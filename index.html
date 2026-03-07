@@ -203,6 +203,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 .size-btn:hover:not(:disabled){border-color:var(--pp);color:var(--pp)}
 .size-btn.sel{border-color:var(--pp);background:var(--pp);color:#fff}
 .size-btn:disabled{opacity:.4;cursor:not-allowed;text-decoration:line-through}
+.size-btn.oos{opacity:.4;text-decoration:line-through;cursor:not-allowed}
 .qty-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .qty-row label{font-size:.82rem;font-weight:800;color:#444}
 .qty-ctrl{display:flex;align-items:center;gap:10px;background:var(--lt);border-radius:50px;padding:4px}
@@ -499,7 +500,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
     <div class="footer-col">
       <h4>Contact</h4>
       <a href="tel:+919497596110">📞 +91 94975 96110</a>
-      <a href="mailto:info@kidscart.kids">✉️ info@kidscart.kids</a>
+      <a href="/cdn-cgi/l/email-protection#4a23242c250a21232e39292b383e6421232e39">✉️ <span class="__cf_email__" data-cfemail="f39a9d959cb3989a978090928187dd989a9780">[email&#160;protected]</span></a>
       <a href="#">📍 Kerala, India</a>
       <a href="#">🕐 Mon-Sat 9AM-7PM</a>
     </div>
@@ -719,7 +720,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
   </div>
 </div>
 
-<script data-cfasync="false">
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false">
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
@@ -1020,8 +1021,18 @@ function handleSearch(val) {
 // PRODUCT DETAIL
 // ══════════════════════════════════════════════
 async function openProd(id) {
+  // Keep grid products in memory so they don't disappear
+  if (!window._prodCache) window._prodCache = {};
   try {
-    const d = await api('/products/' + id);
+    // Show cached immediately, refresh in background
+    let d = window._prodCache[id];
+    if (!d) {
+      d = await api('/products/' + id);
+      window._prodCache[id] = d;
+    } else {
+      // Refresh cache silently in background
+      api('/products/' + id).then(fresh => { window._prodCache[id] = fresh; }).catch(()=>{});
+    }
     const p = d.product, reviews = d.reviews || [];
     const off = Math.round((p.mrp - p.price) / p.mrp * 100);
     const isWL = wishlist.some(x => x === p._id || x?._id === p._id);
@@ -1049,8 +1060,8 @@ async function openProd(id) {
       </div>
       ${p.description ? `<div class="prod-desc">${p.description}</div>` : ''}
       <div class="size-label">Select Size: <span id="selSizeLbl" style="color:var(--pp)">—</span></div>
-      <div class="size-btns">
-        ${(p.sizes || []).filter(s => s.stock > 0 || true).map(s => `<button class="size-btn" ${s.stock === 0 ? 'disabled style="opacity:.45;text-decoration:line-through"' : ''} onclick="selSize(this,'${s.size}')">${s.size}${s.stock === 0 ? ' ✕' : ''}</button>`).join('')}
+      <div class="size-btns" id="sizeBtnsEl">
+        ${(p.sizes||[]).map(s=>`<button class="size-btn${s.stock===0?' oos':''}" ${s.stock===0?'disabled':''} onclick="selSize(this,'${s.size}')" title="${s.stock===0?'Out of stock':s.stock+' left'}">${s.size}${s.stock===0?'<span style=\"font-size:.65em;vertical-align:super\">✕</span>':s.stock<=3?'<span style=\"font-size:.65em;color:var(--or);margin-left:2px\">'+s.stock+'</span>':''}</button>`).join('')||'<p style="color:var(--er);font-size:.82rem;padding:4px 0">Currently out of stock</p>'}
       </div>
       ${(p.colors && p.colors.length > 0) ? `
       <div class="size-label" style="margin-top:10px">Select Colour: <span id="selColorLbl" style="color:var(--pp)">—</span></div>
@@ -1474,10 +1485,10 @@ async function loadOrders() {
         </div>
         <div style="font-size:.8rem;color:var(--gy);margin-bottom:8px">${o.items?.length} item(s) • ₹${o.total?.toLocaleString('en-IN')}</div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span class="badge b-${o.status}">${o.status.replace('_',' ')}</span>
+          <span class="badge b-${o.status}" style="text-transform:capitalize">${{placed:'📋 Placed',confirmed:'✅ Confirmed',processing:'⚙️ Processing',shipped:'🚚 Shipped',out_for_delivery:'🏍️ Out for Delivery',delivered:'🎉 Delivered',cancelled:'❌ Cancelled',returned:'↩️ Returned'}[o.status]||o.status.replace('_',' ')}</span>
           <div style="display:flex;gap:6px">
             <button onclick="openTracking('${o._id}')" style="font-size:.78rem;font-weight:800;background:var(--lt);color:var(--pp);padding:5px 12px;border-radius:50px;cursor:pointer">📦 Track</button>
-            ${['placed','confirmed'].includes(o.status) ? `<button onclick="cancelOrder('${o._id}')" style="font-size:.78rem;font-weight:800;background:#ffebee;color:var(--er);padding:5px 12px;border-radius:50px;cursor:pointer">Cancel</button>` : ''}
+            ${['placed','confirmed'].includes(o.status) ? `<button onclick="cancelOrder('${o._id}')" style="font-size:.75rem;font-weight:800;background:#ffebee;color:var(--er);padding:4px 10px;border-radius:50px;cursor:pointer;border:none">❌ Cancel</button>` : ''}
           </div>
         </div>
       </div>`).join('');
@@ -1632,47 +1643,91 @@ function renderCheckout() {
 
 function renderAddrStep() {
   const addrs = user?.addresses || [];
+  // Auto-select default address if none selected
+  if (selAddr === null && !window._newAddr && addrs.length > 0) {
+    const defIdx = addrs.findIndex(a => a.isDefault);
+    selAddr = defIdx >= 0 ? defIdx : 0;
+  }
+  const newAddrOpen = !addrs.length || window._newAddr;
   return `
     <div>
+      <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:10px">📍 Deliver To</div>
       ${addrs.map((a, i) => `
-        <div class="addr-card ${selAddr === i ? 'sel' : ''}" onclick="selAddrFn(${i})">
-          <div style="display:flex;justify-content:space-between"><h4>${a.label || 'Home'} ${a.isDefault ? '⭐' : ''}</h4><span style="font-size:1.1rem">${selAddr === i ? '✅' : '⭕'}</span></div>
-          <p>${a.name} • ${a.phone}<br>${a.line1}${a.line2 ? ', ' + a.line2 : ''}<br>${a.city}, ${a.state} – ${a.pincode}</p>
-        </div>`).join('')}
-      ${!addrs.length ? `<p style="color:var(--gy);font-size:.85rem;margin-bottom:12px">No saved addresses. Add one below.</p>` : ''}
-      <details style="margin-top:8px;margin-bottom:16px">
-        <summary style="cursor:pointer;font-weight:800;color:var(--pp);font-size:.85rem;padding:6px 0">${addrs.length ? '+ Use a different address' : '+ Add delivery address'}</summary>
-        <div style="margin-top:12px;padding:12px;background:var(--lt);border-radius:var(--rs)">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div class="fgroup"><label>Name *</label><input type="text" id="cName" placeholder="Full name"></div>
-            <div class="fgroup"><label>Phone *</label><input type="tel" id="cPhone" placeholder="+91..."></div>
-            <div class="fgroup"><label>Pincode *</label><input type="text" id="cPin" placeholder="600001"></div>
-            <div class="fgroup"><label>City *</label><input type="text" id="cCity" placeholder="City"></div>
+        <div class="addr-card ${selAddr === i ? 'sel' : ''}" onclick="selAddrFn(${i})" style="position:relative;cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:1.1rem">${selAddr === i ? '🟣' : '⚪'}</span>
+              <div>
+                <span style="font-weight:800;font-size:.88rem">${a.label || 'Home'} ${a.isDefault ? '⭐' : ''}</span>
+                <p style="font-size:.8rem;color:#555;margin:2px 0">${a.name} • ${a.phone}</p>
+                <p style="font-size:.78rem;color:var(--gy)">${a.line1}${a.line2?', '+a.line2:''}, ${a.city} – ${a.pincode}</p>
+              </div>
+            </div>
           </div>
-          <div class="fgroup"><label>Address Line 1 *</label><input type="text" id="cLine1" placeholder="House/Flat, Street"></div>
-          <div class="fgroup"><label>Landmark (opt)</label><input type="text" id="cLine2" placeholder="Near..."></div>
-          <div class="fgroup"><label>State *</label><input type="text" id="cState" placeholder="State"></div>
-          <button class="btn-full" style="margin-top:4px" onclick="useNewAddr()">Use This Address →</button>
+        </div>`).join('')}
+      ${window._newAddr ? `
+        <div class="addr-card sel" style="font-size:.82rem;background:#f0fdf4;border-color:var(--ok)">
+          ✅ Using new address: <b>${window._newAddr.name}</b>, ${window._newAddr.line1}, ${window._newAddr.city}
+          <button onclick="window._newAddr=null;selAddr=${addrs.length?0:null};renderCheckout()" style="background:none;border:none;color:var(--er);cursor:pointer;font-size:.8rem;margin-left:8px">✕ Remove</button>
+        </div>` : ''}
+      <div style="margin-top:10px;margin-bottom:16px">
+        <button onclick="toggleNewAddrForm()" style="background:var(--lt);border:none;border-radius:50px;padding:8px 18px;font-weight:800;font-size:.82rem;color:var(--pp);cursor:pointer;width:100%">
+          ➕ ${addrs.length ? 'Use a different / new address' : 'Add delivery address'}
+        </button>
+      </div>
+      <div id="newAddrForm" style="display:${newAddrOpen?'block':'none'};background:var(--lt);border-radius:14px;padding:14px;margin-bottom:16px">
+        <div style="font-weight:800;font-size:.82rem;color:var(--pp);margin-bottom:10px">New Delivery Address</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="fgroup"><label>Name *</label><input type="text" id="cName" placeholder="Full name"></div>
+          <div class="fgroup"><label>Phone *</label><input type="tel" id="cPhone" placeholder="10-digit mobile"></div>
+          <div class="fgroup"><label>Pincode *</label><input type="text" id="cPin" placeholder="600001" maxlength="6" oninput="autofillCity(this)"></div>
+          <div class="fgroup"><label>City *</label><input type="text" id="cCity" placeholder="City"></div>
         </div>
-      </details>
-      <button class="btn-full" onclick="goPayStep()" ${selAddr === null && !(typeof window._newAddr !== 'undefined') ? '' : ''}>Continue to Payment →</button>
+        <div class="fgroup"><label>Address Line 1 *</label><input type="text" id="cLine1" placeholder="House/Flat no., Street name"></div>
+        <div class="fgroup"><label>Landmark (optional)</label><input type="text" id="cLine2" placeholder="Near landmark..."></div>
+        <div class="fgroup"><label>State *</label><input type="text" id="cState" placeholder="State"></div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer;font-weight:700">
+            <input type="checkbox" id="saveNewAddr"> Save this address
+          </label>
+        </div>
+        <button class="btn-full" style="margin-top:10px" onclick="useNewAddr()">✅ Use This Address</button>
+      </div>
+      <button class="btn-full" onclick="goPayStep()">Continue to Payment →</button>
     </div>`;
+}
+function toggleNewAddrForm() {
+  const f = document.getElementById('newAddrForm');
+  if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
 }
 
 function selAddrFn(i) { selAddr = i; window._newAddr = null; renderCheckout(); }
 
-function useNewAddr() {
+async function useNewAddr() {
   const addr = {
-    name: document.getElementById('cName')?.value.trim(),
-    phone: document.getElementById('cPhone')?.value.trim(),
-    line1: document.getElementById('cLine1')?.value.trim(),
-    line2: document.getElementById('cLine2')?.value.trim(),
-    city:  document.getElementById('cCity')?.value.trim(),
-    state: document.getElementById('cState')?.value.trim(),
+    name:    document.getElementById('cName')?.value.trim(),
+    phone:   document.getElementById('cPhone')?.value.trim(),
+    line1:   document.getElementById('cLine1')?.value.trim(),
+    line2:   document.getElementById('cLine2')?.value.trim() || '',
+    city:    document.getElementById('cCity')?.value.trim(),
+    state:   document.getElementById('cState')?.value.trim(),
     pincode: document.getElementById('cPin')?.value.trim()
   };
-  if (!addr.name || !addr.phone || !addr.line1 || !addr.city || !addr.state || !addr.pincode) { toast('⚠️ Fill all required fields'); return; }
-  window._newAddr = addr; selAddr = null; goPayStep();
+  if (!addr.name || !addr.phone || !addr.line1 || !addr.city || !addr.state || !addr.pincode) {
+    toast('⚠️ Please fill all required fields'); return;
+  }
+  if (!/^\d{10}$/.test(addr.phone.replace(/\D/g,''))) { toast('⚠️ Enter a valid 10-digit phone number'); return; }
+  if (!/^\d{6}$/.test(addr.pincode)) { toast('⚠️ Enter a valid 6-digit pincode'); return; }
+  // Save if checkbox checked
+  const saveChk = document.getElementById('saveNewAddr');
+  if (saveChk?.checked && token) {
+    try { await api('/auth/address', 'POST', { ...addr, label: 'Home' }); user = (await api('/auth/me')).user; }
+    catch(e) { console.warn('Save address failed:', e.message); }
+  }
+  window._newAddr = addr; selAddr = null;
+  renderCheckout();
+  // Auto proceed to payment
+  goPayStep();
 }
 
 function goPayStep() {
@@ -1839,6 +1894,28 @@ function appendChatMsg(sender, text) {
 // ═════════════════════════════════════════════
 // START THE APP
 document.addEventListener('DOMContentLoaded', init);
+
+function autofillCity(input) {
+  // Could call pincode API here - left for future
+  if (input.value.length === 6) {
+    const cityEl = document.getElementById('cCity');
+    const stateEl = document.getElementById('cState');
+    // Basic state prefixes from pincode range
+    const pin = parseInt(input.value);
+    if (!stateEl.value) {
+      if (pin >= 600000 && pin <= 643999) stateEl.value = 'Tamil Nadu';
+      else if (pin >= 500000 && pin <= 509999) stateEl.value = 'Telangana';
+      else if (pin >= 560000 && pin <= 591999) stateEl.value = 'Karnataka';
+      else if (pin >= 400000 && pin <= 445999) stateEl.value = 'Maharashtra';
+      else if (pin >= 110000 && pin <= 110099) stateEl.value = 'Delhi';
+      else if (pin >= 700000 && pin <= 743999) stateEl.value = 'West Bengal';
+      else if (pin >= 380000 && pin <= 396999) stateEl.value = 'Gujarat';
+      else if (pin >= 302000 && pin <= 345999) stateEl.value = 'Rajasthan';
+      else if (pin >= 200000 && pin <= 285999) stateEl.value = 'Uttar Pradesh';
+      else if (pin >= 173000 && pin <= 177999) stateEl.value = 'Himachal Pradesh';
+    }
+  }
+}
 </script>
 
 <!-- ── POLICY PAGES MODAL ── -->
@@ -1951,14 +2028,4 @@ function showPolicy(type) {
   document.getElementById('policyContent').innerHTML = p.content;
   document.getElementById('policyOverlay').style.display = 'block';
   document.getElementById('policyModal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
-function closePolicy() {
-  document.getElementById('policyOverlay').style.display = 'none';
-  document.getElementById('policyModal').style.display = 'none';
-  document.body.style.overflow = '';
-}
-</script>
-
-</body>
-</html>
+  document.body.style.overf

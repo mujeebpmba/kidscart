@@ -867,10 +867,18 @@ app.post('/api/admin/upload-banner', adminAuth, (req, res, next) => {
   });
 });
 
+app.get('/api/admin/orders/:id', adminAuth, async (req, res) => {
+  try {
+    const o = await Order.findById(req.params.id).populate('user','name email phone');
+    if (!o) return res.status(404).json({ error: 'Not found' });
+    res.json({ success: true, order: o });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── ADMIN ORDERS ──────────────────────────────────────────
 app.get('/api/admin/orders', adminAuth, async (req, res) => {
   try {
-    const { status, page = 1, limit = 20, search } = req.query;
+    const { status, page = 1, limit = 200, search } = req.query;
     const q = status ? { status } : {};
     if (search) q.orderId = safeRegex(search);
     const [orders, total] = await Promise.all([

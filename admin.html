@@ -178,25 +178,93 @@ tr:hover td{background:#FAF7FC;}
   .report-row{grid-template-columns:1fr;}
 }
 
+/* ══════════════════════════════════════
+   MOBILE APP STYLES
+══════════════════════════════════════ */
+.mob-bar{display:none}
+.mob-header{display:none}
+
 @media(max-width:768px){
-  .sidebar{width:100%!important;height:58px;top:auto;bottom:0;flex-direction:row;overflow-x:auto;overflow-y:hidden}
-  .sb-logo{display:none!important}
-  .sb-nav{display:flex;flex-direction:row;padding:0;flex:1;align-items:center;overflow-x:auto}
-  .nav-item{flex-direction:column;padding:6px 8px;min-width:50px;border-radius:0;gap:1px;white-space:nowrap}
-  .nav-item span.lbl{display:block!important;font-size:.55rem}
-  .nav-item span.ico{font-size:1.1rem}
-  .sb-bottom{display:none}
-  .main{margin-left:0!important;margin-bottom:60px}
-  .content{padding:10px!important}
-  .stats-grid{grid-template-columns:1fr 1fr!important;gap:8px}
-  .grid2,.grid3{grid-template-columns:1fr!important}
+  /* Hide desktop sidebar */
+  .sidebar{display:none!important}
+  
+  /* Mobile top header */
+  .mob-header{
+    display:flex;position:fixed;top:0;left:0;right:0;height:54px;
+    background:linear-gradient(90deg,var(--pp),var(--pp2));
+    z-index:300;align-items:center;padding:0 16px;gap:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.2)
+  }
+  .mob-header img{height:32px;object-fit:contain}
+  .mob-header .mh-title{flex:1;color:#fff;font-weight:800;font-size:.95rem;font-family:'Poppins',sans-serif;margin:0 8px}
+  .mob-header .mh-user{color:rgba(255,255,255,.8);font-size:.72rem;text-align:right;line-height:1.3}
+
+  /* Mobile bottom nav bar */
+  .mob-bar{
+    display:block;position:fixed;bottom:0;left:0;right:0;
+    height:62px;background:#fff;border-top:1.5px solid #f0e4f9;
+    z-index:300;box-shadow:0 -2px 12px rgba(123,45,139,.08)
+  }
+  .mob-bar-inner{
+    display:flex;height:100%;overflow-x:auto;
+    scrollbar-width:none;-ms-overflow-style:none
+  }
+  .mob-bar-inner::-webkit-scrollbar{display:none}
+  .mob-btn{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:68px;flex:1;gap:2px;border:none;background:transparent;
+    cursor:pointer;color:#aaa;transition:.15s;padding:6px 2px;
+    font-family:'Nunito',sans-serif
+  }
+  .mob-btn.active{color:var(--pp)}
+  .mob-btn .mi{font-size:1.3rem;line-height:1;transition:.15s}
+  .mob-btn.active .mi{transform:scale(1.2)}
+  .mob-btn .ml{font-size:.56rem;font-weight:800;white-space:nowrap;margin-top:1px}
+
+  /* Main content offset */
+  .main{margin-left:0!important;margin-top:54px;margin-bottom:66px}
+  .content{padding:12px 10px!important}
+
+  /* Stats cards - 2 cols */
+  .stats-grid{grid-template-columns:1fr 1fr!important;gap:8px;margin-bottom:16px}
+  .stat-card{padding:14px 10px!important}
+  .stat-card .sv{font-size:1.4rem!important}
+  .stat-card .sl{font-size:.68rem!important}
+
+  /* Forms - single col */
+  .grid2,.grid3{grid-template-columns:1fr!important;gap:10px}
   .report-row{grid-template-columns:1fr!important}
-  .card{padding:12px!important}
-  table{font-size:.75rem}
-  table td,table th{padding:6px 4px!important}
-  .hide-mobile{display:none!important}
+
+  /* Cards */
+  .card{padding:14px 12px!important;border-radius:14px!important;margin-bottom:14px}
+  .card-head{flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .card-head h3{font-size:.9rem}
+
+  /* Tables - horizontal scroll */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
+  table{font-size:.74rem;min-width:480px}
+  table td,table th{padding:8px 6px!important;white-space:nowrap}
+
+  /* Chat */
   .chat-grid{grid-template-columns:1fr!important;height:auto!important}
-  .chat-list{max-height:150px!important}
+  .chat-list{max-height:180px!important;border-right:none!important;border-bottom:1px solid #f0e4f9}
+
+  /* Login */
+  #loginScreen{padding:16px}
+  .login-box{width:100%!important;max-width:100%!important;padding:28px 20px!important;border-radius:20px!important}
+
+  /* Modals full screen on mobile */
+  .modal-box{width:95vw!important;max-height:90vh;overflow-y:auto}
+
+  /* Order mobile cards */
+  .ord-table-wrap{overflow-x:auto}
+
+  /* Buttons */
+  .btn-sm{padding:6px 10px!important;font-size:.75rem!important}
+}
+@media(max-width:420px){
+  .stats-grid{grid-template-columns:1fr 1fr!important}
+  .mob-btn{min-width:58px}
 }
 </style>
 </head>
@@ -235,6 +303,29 @@ tr:hover td{background:#FAF7FC;}
 
 <!-- ── ADMIN APP ── -->
 <div id="adminApp">
+
+  <!-- MOBILE HEADER -->
+  <header class="mob-header" id="mobHeader">
+    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" onerror="this.style.display='none'">
+    <span class="mh-title" id="mobTitle">Dashboard</span>
+    <div class="mh-user" id="mobUser"></div>
+  </header>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mob-bar" id="mobBar">
+    <div class="mob-bar-inner">
+      <button class="mob-btn active" id="mb-dashboard" onclick="mobShow('dashboard',this)"><span class="mi">📊</span><span class="ml">Home</span></button>
+      <button class="mob-btn" id="mb-orders" onclick="mobShow('orders',this)"><span class="mi">📦</span><span class="ml">Orders</span></button>
+      <button class="mob-btn" id="mb-products" onclick="mobShow('products',this)"><span class="mi">👗</span><span class="ml">Products</span></button>
+      <button class="mob-btn" id="mb-addprod" onclick="mobShow('addprod',this)"><span class="mi">➕</span><span class="ml">Add</span></button>
+      <button class="mob-btn" id="mb-stock" onclick="mobShow('stock',this)"><span class="mi">📋</span><span class="ml">Stock</span></button>
+      <button class="mob-btn" id="mb-customers" onclick="mobShow('customers',this)"><span class="mi">👥</span><span class="ml">Customers</span></button>
+      <button class="mob-btn" id="mb-banners" onclick="mobShow('banners',this)"><span class="mi">🎨</span><span class="ml">Banners</span></button>
+      <button class="mob-btn" id="mb-coupons" onclick="mobShow('coupons',this)"><span class="mi">🎟️</span><span class="ml">Coupons</span></button>
+      <button class="mob-btn" id="mb-reports" onclick="mobShow('reports',this)"><span class="mi">📈</span><span class="ml">Reports</span></button>
+      <button class="mob-btn" id="mb-logout" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button>
+    </div>
+  </nav>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -396,8 +487,8 @@ tr:hover td{background:#FAF7FC;}
           <div class="card-head"><h3>📋 Stock Management</h3><span style="font-size:.8rem;color:var(--gy);">Click a stock value to edit inline</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Product</th><th>XS/0-3M</th><th>S/3-6M</th><th>M/6-12M</th><th>L/1-2Y</th><th>XL/2-4Y</th><th>XXL/4-6Y</th><th>Total</th><th>Save</th></tr></thead>
-              <tbody id="stockTableBody"><tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
+              <thead><tr><th>Product</th><th>0-3M</th><th>3-6M</th><th>6-12M</th><th>1-2Y</th><th>2-3Y</th><th>3-4Y</th><th>4-5Y</th><th>5-6Y</th><th>6-8Y</th><th>8-10Y</th><th>10-12Y</th><th>12-15Y</th><th>Total</th><th>Save</th></tr></thead>
+              <tbody id="stockTableBody"><tr><td colspan="15" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -880,7 +971,7 @@ function renderDashOrders(orders) {
       <td><b>#${o.orderId}</b></td>
       <td>${o.user?.name || '—'}</td>
       <td>₹${(o.total || 0).toLocaleString('en-IN')}</td>
-      <td><span class="badge b-${o.status}">${o.status}</span></td>
+      <td><span class="badge b-${o.status}" style="text-transform:capitalize;white-space:nowrap">${{placed:'📋 Placed',confirmed:'✅ Confirmed',processing:'⚙️ Processing',shipped:'🚚 Shipped',out_for_delivery:'🏍️ Out for Delivery',delivered:'🎉 Delivered',cancelled:'❌ Cancelled',returned:'↩️ Returned'}[o.status]||o.status}</span></td>
       <td><button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}')">Update</button></td>
     </tr>`).join('');
 }
@@ -922,7 +1013,7 @@ function renderOrders(orders) {
         <small style="color:${o.payment?.status==='paid'?'var(--ok)':'var(--or)'};">${o.payment?.status||'pending'}</small>
       </td>
       <td>${fmtDate(o.createdAt)}</td>
-      <td><span class="badge b-${o.status}">${o.status}</span></td>
+      <td><span class="badge b-${o.status}" style="text-transform:capitalize;white-space:nowrap">${{placed:'📋 Placed',confirmed:'✅ Confirmed',processing:'⚙️ Processing',shipped:'🚚 Shipped',out_for_delivery:'🏍️ Out for Delivery',delivered:'🎉 Delivered',cancelled:'❌ Cancelled',returned:'↩️ Returned'}[o.status]||o.status}</span></td>
       <td>
         <div style="display:flex;gap:5px;flex-wrap:wrap;">
           <button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}','${o.payment?.method||'cod'}','${o.payment?.status||'pending'}')">✏️ Update</button>
@@ -984,13 +1075,90 @@ async function deleteOrder(id, orderId) {
 
 async function viewOrderDetail(id) {
   try {
-    const r = await apiFetch('/admin/orders?limit=200');
-    const o = (r.orders || []).find(x => x._id === id);
+    let o;
+    // Try admin single-order route first, fallback to list search
+    try {
+      const r = await apiFetch('/admin/orders/' + id);
+      o = r.order;
+    } catch {
+      const r = await apiFetch('/admin/orders?limit=200');
+      o = (r.orders || []).find(x => x._id === id);
+    }
     if (!o) { toast('Order not found'); return; }
-    const info = `Order #${o.orderId}\nCustomer: ${o.user?.name} (${o.user?.email})\nItems:\n${o.items.map(i => `  ${i.emoji} ${i.name} (${i.size}) x${i.qty} = ₹${i.price * i.qty}`).join('\n')}\nSubtotal: ₹${o.subtotal}\nDelivery: ₹${o.deliveryFee || 0}\nDiscount: ₹${o.discount || 0}\nTotal: ₹${o.total}\nPayment: ${o.payment?.method?.toUpperCase()}\nStatus: ${o.status}\nAddress: ${o.shippingAddress?.name}, ${o.shippingAddress?.line1}, ${o.shippingAddress?.city} - ${o.shippingAddress?.pincode}`;
-    alert(info);
+    const addr = o.shippingAddress || {};
+    const statusEmoji = {placed:'📋',confirmed:'✅',processing:'⚙️',shipped:'🚚',out_for_delivery:'🏍️',delivered:'🎉',cancelled:'❌',returned:'↩️'};
+    const steps = ['placed','confirmed','processing','shipped','out_for_delivery','delivered'];
+    const si = steps.indexOf(o.status);
+    
+    document.getElementById('ordDetailBody').innerHTML = `
+      <div style="background:var(--lt);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="font-size:1rem;font-weight:900;color:var(--pp)">Order #${o.orderId}</h3>
+          <span class="badge b-${o.status}" style="text-transform:capitalize">${statusEmoji[o.status]||'📦'} ${o.status.replace('_',' ')}</span>
+        </div>
+        <p style="font-size:.82rem;color:var(--gy)">${new Date(o.createdAt).toLocaleString('en-IN')}</p>
+      </div>
+
+      <!-- Customer + Address -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px">
+          <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:8px">👤 CUSTOMER</div>
+          <p style="font-weight:800;font-size:.9rem">${o.user?.name||'—'}</p>
+          <p style="font-size:.78rem;color:var(--gy)">${o.user?.email||''}</p>
+          <p style="font-size:.82rem;margin-top:4px">${o.user?.phone||''}</p>
+        </div>
+        <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px">
+          <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:8px">📍 DELIVERY ADDRESS</div>
+          <p style="font-weight:800;font-size:.88rem">${addr.name||'—'}</p>
+          <p style="font-size:.78rem;color:#444;line-height:1.5">${addr.line1||''}${addr.line2?', '+addr.line2:''}<br>${addr.city||''} ${addr.state||''} – ${addr.pincode||''}</p>
+          <p style="font-size:.82rem;margin-top:4px">📞 ${addr.phone||'—'}</p>
+        </div>
+      </div>
+
+      <!-- Order tracking -->
+      <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:12px">📦 ORDER TRACKING</div>
+        <div style="position:relative">
+          ${steps.map((st,i)=>{
+            const done = i <= si;
+            const evt = o.tracking?.find(t=>t.status===st);
+            return '<div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">' +
+              '<div style="display:flex;flex-direction:column;align-items:center;min-width:28px">' +
+              '<div style="width:28px;height:28px;border-radius:50%;background:'+(done?'var(--pp)':'#eee')+';color:'+(done?'#fff':'#aaa')+';display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0">'+(done?(statusEmoji[st]||'✓'):'·')+'</div>' +
+              (i<steps.length-1?'<div style="width:2px;height:20px;background:'+(done?'var(--pp)':'#eee')+'"></div>':'') +
+              '</div>' +
+              '<div style="padding-top:4px">' +
+              '<div style="font-weight:800;font-size:.82rem;text-transform:capitalize;color:'+(done?'#222':'#aaa')+'">'+st.replace('_',' ')+'</div>' +
+              (evt?'<div style="font-size:.73rem;color:var(--gy)">'+new Date(evt.time).toLocaleString('en-IN')+(evt.message?'<br>'+evt.message:'')+'</div>':'<div style="font-size:.73rem;color:#ccc">Pending</div>') +
+              '</div></div>';
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:10px">🛍️ ITEMS (${o.items?.length||0})</div>
+        ${(o.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f8f0ff;font-size:.82rem"><span>${i.emoji||'📦'} ${i.name} <span style="color:var(--gy)">${i.size?'('+i.size+')':''} ×${i.qty}</span></span><span style="font-weight:800">₹${(i.price*i.qty).toLocaleString('en-IN')}</span></div>`).join('')}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.82rem;color:var(--gy)"><span>Subtotal</span><span>₹${(o.subtotal||0).toLocaleString('en-IN')}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.82rem;color:var(--gy)"><span>Delivery</span><span>₹${(o.deliveryFee||0).toLocaleString('en-IN')}</span></div>
+        ${o.discount?`<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.82rem;color:var(--ok)"><span>Discount</span><span>-₹${o.discount.toLocaleString('en-IN')}</span></div>`:''}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;font-weight:900;color:var(--pp)"><span>Total</span><span>₹${(o.total||0).toLocaleString('en-IN')}</span></div>
+      </div>
+
+      <!-- Payment -->
+      <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px">
+        <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:8px">💳 PAYMENT</div>
+        <div style="display:flex;gap:16px;font-size:.85rem">
+          <span>Method: <b>${(o.payment?.method||'COD').toUpperCase()}</b></span>
+          <span>Status: <b style="color:${o.payment?.status==='paid'?'var(--ok)':'var(--or)'}">${o.payment?.status||'pending'}</b></span>
+        </div>
+        ${o.payment?.transactionId?`<p style="font-size:.75rem;color:var(--gy);margin-top:4px">Txn: ${o.payment.transactionId}</p>`:''}
+      </div>
+    `;
+    document.getElementById('orderDetailModal').style.display = 'flex';
   } catch(e) { toast('❌ ' + e.message); }
 }
+function closeOrderDetail() { document.getElementById('orderDetailModal').style.display = 'none'; }
 
 // ── PRODUCTS ────────────────────────────────
 async function loadProducts() {
@@ -1005,7 +1173,7 @@ async function loadProducts() {
 
 function renderProducts(prods) {
   const el = document.getElementById('productsTable');
-  if (!prods.length) { el.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">No products found</td></tr>'; return; }
+  if (!prods.length) { el.innerHTML = '<tr><td colspan="15" style="text-align:center;color:var(--gy);padding:24px;">No products found</td></tr>'; return; }
   el.innerHTML = prods.map(p => {
     const off = p.mrp > p.price ? Math.round((1 - p.price/p.mrp)*100) : 0;
     const profit = p.costPrice > 0 ? Math.round(((p.price - p.costPrice) / p.price) * 100) : null;
@@ -1199,7 +1367,7 @@ async function loadStock() {
 
 function renderStock(prods) {
   const el = document.getElementById('stockTableBody');
-  const sizeKeys = ['XS/0-3M','S/3-6M','M/6-12M','L/1-2Y','XL/2-4Y','XXL/4-6Y'];
+  const sizeKeys = ['0-3M','3-6M','6-12M','1-2Y','2-3Y','3-4Y','4-5Y','5-6Y','6-8Y','8-10Y','10-12Y','12-15Y'];
   el.innerHTML = prods.map(p => {
     const sizeMap = {};
     (p.sizes || []).forEach(s => sizeMap[s.size] = s.stock || 0);
@@ -1801,6 +1969,31 @@ function showBannerDragger(src){
   img.style.objectPosition='50% 50%';
   setTimeout(initBannerDrag,100);
 }
+
+// ── MOBILE NAVIGATION ─────────────────────
+function mobShow(id, btn) {
+  document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const titles = {
+    dashboard:'Dashboard', orders:'Orders', products:'Products', addprod:'Add Product',
+    stock:'Stock', customers:'Customers', coupons:'Coupons', banners:'Banners',
+    reports:'Reports', chat:'Live Chat', adminusers:'Admin Users'
+  };
+  const t = document.getElementById('mobTitle');
+  if (t) t.textContent = titles[id] || id;
+  show(id);
+}
 </script>
+
+<!-- ORDER DETAIL MODAL -->
+<div id="orderDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;z-index:1">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">📦 Order Details</h2>
+      <button onclick="closeOrderDetail()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;color:var(--pp)">✕</button>
+    </div>
+    <div id="ordDetailBody" style="padding:20px"></div>
+  </div>
+</div>
 </body>
 </html>

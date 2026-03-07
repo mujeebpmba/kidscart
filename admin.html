@@ -1170,7 +1170,7 @@ async function viewOrderDetail(id) {
 // ── PRODUCTS ────────────────────────────────
 async function loadProducts() {
   try {
-    const r = await apiFetch('/products?limit=200');
+    const r = await apiFetch('/admin/products?limit=200');
     prodsData = r.products || [];
     renderProducts(prodsData);
   } catch(e) {
@@ -1403,7 +1403,7 @@ function cancelEditProd() {
 // ── STOCK ───────────────────────────────────
 async function loadStock() {
   try {
-    const r = await apiFetch('/products?limit=200');
+    const r = await apiFetch('/admin/products?limit=200');
     renderStock(r.products || []);
   } catch(e) {}
 }

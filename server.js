@@ -804,7 +804,7 @@ app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
 // ── ADMIN PRODUCTS ────────────────────────────────────────
 app.get('/api/admin/products', adminAuth, async (req, res) => {
   try {
-    const { search, category, page = 1, limit = 50 } = req.query;
+    const { search, category, page = 1, limit = 500 } = req.query;
     const q = {};
     if (search) { const rx = safeRegex(search); q.$or = [{ name: rx }, { category: rx }]; }
     if (category) q.category = category;

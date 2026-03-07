@@ -5,7 +5,80 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KidsCart Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};</script>
+<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};
+// ── COLOR LIVE PREVIEW ──────────────────────────────────────
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.id === 'colorsInput') renderColorTags();
+});
+
+
+// ── BANNER IMAGE DRAG TO REPOSITION ────────────────────────
+function initBannerDrag() {
+  const box = document.getElementById('bannerDragBox');
+  if (!box || box._dragInit) return;
+  box._dragInit = true;
+  let dragging = false, startX, startY, px = 50, py = 50;
+
+  function updatePos(x, y) {
+    px = Math.max(0, Math.min(100, x));
+    py = Math.max(0, Math.min(100, y));
+    const img = document.getElementById('bannerDragImg');
+    if (img) img.style.objectPosition = px + '% ' + py + '%';
+    document.getElementById('bannerImgPosX').value = px;
+    document.getElementById('bannerImgPosY').value = py;
+    const labels = ['left','center','right'];
+    const labely = ['top','center','bottom'];
+    const lx = px < 33 ? labels[0] : px < 67 ? labels[1] : labels[2];
+    const ly = py < 33 ? labely[0] : py < 67 ? labely[1] : labely[2];
+    document.getElementById('bannerPosLabel').textContent = 'Position: ' + ly + ' ' + lx;
+  }
+
+  box.addEventListener('mousedown', e => {
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    box.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = box.getBoundingClientRect();
+    const dx = ((e.clientX - startX) / rect.width) * -100;
+    const dy = ((e.clientY - startY) / rect.height) * -100;
+    updatePos(px + dx, py + dy);
+    startX = e.clientX; startY = e.clientY;
+  });
+  document.addEventListener('mouseup', () => { dragging = false; box.style.cursor = 'grab'; });
+
+  // Touch support
+  box.addEventListener('touchstart', e => {
+    dragging = true;
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    e.preventDefault();
+  }, {passive:false});
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const rect = box.getBoundingClientRect();
+    const dx = ((e.touches[0].clientX - startX) / rect.width) * -100;
+    const dy = ((e.touches[0].clientY - startY) / rect.height) * -100;
+    updatePos(px + dx, py + dy);
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+  }, {passive:false});
+  document.addEventListener('touchend', () => { dragging = false; });
+}
+
+function showBannerDragger(src) {
+  const dragger = document.getElementById('bannerPosDragger');
+  const img = document.getElementById('bannerDragImg');
+  if (!dragger || !img) return;
+  img.src = src;
+  dragger.style.display = 'block';
+  document.getElementById('bannerImgPosX').value = 50;
+  document.getElementById('bannerImgPosY').value = 50;
+  img.style.objectPosition = '50% 50%';
+  setTimeout(initBannerDrag, 100);
+}
+
+</script>
 <!-- Socket.io loaded lazily for admin chat -->
 <script>
 function loadSocketIO(cb) {
@@ -16,6 +89,79 @@ function loadSocketIO(cb) {
   s.onerror = () => console.warn('Socket.io unavailable');
   document.head.appendChild(s);
 }
+
+// ── COLOR LIVE PREVIEW ──────────────────────────────────────
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.id === 'colorsInput') renderColorTags();
+});
+
+
+// ── BANNER IMAGE DRAG TO REPOSITION ────────────────────────
+function initBannerDrag() {
+  const box = document.getElementById('bannerDragBox');
+  if (!box || box._dragInit) return;
+  box._dragInit = true;
+  let dragging = false, startX, startY, px = 50, py = 50;
+
+  function updatePos(x, y) {
+    px = Math.max(0, Math.min(100, x));
+    py = Math.max(0, Math.min(100, y));
+    const img = document.getElementById('bannerDragImg');
+    if (img) img.style.objectPosition = px + '% ' + py + '%';
+    document.getElementById('bannerImgPosX').value = px;
+    document.getElementById('bannerImgPosY').value = py;
+    const labels = ['left','center','right'];
+    const labely = ['top','center','bottom'];
+    const lx = px < 33 ? labels[0] : px < 67 ? labels[1] : labels[2];
+    const ly = py < 33 ? labely[0] : py < 67 ? labely[1] : labely[2];
+    document.getElementById('bannerPosLabel').textContent = 'Position: ' + ly + ' ' + lx;
+  }
+
+  box.addEventListener('mousedown', e => {
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    box.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = box.getBoundingClientRect();
+    const dx = ((e.clientX - startX) / rect.width) * -100;
+    const dy = ((e.clientY - startY) / rect.height) * -100;
+    updatePos(px + dx, py + dy);
+    startX = e.clientX; startY = e.clientY;
+  });
+  document.addEventListener('mouseup', () => { dragging = false; box.style.cursor = 'grab'; });
+
+  // Touch support
+  box.addEventListener('touchstart', e => {
+    dragging = true;
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    e.preventDefault();
+  }, {passive:false});
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const rect = box.getBoundingClientRect();
+    const dx = ((e.touches[0].clientX - startX) / rect.width) * -100;
+    const dy = ((e.touches[0].clientY - startY) / rect.height) * -100;
+    updatePos(px + dx, py + dy);
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+  }, {passive:false});
+  document.addEventListener('touchend', () => { dragging = false; });
+}
+
+function showBannerDragger(src) {
+  const dragger = document.getElementById('bannerPosDragger');
+  const img = document.getElementById('bannerDragImg');
+  if (!dragger || !img) return;
+  img.src = src;
+  dragger.style.display = 'block';
+  document.getElementById('bannerImgPosX').value = 50;
+  document.getElementById('bannerImgPosY').value = 50;
+  img.style.objectPosition = '50% 50%';
+  setTimeout(initBannerDrag, 100);
+}
+
 </script>
 <style>
 :root{
@@ -177,6 +323,55 @@ tr:hover td{background:#FAF7FC;}
   .grid2,.grid3{grid-template-columns:1fr;}
   .report-row{grid-template-columns:1fr;}
 }
+
+/* ── MOBILE FRIENDLY ADMIN ── */
+@media(max-width:768px){
+  /* Bottom nav bar for mobile */
+  .sidebar{
+    width:100% !important;
+    height:60px;
+    top:auto;
+    bottom:0;
+    flex-direction:row;
+    overflow-x:auto;
+    overflow-y:hidden;
+  }
+  .sb-logo{ display:none !important; }
+  .sb-nav{ display:flex; flex-direction:row; padding:0; overflow-x:auto; flex:1; align-items:center; }
+  .nav-item{
+    flex-direction:column;
+    padding:6px 10px;
+    min-width:52px;
+    border-radius:0;
+    font-size:.6rem;
+    gap:2px;
+    white-space:nowrap;
+  }
+  .nav-item span.lbl{ display:block !important; font-size:.58rem; }
+  .nav-item span.ico{ font-size:1.2rem; }
+  .sb-bottom{ display:none; }
+  .main{ margin-left:0 !important; margin-bottom:60px; }
+  .content{ padding:12px !important; }
+  .stats-grid{ grid-template-columns:1fr 1fr !important; gap:10px; }
+  .stat-card{ padding:14px !important; }
+  .stat-card .sv{ font-size:1.6rem !important; }
+  .grid2,.grid3{ grid-template-columns:1fr !important; }
+  .report-row{ grid-template-columns:1fr !important; }
+  .card{ padding:14px !important; }
+  .card-head{ flex-wrap:wrap; gap:8px; }
+  table{ font-size:.78rem; }
+  table td, table th{ padding:8px 6px !important; }
+  /* hide less important columns on mobile */
+  .hide-mobile{ display:none !important; }
+  .chat-grid{ grid-template-columns:1fr !important; height:auto !important; }
+  .chat-list{ max-height:160px !important; }
+  .login-box{ padding:28px 20px !important; width:calc(100vw - 32px) !important; }
+  #policyBtns{ flex-wrap:wrap; }
+}
+@media(max-width:480px){
+  .stats-grid{ grid-template-columns:1fr 1fr !important; }
+  .stat-card .sv{ font-size:1.3rem !important; }
+}
 </style>
 </head>
 <body>
@@ -187,12 +382,38 @@ tr:hover td{background:#FAF7FC;}
     <div class="login-logo">
       <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
     </div>
-    <h2>Admin Panel</h2>
-    <p>Sign in to manage your store</p>
-    <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
-    <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
-    <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
-    <div id="loginErr"></div>
+    <!-- SCREEN 1: LOGIN -->
+    <div id="screenLogin">
+      <h2>Admin Panel</h2>
+      <p>Sign in to manage your store</p>
+      <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
+      <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+      <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
+      <div id="loginErr"></div>
+      <p style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="showForgot();return false;" style="color:var(--pp);font-size:.83rem;text-decoration:none;">Forgot password?</a>
+      </p>
+    </div>
+    <!-- SCREEN 2: FORGOT PASSWORD -->
+    <div id="screenForgot" style="display:none;">
+      <h2>Reset Password</h2>
+      <p>Enter your admin email — we will send a reset link</p>
+      <input class="linp" type="email" id="forgotEmail" placeholder="admin@kidscart.kids">
+      <button class="lbtn" onclick="sendResetLink()">📧 Send Reset Link</button>
+      <div id="forgotMsg" style="font-size:.83rem;text-align:center;margin-top:10px;display:none;"></div>
+      <p style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="showLogin();return false;" style="color:var(--pp);font-size:.83rem;text-decoration:none;">← Back to login</a>
+      </p>
+    </div>
+    <!-- SCREEN 3: SET NEW PASSWORD -->
+    <div id="screenReset" style="display:none;">
+      <h2>New Password</h2>
+      <p>Enter your new admin password</p>
+      <input class="linp" type="password" id="newPass1" placeholder="New password (min 8 chars)">
+      <input class="linp" type="password" id="newPass2" placeholder="Confirm new password" onkeydown="if(event.key==='Enter')doReset()">
+      <button class="lbtn" onclick="doReset()">✅ Set New Password</button>
+      <div id="resetMsg" style="font-size:.83rem;text-align:center;margin-top:10px;display:none;"></div>
+    </div>
   </div>
 </div>
 
@@ -378,9 +599,10 @@ tr:hover td{background:#FAF7FC;}
               <div class="fgroup"><label>Product Name *</label><input type="text" name="name" placeholder="e.g. Floral Frock Dress" required></div>
               <div class="fgroup"><label>Category *</label>
                 <select name="category" required>
-                  <option value="">Select…</option>
+                  <option value="">Select Category…</option>
                   <option>Girls</option><option>Boys</option><option>Baby</option>
-                  <option>Party</option><option>Ethnic</option><option>Winter</option><option>School</option><option>Accessories</option>
+                  <option>Western</option><option>Party</option><option>Ethnic</option>
+                  <option>Festive</option><option>Winter</option><option>School</option><option>Accessories</option>
                 </select>
               </div>
               <div class="fgroup"><label>Selling Price (₹) *</label><input type="number" name="price" placeholder="599" required min="1"></div>
@@ -418,16 +640,30 @@ tr:hover td{background:#FAF7FC;}
               <div style="font-size:.75rem;color:var(--gy)">First image becomes the thumbnail. You can upload multiple images for gallery view.</div>
             </div>
             
-            <!-- Stock by Size -->
+            <!-- Colors -->
+            <div style="margin-bottom:16px;background:var(--lt);border-radius:12px;padding:14px;">
+              <div style="font-weight:800;font-size:.88rem;color:var(--pp);margin-bottom:8px;">🎨 Available Colors</div>
+              <input type="text" name="colorsInput" id="colorsInput" placeholder="e.g. Red, Blue, Pink, White" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;margin-bottom:8px">
+              <div id="colorTags" style="display:flex;gap:6px;flex-wrap:wrap;min-height:10px"></div>
+              <div style="font-size:.75rem;color:var(--gy);margin-top:6px">Separate colors with commas. They will show as selectable swatches on the product page.</div>
+            </div>
+
+            <!-- Stock by Size — 0 months to 15 years -->
             <div style="margin-bottom:16px;">
-              <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:10px;">📦 Initial Stock by Size</div>
+              <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:10px;">📦 Stock by Size (0 months → 15 years)</div>
               <div class="grid3">
-                <div class="fgroup"><label>XS / 0-3M</label><input type="number" name="stockXS" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>S / 3-6M</label><input type="number" name="stockS" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>M / 6-12M</label><input type="number" name="stockM" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>L / 1-2Y</label><input type="number" name="stockL" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>XL / 2-4Y</label><input type="number" name="stockXL" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>XXL / 4-6Y</label><input type="number" name="stockXXL" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>0–3 Months</label><input type="number" name="stock_0_3M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>3–6 Months</label><input type="number" name="stock_3_6M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>6–12 Months</label><input type="number" name="stock_6_12M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>1–2 Years</label><input type="number" name="stock_1_2Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>2–3 Years</label><input type="number" name="stock_2_3Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>3–4 Years</label><input type="number" name="stock_3_4Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>4–5 Years</label><input type="number" name="stock_4_5Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>5–6 Years</label><input type="number" name="stock_5_6Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>6–8 Years</label><input type="number" name="stock_6_8Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>8–10 Years</label><input type="number" name="stock_8_10Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>10–12 Years</label><input type="number" name="stock_10_12Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>12–15 Years</label><input type="number" name="stock_12_15Y" placeholder="0" min="0" value="0"></div>
               </div>
             </div>
             
@@ -576,6 +812,16 @@ tr:hover td{background:#FAF7FC;}
                 </label>
                 <span style="font-size:.75rem;color:var(--gy);margin-left:8px">1200×400px ideal • JPG/PNG</span>
                 <div id="bannerImagePreview" style="margin-top:10px"></div>
+                <!-- Image position dragger -->
+                <div id="bannerPosDragger" style="display:none;margin-top:10px;">
+                  <div style="font-size:.78rem;font-weight:800;color:var(--pp);margin-bottom:6px;">🖱️ Drag image to reposition</div>
+                  <div id="bannerDragBox" style="width:100%;height:120px;border-radius:10px;overflow:hidden;cursor:grab;position:relative;border:2px dashed var(--pp);background:#f5f0f8;">
+                    <img id="bannerDragImg" src="" style="width:100%;height:100%;object-fit:cover;object-position:50% 50%;user-select:none;pointer-events:none;" draggable="false">
+                  </div>
+                  <input type="hidden" id="bannerImgPosX" value="50">
+                  <input type="hidden" id="bannerImgPosY" value="50">
+                  <div style="font-size:.72rem;color:var(--gy);margin-top:4px;text-align:center" id="bannerPosLabel">Position: center center</div>
+                </div>
                 <input type="hidden" id="bannerImageUrl">
                 <div style="margin-top:8px"><input type="text" id="bannerImageLink" placeholder="Or paste image URL" style="width:100%;padding:8px;border:1.5px solid #ddd;border-radius:7px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none" oninput="setBannerImageFromUrl(this.value)"></div>
               </div>
@@ -728,6 +974,61 @@ async function adminLogin() {
     errEl.style.display = 'block';
   }
 }
+
+
+// ── FORGOT / RESET PASSWORD ──────────────────────────────────
+function showForgot() {
+  document.getElementById('screenLogin').style.display  = 'none';
+  document.getElementById('screenForgot').style.display = 'block';
+  document.getElementById('screenReset').style.display  = 'none';
+  const m = document.getElementById('forgotMsg');
+  if(m){m.style.display='none';m.textContent='';}
+}
+function showLogin() {
+  document.getElementById('screenLogin').style.display  = 'block';
+  document.getElementById('screenForgot').style.display = 'none';
+  document.getElementById('screenReset').style.display  = 'none';
+}
+function showResetScreen() {
+  document.getElementById('screenLogin').style.display  = 'none';
+  document.getElementById('screenForgot').style.display = 'none';
+  document.getElementById('screenReset').style.display  = 'block';
+}
+async function sendResetLink() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const msgEl = document.getElementById('forgotMsg');
+  msgEl.style.display = 'none';
+  if (!email) { msgEl.style.color='var(--er)'; msgEl.textContent='Please enter your email'; msgEl.style.display='block'; return; }
+  try {
+    await fetch(API + '/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+    msgEl.style.color = 'green';
+    msgEl.textContent = '✅ Reset link sent! Check your email inbox.';
+    msgEl.style.display = 'block';
+  } catch(e) {
+    msgEl.style.color = 'var(--er)';
+    msgEl.textContent = '❌ Failed to send. Try again.';
+    msgEl.style.display = 'block';
+  }
+}
+async function doReset() {
+  const p1 = document.getElementById('newPass1').value;
+  const p2 = document.getElementById('newPass2').value;
+  const msgEl = document.getElementById('resetMsg');
+  msgEl.style.display = 'none';
+  if (!p1 || p1.length < 8) { msgEl.style.color='var(--er)'; msgEl.textContent='Minimum 8 characters'; msgEl.style.display='block'; return; }
+  if (p1 !== p2) { msgEl.style.color='var(--er)'; msgEl.textContent='Passwords do not match'; msgEl.style.display='block'; return; }
+  const params = new URLSearchParams(window.location.search);
+  const token2 = params.get('resetToken'), userId = params.get('userId');
+  if (!token2||!userId) { msgEl.style.color='var(--er)'; msgEl.textContent='Invalid reset link'; msgEl.style.display='block'; return; }
+  try {
+    const r = await fetch(API + '/auth/reset-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token:token2, userId, newPassword:p1 }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error||'Reset failed');
+    msgEl.style.color='green'; msgEl.textContent='✅ Password updated! Redirecting...'; msgEl.style.display='block';
+    setTimeout(() => { window.location.href = window.location.pathname; }, 2000);
+  } catch(e) { msgEl.style.color='var(--er)'; msgEl.textContent='❌ '+e.message; msgEl.style.display='block'; }
+}
+(function(){ const p=new URLSearchParams(window.location.search); if(p.get('resetToken')&&p.get('userId')) showResetScreen(); })();
 
 function adminLogout() {
   token = ''; adminUser = null;
@@ -1004,7 +1305,7 @@ async function uploadProdImages() {
   if (!input.files.length) return [];
   const fd = new FormData();
   Array.from(input.files).forEach(f => fd.append('images', f));
-  const r = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+  const r = await fetch(API.replace('/api','') + '/api/admin/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
   const d = await r.json();
   if (!r.ok) throw new Error(d.error || 'Upload failed');
   // Return absolute URLs so images always load correctly
@@ -1046,12 +1347,19 @@ function editProduct(id) {
     // sizes
     const sizeMap = {};
     (p.sizes || []).forEach(s => sizeMap[s.size] = s.stock || 0);
-    if (form.stockXS) form.stockXS.value = sizeMap['XS/0-3M'] || 0;
-    if (form.stockS)  form.stockS.value  = sizeMap['S/3-6M']  || 0;
-    if (form.stockM)  form.stockM.value  = sizeMap['M/6-12M'] || 0;
-    if (form.stockL)  form.stockL.value  = sizeMap['L/1-2Y']  || 0;
-    if (form.stockXL) form.stockXL.value = sizeMap['XL/2-4Y'] || 0;
-    if (form.stockXXL)form.stockXXL.value= sizeMap['XXL/4-6Y']|| 0;
+    const sizeFields = {
+      'stock_0_3M':'0-3M','stock_3_6M':'3-6M','stock_6_12M':'6-12M',
+      'stock_1_2Y':'1-2Y','stock_2_3Y':'2-3Y','stock_3_4Y':'3-4Y',
+      'stock_4_5Y':'4-5Y','stock_5_6Y':'5-6Y','stock_6_8Y':'6-8Y',
+      'stock_8_10Y':'8-10Y','stock_10_12Y':'10-12Y','stock_12_15Y':'12-15Y'
+    };
+    Object.entries(sizeFields).forEach(([field, size]) => {
+      if (form[field]) form[field].value = sizeMap[size] || 0;
+    });
+    // Load colors
+    const colInp = document.getElementById('colorsInput');
+    if (colInp) colInp.value = (p.colors || []).join(', ');
+    renderColorTags();
     document.getElementById('prodEditId').value = id;
     document.getElementById('addprodTitle').textContent = '✏️ Edit Product: ' + p.name;
   }, 120);
@@ -1066,6 +1374,25 @@ async function deleteProduct(id, name) {
   } catch(e) { toast('❌ ' + e.message); }
 }
 
+
+function renderColorTags() {
+  const inp = document.getElementById('colorsInput');
+  const tags = document.getElementById('colorTags');
+  if (!inp || !tags) return;
+  const colors = inp.value.split(',').map(s => s.trim()).filter(Boolean);
+  const colorMap = {
+    'red':'#e53935','blue':'#1e88e5','pink':'#e91e8c','white':'#f5f5f5',
+    'black':'#212121','green':'#43a047','yellow':'#fdd835','orange':'#fb8c00',
+    'purple':'#8e24aa','grey':'#757575','gray':'#757575','cream':'#fff8e1',
+    'brown':'#6d4c41','navy':'#1a237e','maroon':'#880e4f','teal':'#00897b'
+  };
+  tags.innerHTML = colors.map(col => {
+    const bg = colorMap[col.toLowerCase()] || '#ccc';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:#f0e6f8;border-radius:20px;padding:3px 10px;font-size:.75rem;font-weight:700">
+      <span style="width:12px;height:12px;border-radius:50%;background:${bg};border:1px solid rgba(0,0,0,.15);display:inline-block"></span>${col}
+    </span>`;
+  }).join('');
+}
 async function saveProduct(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -1079,14 +1406,25 @@ async function saveProduct(e) {
   // Parse tags
   data.tags = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
   data.sizes = [
-    { size:'XS/0-3M', stock: +data.stockXS || 0 },
-    { size:'S/3-6M',  stock: +data.stockS  || 0 },
-    { size:'M/6-12M', stock: +data.stockM  || 0 },
-    { size:'L/1-2Y',  stock: +data.stockL  || 0 },
-    { size:'XL/2-4Y', stock: +data.stockXL || 0 },
-    { size:'XXL/4-6Y',stock: +data.stockXXL|| 0 },
-  ];
-  ['stockXS','stockS','stockM','stockL','stockXL','stockXXL'].forEach(k => delete data[k]);
+    { size:'0-3M',   stock: +data.stock_0_3M   || 0 },
+    { size:'3-6M',   stock: +data.stock_3_6M   || 0 },
+    { size:'6-12M',  stock: +data.stock_6_12M  || 0 },
+    { size:'1-2Y',   stock: +data.stock_1_2Y   || 0 },
+    { size:'2-3Y',   stock: +data.stock_2_3Y   || 0 },
+    { size:'3-4Y',   stock: +data.stock_3_4Y   || 0 },
+    { size:'4-5Y',   stock: +data.stock_4_5Y   || 0 },
+    { size:'5-6Y',   stock: +data.stock_5_6Y   || 0 },
+    { size:'6-8Y',   stock: +data.stock_6_8Y   || 0 },
+    { size:'8-10Y',  stock: +data.stock_8_10Y  || 0 },
+    { size:'10-12Y', stock: +data.stock_10_12Y || 0 },
+    { size:'12-15Y', stock: +data.stock_12_15Y || 0 },
+  ].filter(s => s.stock > 0);
+  // colors
+  const colorsRaw = document.getElementById('colorsInput')?.value || '';
+  data.colors = colorsRaw.split(',').map(s => s.trim()).filter(Boolean);
+  // clean up size fields
+  Object.keys(data).filter(k => k.startsWith('stock_')).forEach(k => delete data[k]);
+  delete data.colorsInput;
 
   // Upload images if any selected
   const submitBtn = e.target.querySelector('button[type=submit]');
@@ -1360,7 +1698,7 @@ async function previewBannerImage(input) {
   try {
     const fd = new FormData();
     fd.append('image', input.files[0]);
-    const r = await fetch('/api/admin/upload-banner', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+    const r = await fetch(API.replace('/api','') + '/api/admin/upload-banner', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
     const d = await r.json();
     if (d.url) {
       // Save as absolute URL so it works on all pages
@@ -1368,7 +1706,12 @@ async function previewBannerImage(input) {
       document.getElementById('bannerImageUrl').value = absoluteUrl;
       toast('✅ Image uploaded!');
     }
-  } catch(e) { toast('❌ Image upload failed: ' + e.message); }
+  } catch(e) { toast('❌ Image upload failed: ' + e.message); 
+  // Show dragger
+  if (input.files && input.files[0]) {
+    const url = URL.createObjectURL(input.files[0]);
+    showBannerDragger(url);
+  }
 }
 
 async function loadBanners() {
@@ -1376,7 +1719,7 @@ async function loadBanners() {
     const r = await apiFetch('/admin/banners');
     renderAdminBanners(r.banners || []);
   } catch(e) {
-    try { const r2 = await fetch('/api/banners'); const d = await r2.json(); renderAdminBanners(d.banners || []); } catch {}
+    try { const r2 = await fetch(API + '/banners'); const d = await r2.json(); renderAdminBanners(d.banners || []); } catch {}
   }
 }
 
@@ -1643,6 +1986,79 @@ document.addEventListener('keydown', e => {
 document.getElementById('orderModal').addEventListener('click', function(e) {
   if (e.target === this) closeOrderModal();
 });
+
+// ── COLOR LIVE PREVIEW ──────────────────────────────────────
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.id === 'colorsInput') renderColorTags();
+});
+
+
+// ── BANNER IMAGE DRAG TO REPOSITION ────────────────────────
+function initBannerDrag() {
+  const box = document.getElementById('bannerDragBox');
+  if (!box || box._dragInit) return;
+  box._dragInit = true;
+  let dragging = false, startX, startY, px = 50, py = 50;
+
+  function updatePos(x, y) {
+    px = Math.max(0, Math.min(100, x));
+    py = Math.max(0, Math.min(100, y));
+    const img = document.getElementById('bannerDragImg');
+    if (img) img.style.objectPosition = px + '% ' + py + '%';
+    document.getElementById('bannerImgPosX').value = px;
+    document.getElementById('bannerImgPosY').value = py;
+    const labels = ['left','center','right'];
+    const labely = ['top','center','bottom'];
+    const lx = px < 33 ? labels[0] : px < 67 ? labels[1] : labels[2];
+    const ly = py < 33 ? labely[0] : py < 67 ? labely[1] : labely[2];
+    document.getElementById('bannerPosLabel').textContent = 'Position: ' + ly + ' ' + lx;
+  }
+
+  box.addEventListener('mousedown', e => {
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    box.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = box.getBoundingClientRect();
+    const dx = ((e.clientX - startX) / rect.width) * -100;
+    const dy = ((e.clientY - startY) / rect.height) * -100;
+    updatePos(px + dx, py + dy);
+    startX = e.clientX; startY = e.clientY;
+  });
+  document.addEventListener('mouseup', () => { dragging = false; box.style.cursor = 'grab'; });
+
+  // Touch support
+  box.addEventListener('touchstart', e => {
+    dragging = true;
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    e.preventDefault();
+  }, {passive:false});
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const rect = box.getBoundingClientRect();
+    const dx = ((e.touches[0].clientX - startX) / rect.width) * -100;
+    const dy = ((e.touches[0].clientY - startY) / rect.height) * -100;
+    updatePos(px + dx, py + dy);
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+  }, {passive:false});
+  document.addEventListener('touchend', () => { dragging = false; });
+}
+
+function showBannerDragger(src) {
+  const dragger = document.getElementById('bannerPosDragger');
+  const img = document.getElementById('bannerDragImg');
+  if (!dragger || !img) return;
+  img.src = src;
+  dragger.style.display = 'block';
+  document.getElementById('bannerImgPosX').value = 50;
+  document.getElementById('bannerImgPosY').value = 50;
+  img.style.objectPosition = '50% 50%';
+  setTimeout(initBannerDrag, 100);
+}
+
 </script>
 </body>
 </html>

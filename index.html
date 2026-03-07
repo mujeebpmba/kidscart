@@ -28,7 +28,7 @@ button{cursor:pointer;font-family:'Nunito',sans-serif;border:none;outline:none}
 nav{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--lt);box-shadow:0 2px 16px rgba(123,45,139,.08);padding:0 20px}
 .nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;height:64px}
 .nav-logo{}
-.nav-logo img{height:72px;object-fit:contain}
+.nav-logo img{height:100px;object-fit:contain}
 .nav-logo span{display:none}
 .nav-search{flex:1;max-width:520px;position:relative}
 .nav-search input{width:100%;padding:10px 20px 10px 44px;border:2px solid var(--lt2);border-radius:50px;font-family:'Nunito',sans-serif;font-size:.92rem;outline:none;transition:var(--tr);background:#fafafa}
@@ -336,7 +336,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
   .announce-bar{font-size:.72rem;padding:7px 12px}
   .nav-inner{gap:8px;height:72px}
   .nav-search{display:none}
-  .nav-logo img{height:64px}
+  .nav-logo img{height:80px}
   .banner-slide{min-height:200px}
   .banner-content{padding:22px 20px}
   .banner-slide h2{font-size:1.25rem}
@@ -408,14 +408,16 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 <!-- ── COMPACT CATEGORIES ── -->
 <div class="cats-section" id="categories">
   <div class="cats-row" id="catsRow">
+    <div class="cat-pill" onclick="filterCat(this,null)"><span class="ci">✨</span><span>All</span></div>
     <div class="cat-pill" onclick="filterCat(this,'Girls')"><span class="ci">👧</span><span>Girls</span></div>
     <div class="cat-pill" onclick="filterCat(this,'Boys')"><span class="ci">👦</span><span>Boys</span></div>
     <div class="cat-pill" onclick="filterCat(this,'Baby')"><span class="ci">🍼</span><span>Baby</span></div>
+    <div class="cat-pill" onclick="filterCat(this,'Western')"><span class="ci">👖</span><span>Western</span></div>
     <div class="cat-pill" onclick="filterCat(this,'Party')"><span class="ci">🎉</span><span>Party Wear</span></div>
     <div class="cat-pill" onclick="filterCat(this,'Ethnic')"><span class="ci">🌸</span><span>Ethnic</span></div>
     <div class="cat-pill" onclick="filterCat(this,'Winter')"><span class="ci">🧥</span><span>Winter</span></div>
     <div class="cat-pill" onclick="filterCat(this,'School')"><span class="ci">🎒</span><span>School</span></div>
-    <div class="cat-pill" onclick="filterCat(this,null)"><span class="ci">✨</span><span>All</span></div>
+    <div class="cat-pill" onclick="filterCat(this,'Festive')"><span class="ci">🪔</span><span>Festive</span></div>
   </div>
 </div>
 
@@ -488,11 +490,11 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
     </div>
     <div class="footer-col">
       <h4>Help</h4>
-      <a href="#">Track Order</a>
-      <a href="#">Size Guide</a>
-      <a href="#">FAQs</a>
       <a href="#" onclick="openChat()">Live Chat</a>
-      <a href="https://www.instagram.com/kids_cart.kids/" target="_blank">Instagram</a>
+      <a href="#policies" onclick="showPolicy('terms')">Terms &amp; Conditions</a>
+      <a href="#policies" onclick="showPolicy('refund')">Refund &amp; Cancellation</a>
+      <a href="#policies" onclick="showPolicy('shipping')">Shipping Policy</a>
+      <a href="#policies" onclick="showPolicy('contact')">Contact Us</a>
     </div>
     <div class="footer-col">
       <h4>Contact</h4>
@@ -504,7 +506,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
   </div>
   <div class="footer-bottom">
     <span>© 2025 KidsCart. All rights reserved.</span>
-    <span>💳 COD | UPI | Cards Accepted</span>
+    <span>💵 COD | 📱 UPI | Google Pay | PhonePe</span>
   </div>
 </footer>
 
@@ -1048,8 +1050,17 @@ async function openProd(id) {
       ${p.description ? `<div class="prod-desc">${p.description}</div>` : ''}
       <div class="size-label">Select Size: <span id="selSizeLbl" style="color:var(--pp)">—</span></div>
       <div class="size-btns">
-        ${(p.sizes || []).map(s => `<button class="size-btn ${s.stock === 0 ? '' : ''}" ${s.stock === 0 ? 'disabled' : ''} onclick="selSize(this,'${s.size}')">${s.size} ${s.stock === 0 ? '(OOS)' : ''}</button>`).join('')}
+        ${(p.sizes || []).filter(s => s.stock > 0 || true).map(s => `<button class="size-btn" ${s.stock === 0 ? 'disabled style="opacity:.45;text-decoration:line-through"' : ''} onclick="selSize(this,'${s.size}')">${s.size}${s.stock === 0 ? ' ✕' : ''}</button>`).join('')}
       </div>
+      ${(p.colors && p.colors.length > 0) ? `
+      <div class="size-label" style="margin-top:10px">Select Colour: <span id="selColorLbl" style="color:var(--pp)">—</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        ${p.colors.map(col => {
+          const colorMap = {'red':'#e53935','blue':'#1e88e5','pink':'#e91e8c','white':'#f5f5f5','black':'#212121','green':'#43a047','yellow':'#fdd835','orange':'#fb8c00','purple':'#8e24aa','grey':'#757575','gray':'#757575','cream':'#fff8e1','brown':'#6d4c41','navy':'#1a237e','maroon':'#880e4f','teal':'#00897b'};
+          const bg = colorMap[col.toLowerCase()] || '#ccc';
+          return `<button onclick="selColor(this,'${col}')" title="${col}" style="width:30px;height:30px;border-radius:50%;background:${bg};border:3px solid transparent;cursor:pointer;transition:all .2s" class="color-swatch">${col==='white'?'':''}  </button>`;
+        }).join('')}
+      </div>` : ''}
       <div class="qty-row">
         <label>Qty:</label>
         <div class="qty-ctrl">
@@ -1101,9 +1112,20 @@ function closeProd() {
   document.getElementById('prodOverlay').classList.remove('open'); 
   document.body.style.overflow = ''; 
   selSizeVal = null;
+  selColorVal = null;
   pdQtyVal = 1;
 }
 
+
+let selColorVal = null;
+function selColor(btn, color) {
+  selColorVal = color;
+  document.querySelectorAll('.color-swatch').forEach(b => b.style.borderColor = 'transparent');
+  btn.style.borderColor = 'var(--pp)';
+  btn.style.transform = 'scale(1.2)';
+  const lbl = document.getElementById('selColorLbl');
+  if (lbl) lbl.textContent = color;
+}
 let selSizeVal = null;
 function selSize(btn, size) {
   selSizeVal = size;
@@ -1666,10 +1688,7 @@ function renderPayStep() {
         <input type="radio" name="pay" ${selPay==='cod'?'checked':''}><div class="pay-opt-icon">💵</div><div class="pay-opt-info"><h4>Cash on Delivery</h4><p>Pay when your order arrives</p></div>
       </div>
       <div class="pay-opt ${selPay==='upi'?'sel':''}" onclick="selPayFn('upi')">
-        <input type="radio" name="pay" ${selPay==='upi'?'checked':''}><div class="pay-opt-icon">📱</div><div class="pay-opt-info"><h4>UPI</h4><p>Google Pay, PhonePe, Paytm</p></div>
-      </div>
-      <div class="pay-opt ${selPay==='online'?'sel':''}" onclick="selPayFn('online')">
-        <input type="radio" name="pay" ${selPay==='online'?'checked':''}><div class="pay-opt-icon">💳</div><div class="pay-opt-info"><h4>Credit / Debit Card</h4><p>All major cards accepted</p></div>
+        <input type="radio" name="pay" ${selPay==='upi'?'checked':''}><div class="pay-opt-icon">📱</div><div class="pay-opt-info"><h4>UPI / Online</h4><p>Google Pay, PhonePe, Paytm, Net Banking</p></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:16px">
         <button onclick="checkoutStep=1;renderCheckout()" style="flex:1;padding:12px;border:2px solid var(--lt2);border-radius:var(--rs);font-weight:800;cursor:pointer;background:#fff">← Back</button>
@@ -1821,5 +1840,125 @@ function appendChatMsg(sender, text) {
 // START THE APP
 document.addEventListener('DOMContentLoaded', init);
 </script>
+
+<!-- ── POLICY PAGES MODAL ── -->
+<div class="overlay" id="policyOverlay" onclick="closePolicy()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center"></div>
+<div id="policyModal" style="display:none;position:fixed;inset:0;z-index:10000;overflow-y:auto;padding:20px">
+  <div style="background:#fff;max-width:720px;margin:0 auto;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+    <div style="background:linear-gradient(135deg,#7B2D8B,#5C1F7A);padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+      <h2 id="policyTitle" style="color:#fff;font-size:1.1rem;font-family:'Poppins',sans-serif;margin:0"></h2>
+      <button onclick="closePolicy()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:1.1rem;cursor:pointer">✕</button>
+    </div>
+    <div id="policyContent" style="padding:24px 28px;font-size:.88rem;line-height:1.8;color:#444"></div>
+  </div>
+</div>
+
+<script>
+const POLICIES = {
+  terms: {
+    title: '📋 Terms & Conditions',
+    content: `
+      <p><strong>Effective Date:</strong> January 1, 2025 &nbsp;|&nbsp; <strong>Website:</strong> kidscart.kids</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">1. Acceptance of Terms</h3>
+      <p>By accessing or using KidsCart (kidscart.kids), you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our website.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">2. Products & Pricing</h3>
+      <p>All prices are in Indian Rupees (₹) and include applicable taxes. We reserve the right to modify prices without prior notice. Product images are for illustration purposes; actual colours may vary slightly.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">3. Orders & Payment</h3>
+      <p>Orders are confirmed only after successful payment or COD acceptance. We accept Cash on Delivery (COD) and UPI payments. We reserve the right to cancel orders due to stock unavailability.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">4. Intellectual Property</h3>
+      <p>All content on this website including logos, images, and text are the property of KidsCart and may not be reproduced without written permission.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">5. Limitation of Liability</h3>
+      <p>KidsCart shall not be liable for any indirect, incidental, or consequential damages arising from the use of our products or website.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">6. Governing Law</h3>
+      <p>These terms are governed by the laws of India. Any disputes shall be subject to the jurisdiction of courts in Kerala, India.</p>
+      <p style="margin-top:16px;color:#888;font-size:.8rem">For queries: <a href="mailto:info@kidscart.kids" style="color:#7B2D8B">info@kidscart.kids</a> | +91 94975 96110</p>
+    `
+  },
+  refund: {
+    title: '↩️ Refund & Cancellation Policy',
+    content: `
+      <p><strong>Effective Date:</strong> January 1, 2025 &nbsp;|&nbsp; <strong>Website:</strong> kidscart.kids</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">Cancellation Policy</h3>
+      <p>Orders can be cancelled within <strong>24 hours</strong> of placement by contacting us at info@kidscart.kids or calling +91 94975 96110. Once the order is shipped, cancellation is not possible.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">Return Policy</h3>
+      <p>We accept returns within <strong>7 days</strong> of delivery under these conditions:</p>
+      <ul style="padding-left:18px;margin:8px 0">
+        <li>Item received is damaged or defective</li>
+        <li>Wrong item was delivered</li>
+        <li>Size mismatch (exchange only)</li>
+      </ul>
+      <p>Items must be unused, unwashed, and in original packaging with all tags intact.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">Refund Process</h3>
+      <p>Once we receive and inspect the returned item, refunds are processed within <strong>5-7 business days</strong> to the original payment method. COD orders will be refunded via bank transfer.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">Non-Returnable Items</h3>
+      <p>Sale items, innerwear, and customised products are not eligible for return or refund.</p>
+      <p style="margin-top:16px;color:#888;font-size:.8rem">To initiate a return: <a href="mailto:info@kidscart.kids" style="color:#7B2D8B">info@kidscart.kids</a> | +91 94975 96110</p>
+    `
+  },
+  shipping: {
+    title: '🚚 Shipping & Delivery Policy',
+    content: `
+      <p><strong>Effective Date:</strong> January 1, 2025 &nbsp;|&nbsp; <strong>Website:</strong> kidscart.kids</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">Delivery Timeframe</h3>
+      <p>We deliver across India. Standard delivery takes <strong>3–7 business days</strong> depending on your location.</p>
+      <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:.85rem">
+        <tr style="background:#F5F0F8"><td style="padding:8px 12px;border:1px solid #eee"><strong>Zone</strong></td><td style="padding:8px 12px;border:1px solid #eee"><strong>Delivery Time</strong></td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #eee">Kerala (Local)</td><td style="padding:8px 12px;border:1px solid #eee">1–3 business days</td></tr>
+        <tr style="background:#fafafa"><td style="padding:8px 12px;border:1px solid #eee">South India</td><td style="padding:8px 12px;border:1px solid #eee">3–5 business days</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #eee">Rest of India</td><td style="padding:8px 12px;border:1px solid #eee">5–7 business days</td></tr>
+      </table>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">Shipping Charges</h3>
+      <p>🎉 <strong>FREE shipping</strong> on orders above ₹999. A flat delivery fee of <strong>₹60</strong> applies on orders below ₹999.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">Order Tracking</h3>
+      <p>Once your order is shipped, you will receive an email with tracking details. You can also track your order from your account page.</p>
+      <h3 style="color:#7B2D8B;margin:16px 0 8px">Delivery Issues</h3>
+      <p>If your order is delayed beyond the estimated time, please contact us at info@kidscart.kids or +91 94975 96110.</p>
+    `
+  },
+  contact: {
+    title: '📞 Contact Us',
+    content: `
+      <div style="display:grid;gap:16px">
+        <div style="background:#F5F0F8;border-radius:12px;padding:16px">
+          <h3 style="color:#7B2D8B;margin:0 0 10px">📧 Email</h3>
+          <p style="margin:4px 0"><a href="mailto:info@kidscart.kids" style="color:#7B2D8B;font-weight:700">info@kidscart.kids</a></p>
+          <p style="font-size:.82rem;color:#888">We reply within 24 hours on business days</p>
+        </div>
+        <div style="background:#F5F0F8;border-radius:12px;padding:16px">
+          <h3 style="color:#7B2D8B;margin:0 0 10px">📞 Phone / WhatsApp</h3>
+          <p style="margin:4px 0"><a href="tel:+919497596110" style="color:#7B2D8B;font-weight:700">+91 94975 96110</a></p>
+          <p style="font-size:.82rem;color:#888">Mon–Sat, 9AM–7PM IST</p>
+        </div>
+        <div style="background:#F5F0F8;border-radius:12px;padding:16px">
+          <h3 style="color:#7B2D8B;margin:0 0 10px">📍 Address</h3>
+          <p style="margin:4px 0;font-weight:700">KidsCart</p>
+          <p style="color:#666">Kerala, India</p>
+        </div>
+        <div style="background:#F5F0F8;border-radius:12px;padding:16px">
+          <h3 style="color:#7B2D8B;margin:0 0 10px">🕐 Business Hours</h3>
+          <p style="margin:4px 0">Monday – Saturday: <strong>9:00 AM – 7:00 PM</strong></p>
+          <p style="margin:4px 0">Sunday: <strong>Closed</strong></p>
+        </div>
+      </div>
+    `
+  }
+};
+
+function showPolicy(type) {
+  const p = POLICIES[type];
+  if (!p) return;
+  document.getElementById('policyTitle').textContent = p.title;
+  document.getElementById('policyContent').innerHTML = p.content;
+  document.getElementById('policyOverlay').style.display = 'block';
+  document.getElementById('policyModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closePolicy() {
+  document.getElementById('policyOverlay').style.display = 'none';
+  document.getElementById('policyModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+</script>
+
 </body>
 </html>

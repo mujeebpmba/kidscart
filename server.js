@@ -151,7 +151,7 @@ const emailForgot = (to, name, token, uid) => sendEmail(to, `${BRAND} – Reset 
   emailWrap('Reset Your Password 🔒',
     `<p style="color:#444;font-size:15px;">Hi ${name}, click below to set a new password. This link expires in 1 hour.</p>
      <p style="color:#888;font-size:13px;">Didn't request this? You can safely ignore this email.</p>`,
-    `${SITE_URL}/?resetToken=${token}&userId=${uid}`, 'Reset Password →'));
+    `${SITE_URL}/admin.html?resetToken=${token}&userId=${uid}`, 'Reset Password →'));
 
 const emailWelcome = (to, name) => sendEmail(to, `Welcome to ${BRAND}! 🎉`,
   emailWrap(`Welcome, ${name}! 🎉`,
@@ -214,6 +214,7 @@ const ProductSchema = new mongoose.Schema({
   gender:      { type: String, enum: ['Boys', 'Girls', 'Unisex', 'Baby'], default: 'Unisex' },
   ageGroup:    { type: String, default: '' },
   sizes:       [{ size: String, stock: { type: Number, default: 0 } }],
+  colors:      [String],
   price:       { type: Number, required: true },
   mrp:         { type: Number, required: true },
   costPrice:   { type: Number, default: 0 },
@@ -1097,15 +1098,16 @@ async function seed() {
 
   // FIXED: Admin seed now uses findOneAndUpdate so it always ensures correct role
   // even if the user already exists with wrong role
-  const adminEmail = 'admin@kidscart.kids';
+  const adminEmail    = process.env.ADMIN_EMAIL    || 'admin@kidscart.kids';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@2025!';
   const existing   = await User.findOne({ email: adminEmail });
   if (!existing) {
     await User.create({
       name: 'KidsCart Admin', email: adminEmail,
-      password: await bcrypt.hash('Admin@2025!', 12),
+      password: await bcrypt.hash(adminPassword, 12),
       role: 'super_admin', isVerified: true
     });
-    console.log('✅ Admin created: admin@kidscart.kids / Admin@2025!');
+    console.log('✅ Admin created:', adminEmail);
   } else if (!['admin', 'super_admin'].includes(existing.role)) {
     await User.findOneAndUpdate({ email: adminEmail }, { role: 'super_admin', isVerified: true });
     console.log('✅ Admin role corrected for:', adminEmail);

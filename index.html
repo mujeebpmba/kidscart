@@ -27,8 +27,8 @@ button{cursor:pointer;font-family:'Nunito',sans-serif;border:none;outline:none}
 /* ── NAV ── */
 nav{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--lt);box-shadow:0 2px 16px rgba(123,45,139,.08);padding:0 20px}
 .nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;height:64px}
-.nav-logo{}
-.nav-logo img{height:160px;object-fit:contain}
+.nav-logo{overflow:hidden}
+.nav-logo img{height:160px;object-fit:contain;transform:scale(2.2);transform-origin:left center}
 .nav-logo span{display:none}
 .nav-search{flex:1;max-width:520px;position:relative}
 .nav-search input{width:100%;padding:10px 20px 10px 44px;border:2px solid var(--lt2);border-radius:50px;font-family:'Nunito',sans-serif;font-size:.92rem;outline:none;transition:var(--tr);background:#fafafa}
@@ -350,7 +350,7 @@ body.cart-open .chat-bubble,body.checkout-open .chat-bubble{opacity:0!important;
   /* ── Nav ── */
   .announce-bar{font-size:.72rem;padding:7px 12px}
   .nav-inner{gap:6px;height:64px}
-  .nav-logo img{height:80px;max-width:200px}
+  .nav-logo img{height:80px;max-width:200px;transform:scale(2.2);transform-origin:left center}
   .nav-btn{padding:5px 6px;font-size:.78rem}
   .btn-cart{padding:6px 12px!important}
   .nav-actions{gap:4px}
@@ -429,7 +429,7 @@ body.cart-open .chat-bubble,body.checkout-open .chat-bubble{opacity:0!important;
 <nav>
   <div class="nav-inner">
     <div class="nav-logo" onclick="location.reload()" style="cursor:pointer;display:flex;align-items:center;gap:8px">
-      <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/e_trim:10/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" onerror="this.style.display='none'">
+      <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" onerror="this.style.display='none'">
       <span>KidsCart</span>
     </div>
     <div class="nav-search">
@@ -528,7 +528,7 @@ body.cart-open .chat-bubble,body.checkout-open .chat-bubble{opacity:0!important;
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">
-      <div style="margin-bottom:12px"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/e_trim:10/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:100px;filter:brightness(0) invert(1);object-fit:contain" onerror="this.outerHTML='<span style=font-size:1.4rem;font-weight:900;color:#fff>👗 KidsCart</span>'"></div>
+      <div style="margin-bottom:12px"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:100px;filter:brightness(0) invert(1);object-fit:contain" onerror="this.outerHTML='<span style=font-size:1.4rem;font-weight:900;color:#fff>👗 KidsCart</span>'"></div>
       <p>India's favourite kids fashion store. Premium, safe & stylish clothes for babies, toddlers and kids.</p>
       <div class="footer-social">
         <a href="https://www.instagram.com/kids_cart.kids/" target="_blank" title="Instagram">📸</a>

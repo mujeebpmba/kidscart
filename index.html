@@ -329,8 +329,8 @@ body.cart-open .chat-bubble,body.checkout-open .chat-bubble{opacity:0!important;
 .chat-start-form h4{font-size:.9rem;font-weight:800;margin-bottom:12px;color:#1a0033}
 
 /* ── TOAST ── */
-.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1a0033;color:#fff;padding:12px 24px;border-radius:50px;font-size:.88rem;font-weight:700;z-index:2000;transition:transform .3s ease,opacity .3s ease;pointer-events:none;max-width:90vw;text-align:center;white-space:normal}
-.toast.show{transform:translateX(-50%) translateY(0)}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a0033;color:#fff;padding:12px 24px;border-radius:50px;font-size:.88rem;font-weight:700;z-index:2000;transition:opacity .3s ease;pointer-events:none;max-width:90vw;text-align:center;white-space:normal;opacity:0}
+.toast.show{opacity:1}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
@@ -392,7 +392,7 @@ body.cart-open .chat-bubble,body.checkout-open .chat-bubble{opacity:0!important;
   .modal{border-radius:16px!important;max-height:92vh;width:100%!important;position:relative;bottom:auto}
   /* ── Cart - slides from right, full height ── */
   .cart-items{padding:8px}
-  .cart-side{width:100vw!important;max-width:100%!important;height:100%!important;top:0!important;bottom:auto!important;right:-100vw!important;border-radius:0!important;transition:right .3s ease!important}
+  .cart-side{width:100vw!important;max-width:100%!important;height:calc(100% - 56px)!important;top:56px!important;bottom:auto!important;right:-100vw!important;border-radius:0!important;transition:right .3s ease!important}
   .cart-side.open{right:0!important;bottom:auto!important}
   /* ── Product detail ── */
   .prod-detail-hero{height:200px;border-radius:12px}
@@ -404,8 +404,8 @@ body.cart-open .chat-bubble,body.checkout-open .chat-bubble{opacity:0!important;
   .pay-opt{padding:10px;gap:10px}
   .pay-opt h4{font-size:.88rem}
   .pay-opt p{font-size:.75rem}
-  #checkoutOverlay{padding:16px!important;align-items:center!important}
-  .checkout-modal-box{border-radius:16px!important;max-height:92vh!important;height:auto;max-width:100%!important;margin:0 auto!important;overflow-y:auto}
+  #checkoutOverlay{padding:0!important;align-items:stretch!important}
+  .checkout-modal-box{border-radius:0!important;max-height:100vh!important;height:100%;max-width:100%!important;margin:0!important;overflow-y:auto}
   /* ── Chat ── */
   .chat-window{width:calc(100vw - 28px);right:14px;bottom:130px}
 }

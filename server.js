@@ -104,10 +104,25 @@ const uploadBanner = multer({
 });
 
 // ── ZEPTOMAIL ─────────────────────────────────────────────
+// ZeptoMail SMTP - primary on 587, fallback config
 const mailer = nodemailer.createTransport({
-  host: 'smtp.zeptomail.com', port: 587, secure: false,
-  auth: { user: 'emailapikey', pass: process.env.ZEPTO_API_KEY },
-  tls: { rejectUnauthorized: false }
+  host: 'smtp.zeptomail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: 'emailapikey',
+    pass: process.env.ZEPTO_API_KEY
+  },
+  tls: { rejectUnauthorized: false, ciphers: 'SSLv3' },
+  pool: false,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+});
+
+// Verify mailer on startup
+mailer.verify((err) => {
+  if (err) console.error('❌ ZeptoMail SMTP error:', err.message);
+  else console.log('✅ ZeptoMail SMTP ready');
 });
 
 // ── EMAIL HELPERS ─────────────────────────────────────────
@@ -133,10 +148,15 @@ function emailWrap(title, body, ctaUrl, ctaText) {
 }
 
 async function sendEmail(to, subject, html) {
+  const from = `"${BRAND}" <${process.env.ZEPTO_FROM_EMAIL || 'noreply@kidscart.kids'}>`;
   try {
-    await mailer.sendMail({ from: `"${BRAND}" <${process.env.ZEPTO_FROM_EMAIL || 'noreply@kidscart.kids'}>`, to, subject, html });
-    console.log('✉️  Sent:', to); return true;
-  } catch (e) { console.error('✉️  FAIL:', e.message); return false; }
+    const info = await mailer.sendMail({ from, to, subject, html });
+    console.log('✉️  Sent to:', to, '| msgId:', info.messageId);
+    return true;
+  } catch (e) {
+    console.error('✉️  FAIL sending to:', to, '| from:', from, '| error:', e.message, '| code:', e.code);
+    return false;
+  }
 }
 
 const emailOTP = (to, otp, name) => sendEmail(to, `${BRAND} – Your OTP`,
@@ -1049,6 +1069,15 @@ app.get('/api/admin/chats', adminAuth, async (req, res) => {
 });
 
 // ── ADMIN UTILITIES ───────────────────────────────────────
+
+// Update product display order
+app.put('/api/admin/products/:id/order', adminAuth, async (req, res) => {
+  try {
+    const { order } = req.body;
+    await Product.findByIdAndUpdate(req.params.id, { order: +order || 0 });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 app.get('/api/admin/test-email', adminAuth, async (req, res) => {
   const ok = await sendEmail('admin@kidscart.kids', 'KidsCart Email Test ✅',
     emailWrap('Email Working!', '<p style="color:#444;font-size:15px;">ZeptoMail is configured correctly. ✅</p>'));

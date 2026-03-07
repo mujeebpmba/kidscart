@@ -421,8 +421,8 @@ tr:hover td{background:#FAF7FC;}
         </div>
 
         <!-- Update Status Modal -->
-        <div id="orderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;">
-          <div style="background:#fff;border-radius:16px;padding:28px;width:420px;max-width:94vw;position:relative;">
+        <div id="orderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeOrderModal()">
+          <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:500px;position:relative;max-height:90vh;overflow-y:auto;" onclick="event.stopPropagation()">
             <button onclick="closeOrderModal()" style="position:absolute;top:12px;right:14px;border:none;background:none;font-size:1.2rem;cursor:pointer;color:#888;">✕</button>
             <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);margin-bottom:18px;">📦 Update Order #<span id="modalOrderId"></span></h3>
             <div class="fgroup">
@@ -515,6 +515,8 @@ tr:hover td{background:#FAF7FC;}
             <!-- Row 1: Basic Info -->
             <div class="grid2">
               <div class="fgroup"><label>Product Name *</label><input type="text" name="name" placeholder="e.g. Floral Frock Dress" required></div>
+            <div class="fgroup" style="margin-bottom:12px"><label style="font-size:.78rem">📊 Display Order <span style="color:var(--gy);font-weight:400">(1=first, 0=default newest-first)</span></label><input type="number" name="order" id="prodOrder" min="0" max="9999" value="0" style="width:100%;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none"></div>
+
               <div class="fgroup"><label>Category *</label>
                 <select name="category" required>
                   <option value="">Select Category…</option>
@@ -1415,6 +1417,7 @@ function editProduct(id) {
     form.badge.value = p.badge || '';
     form.description.value = p.description || '';
     form.brand.value = p.brand || '';
+    if(form.order) form.order.value = p.order || 0;
     form.tags.value = (p.tags || []).join(', ');
     if (form.seoTitle) form.seoTitle.value = p.seoTitle || '';
     if (form.seoDesc) form.seoDesc.value = p.seoDesc || '';
@@ -1468,6 +1471,7 @@ async function saveProduct(e) {
     {size:'10-12Y',stock:+data.s_10_12Y||0},{size:'12-15Y',stock:+data.s_12_15Y||0},
   ].filter(s => s.stock > 0);
   data.colors = (document.getElementById('colorsInput')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  data.order = +(data.order || 0);
   Object.keys(data).filter(k=>k.startsWith('s_')).forEach(k=>delete data[k]);
 
   // Upload images if any selected

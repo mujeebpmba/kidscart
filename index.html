@@ -108,7 +108,43 @@ nav{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid va
 .mobile-search input:focus{border-color:var(--pp)}
 .mobile-search-wrap{position:relative}
 .mobile-search-wrap .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gy2)}
-@media(max-width:600px){.mobile-search{display:block}}
+@media(max-width:600px){
+  .mobile-search{display:block}
+  .nav-search{display:none}
+  .nav{height:56px}
+  .nav-logo img{height:44px}
+  .nav-btn{padding:6px 8px;font-size:.85rem}
+  .categories{gap:6px;padding:8px 10px}
+  .cat-btn{padding:7px 14px;font-size:.8rem}
+  .products-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .prod-card{border-radius:12px}
+  .prod-img{height:160px}
+  .prod-name{font-size:.82rem}
+  .prod-price-row{flex-wrap:wrap;gap:4px}
+  .prod-card .add-btn{font-size:.72rem;padding:6px 10px}
+  .hero{padding:20px 16px}
+  .hero h1{font-size:1.5rem}
+  .hero p{font-size:.85rem}
+  .section-title{font-size:1.1rem}
+  .footer-grid{grid-template-columns:1fr}
+  .footer-bottom{flex-direction:column;gap:8px;text-align:center}
+  /* Modal improvements */
+  .modal{border-radius:20px 20px 0 0!important;max-height:95vh;margin:auto auto 0}
+  .overlay{padding:0;align-items:flex-end}
+  .overlay.open{display:flex}
+  .prod-detail-hero{height:220px}
+  .size-btns{gap:6px}
+  .size-btn{padding:6px 10px;font-size:.78rem}
+  /* Cart */
+  .cart-items{padding:10px}
+  /* Checkout */
+  .addr-card{padding:12px}
+  .pay-opt{padding:12px}
+}
+@media(max-width:380px){
+  .products-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .prod-img{height:140px}
+}
 
 /* ── PRODUCTS GRID ── */
 .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
@@ -165,7 +201,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 .overlay.open{display:flex}
 .modal{background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;position:relative;animation:slideUp .25s ease}
 @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
-.modal-close{position:absolute;top:16px;right:16px;background:var(--lt);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--gy);transition:var(--tr)}
+.modal-close{position:sticky;top:8px;float:right;z-index:50;background:rgba(255,255,255,.95);backdrop-filter:blur(4px);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#555;transition:var(--tr);border:1.5px solid var(--lt2);box-shadow:0 2px 8px rgba(0,0,0,.12);cursor:pointer;margin:10px 10px -38px auto}
 .modal-close:hover{background:var(--lt2)}
 .modal-body{padding:28px}
 .modal-title{font-size:1.3rem;font-weight:900;color:#1a0033;margin-bottom:20px}
@@ -360,6 +396,10 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
   .mobile-search{display:block}
 }
 </style>
+  <!-- Performance hints -->
+  <link rel="dns-prefetch" href="https://res.cloudinary.com">
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+  <link rel="dns-prefetch" href="https://kidscart-production.up.railway.app">
 </head>
 <body>
 
@@ -392,7 +432,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 <div class="mobile-search">
   <div class="mobile-search-wrap">
     <span class="si">🔍</span>
-    <input type="text" placeholder="Search kids fashion..." oninput="handleSearch(this.value)">
+    <input type="text" id="mobSearch" placeholder="Search kids fashion..." oninput="handleSearch(this.value);document.getElementById('navSearch').value=this.value" onkeydown="if(event.key==='Enter')this.blur()">
   </div>
 </div>
 
@@ -1014,7 +1054,12 @@ function applyFilters() { loadProducts(); }
 let searchTimeout;
 function handleSearch(val) {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => loadProducts(), 500);
+  // Sync both search inputs
+  const main = document.getElementById('navSearch');
+  const mob = document.getElementById('mobSearch');
+  if (main && document.activeElement !== main) main.value = val;
+  if (mob && document.activeElement !== mob) mob.value = val;
+  searchTimeout = setTimeout(() => loadProducts(), 400);
 }
 
 // ══════════════════════════════════════════════
@@ -1737,13 +1782,29 @@ function goPayStep() {
 }
 
 function renderPayStep() {
+  // Check if any cart item has COD disabled
+  const cartProds = cart.map(ci => allProducts.find(p => p._id === ci.productId)).filter(Boolean);
+  const anyCodDisabled = cartProds.some(p => p.codEnabled === false);
+  const codAllowed = !anyCodDisabled;
+  
+  // Auto-switch if currently on COD but not allowed
+  if (selPay === 'cod' && !codAllowed) selPay = 'upi';
+  
   return `
     <div>
+      <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:12px">💳 Choose Payment</div>
+      ${codAllowed ? `
       <div class="pay-opt ${selPay==='cod'?'sel':''}" onclick="selPayFn('cod')">
-        <input type="radio" name="pay" ${selPay==='cod'?'checked':''}><div class="pay-opt-icon">💵</div><div class="pay-opt-info"><h4>Cash on Delivery</h4><p>Pay when your order arrives</p></div>
-      </div>
+        <input type="radio" name="pay" ${selPay==='cod'?'checked':''}><div class="pay-opt-icon">💵</div>
+        <div class="pay-opt-info"><h4>Cash on Delivery</h4><p>Pay ₹${(cart.reduce((s,i)=>s+(i.price||0)*i.qty,0)).toLocaleString('en-IN')} when delivered</p></div>
+      </div>` : `
+      <div class="pay-opt" style="opacity:.5;cursor:not-allowed;border-style:dashed">
+        <div class="pay-opt-icon">🚫</div>
+        <div class="pay-opt-info"><h4>Cash on Delivery</h4><p style="color:var(--er)">Not available for item(s) in your cart — prepaid only</p></div>
+      </div>`}
       <div class="pay-opt ${selPay==='upi'?'sel':''}" onclick="selPayFn('upi')">
-        <input type="radio" name="pay" ${selPay==='upi'?'checked':''}><div class="pay-opt-icon">📱</div><div class="pay-opt-info"><h4>UPI / Online</h4><p>Google Pay, PhonePe, Paytm, Net Banking</p></div>
+        <input type="radio" name="pay" ${selPay==='upi'?'checked':''}><div class="pay-opt-icon">📱</div>
+        <div class="pay-opt-info"><h4>UPI / Online</h4><p>Google Pay, PhonePe, Paytm, Net Banking</p></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:16px">
         <button onclick="checkoutStep=1;renderCheckout()" style="flex:1;padding:12px;border:2px solid var(--lt2);border-radius:var(--rs);font-weight:800;cursor:pointer;background:#fff">← Back</button>

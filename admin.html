@@ -266,6 +266,16 @@ tr:hover td{background:#FAF7FC;}
   .stats-grid{grid-template-columns:1fr 1fr!important}
   .mob-btn{min-width:58px}
 }
+
+/* ── Product image thumbnails ── */
+.img-thumb-wrap{position:relative;display:inline-block;border-radius:10px;overflow:hidden;border:2px solid var(--lt2);cursor:pointer}
+.img-thumb-wrap[data-is-cover="true"],.img-thumb-wrap[data-is-cover]{border-color:#f7c600!important;box-shadow:0 0 0 2px #f7c60044}
+.img-thumb{width:76px;height:76px;object-fit:cover;display:block}
+.img-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,.25);display:flex;flex-direction:column;justify-content:space-between;padding:3px;opacity:0;transition:.15s}
+.img-thumb-wrap:hover .img-thumb-overlay{opacity:1}
+.img-star-btn,.img-del-btn{border:none;cursor:pointer;border-radius:4px;font-size:.7rem;padding:2px 5px;font-weight:900;line-height:1.4}
+.img-star-btn{background:rgba(0,0,0,.5);color:#fff;align-self:flex-start}
+.img-del-btn{background:var(--er);color:#fff;align-self:flex-end}
 </style>
 </head>
 <body>
@@ -306,7 +316,7 @@ tr:hover td{background:#FAF7FC;}
 
   <!-- MOBILE HEADER -->
   <header class="mob-header" id="mobHeader">
-    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" onerror="this.style.display='none'">
+    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" onerror="this.style.display='none'" style="background:#fff;border-radius:10px;padding:6px;box-sizing:border-box">
     <span class="mh-title" id="mobTitle">Dashboard</span>
     <div class="mh-user" id="mobUser"></div>
   </header>
@@ -535,16 +545,28 @@ tr:hover td{background:#FAF7FC;}
             <!-- Product Images - Upload -->
             <div style="margin-bottom:16px;background:var(--lt);border-radius:12px;padding:16px;">
               <div style="font-weight:800;font-size:.88rem;color:var(--pp);margin-bottom:10px;">🖼️ Product Images (Upload from computer)</div>
-              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
-                <label style="background:var(--pp);color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:800;font-size:.82rem;">
-                  📁 Choose Images
+              <!-- Hidden input to track existing images on edit -->
+              <input type="hidden" id="existingImages" value="">
+              <input type="hidden" id="coverImageUrl" value="">
+
+              <!-- Existing images (shown when editing) -->
+              <div id="existingImgRow" style="display:none;margin-bottom:12px">
+                <div style="font-size:.78rem;font-weight:800;color:var(--pp);margin-bottom:6px">📸 Current Images — tap ⭐ to set cover, ✕ to delete</div>
+                <div id="existingImgPreviews" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+              </div>
+
+              <!-- New images upload -->
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+                <label style="background:var(--pp);color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:800;font-size:.82rem;display:inline-flex;align-items:center;gap:6px">
+                  📁 Add Images
                   <input type="file" id="prodImageInput" accept="image/*" multiple style="display:none" onchange="previewProdImages(this)">
                 </label>
-                <span style="font-size:.78rem;color:var(--gy)">Or paste URL below • Max 5MB each • JPG/PNG/WebP</span>
+                <span style="font-size:.75rem;color:var(--gy)">JPG/PNG/WebP • Max 5MB each</span>
               </div>
-              <div id="prodImagePreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;min-height:20px"></div>
-              <input type="text" id="prodThumbUrl" name="thumbnail" placeholder="Paste image URL (optional if uploading)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;margin-bottom:6px">
-              <div style="font-size:.75rem;color:var(--gy)">First image becomes the thumbnail. You can upload multiple images for gallery view.</div>
+              <div id="prodImagePreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;min-height:10px"></div>
+              
+              <input type="text" id="prodThumbUrl" name="thumbnail" placeholder="Or paste an image URL here" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;margin-bottom:6px">
+              <div style="font-size:.75rem;color:var(--gy)">⭐ = Cover/thumbnail image shown in shop listing</div>
             </div>
             
             <!-- Colors -->
@@ -1217,13 +1239,76 @@ function previewProdImages(input) {
     const reader = new FileReader();
     reader.onload = e => {
       const div = document.createElement('div');
-      div.style.cssText = 'position:relative;display:inline-block';
-      div.innerHTML = `<img src="${e.target.result}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--pp)">
-        <div style="position:absolute;top:-4px;right:-4px;background:var(--er);color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;font-weight:900" onclick="this.parentElement.remove()">×</div>`;
+      div.className = 'img-thumb-wrap';
+      div.dataset.isNew = 'true';
+      div.innerHTML = `
+        <img src="${e.target.result}" class="img-thumb">
+        <div class="img-thumb-overlay">
+          <button class="img-star-btn" onclick="setCoverNew(this)" title="Set as cover">⭐</button>
+          <button class="img-del-btn" onclick="this.closest('.img-thumb-wrap').remove()" title="Remove">✕</button>
+        </div>`;
       preview.appendChild(div);
     };
     reader.readAsDataURL(file);
   });
+  // Reset so same file can be re-selected
+  input.value = '';
+}
+
+function setCoverNew(btn) {
+  // Mark all new thumbs as non-cover
+  document.querySelectorAll('#prodImagePreviews .img-thumb-wrap').forEach(w => {
+    w.querySelector('.img-star-btn').style.background = 'rgba(0,0,0,.5)';
+    w.dataset.isCover = '';
+  });
+  const wrap = btn.closest('.img-thumb-wrap');
+  wrap.dataset.isCover = 'true';
+  btn.style.background = '#f7c600';
+}
+
+function setCoverExisting(url, btn) {
+  // Mark all existing as non-cover
+  document.querySelectorAll('#existingImgPreviews .img-thumb-wrap').forEach(w => {
+    w.querySelector('.img-star-btn').style.background = 'rgba(0,0,0,.5)';
+    delete w.dataset.isCover;
+  });
+  const wrap = btn.closest('.img-thumb-wrap');
+  wrap.dataset.isCover = 'true';
+  btn.style.background = '#f7c600';
+  document.getElementById('coverImageUrl').value = url;
+}
+
+function removeExistingImg(url, btn) {
+  btn.closest('.img-thumb-wrap').remove();
+  // Update existingImages hidden input
+  const current = document.getElementById('existingImages').value;
+  const arr = current ? JSON.parse(current) : [];
+  document.getElementById('existingImages').value = JSON.stringify(arr.filter(u => u !== url));
+}
+
+function renderExistingImages(images, thumbnail) {
+  const row = document.getElementById('existingImgRow');
+  const preview = document.getElementById('existingImgPreviews');
+  if (!images || !images.length) { row.style.display = 'none'; return; }
+  row.style.display = 'block';
+  preview.innerHTML = '';
+  images.forEach(img => {
+    const url = fixImgSrc(img);
+    const isCover = url === fixImgSrc(thumbnail) || img === thumbnail;
+    const div = document.createElement('div');
+    div.className = 'img-thumb-wrap';
+    div.dataset.url = url;
+    if (isCover) div.dataset.isCover = 'true';
+    div.innerHTML = `
+      <img src="${url}" class="img-thumb" onerror="this.style.opacity='.3'">
+      <div class="img-thumb-overlay">
+        <button class="img-star-btn" style="background:${isCover?'#f7c600':'rgba(0,0,0,.5)'}" onclick="setCoverExisting('${url}',this)" title="Set as cover">⭐</button>
+        <button class="img-del-btn" onclick="removeExistingImg('${url}',this)" title="Delete">✕</button>
+      </div>`;
+    preview.appendChild(div);
+  });
+  document.getElementById('existingImages').value = JSON.stringify(images);
+  document.getElementById('coverImageUrl').value = fixImgSrc(thumbnail) || fixImgSrc(images[0]);
 }
 
 async function uploadProdImages() {
@@ -1262,14 +1347,11 @@ function editProduct(id) {
     form.isFeatured.value = p.isFeatured ? 'true' : 'false';
     form.isActive.value = p.isActive !== false ? 'true' : 'false';
     form.codEnabled.value = p.codEnabled !== false ? 'true' : 'false';
-    // Show existing thumbnail
+    // Show existing images with cover selector
     const thumbInput = document.getElementById('prodThumbUrl');
-    if (thumbInput) thumbInput.value = p.thumbnail || '';
-    // Show existing images
-    const preview = document.getElementById('prodImagePreviews');
-    if (preview) {
-      preview.innerHTML = (p.images || []).map(img => `<img src="${fixImgSrc(img)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--lt2)" onerror="this.style.opacity='.3'">`).join('');
-    }
+    if (thumbInput) thumbInput.value = '';  // Clear URL field when editing (use uploaded images)
+    document.getElementById('prodImagePreviews').innerHTML = '';
+    renderExistingImages(p.images || (p.thumbnail ? [p.thumbnail] : []), p.thumbnail);
     // sizes
     const sizeMap = {};
     (p.sizes||[]).forEach(s=>sizeMap[s.size]=s.stock||0);
@@ -1322,13 +1404,37 @@ async function saveProduct(e) {
     submitBtn.textContent = '⏳ Uploading...';
     submitBtn.disabled = true;
     
-    const uploadedUrls = await uploadProdImages().catch(() => []);
-    if (uploadedUrls.length > 0) {
-      data.images = uploadedUrls;
-      data.thumbnail = uploadedUrls[0];
-    } else if (data.thumbnail) {
-      // URL was typed
-      data.images = [data.thumbnail];
+    // Upload any new images
+    const newUrls = await uploadProdImages().catch(() => []);
+    
+    // Get remaining existing images (ones not deleted)
+    const existingRaw = document.getElementById('existingImages')?.value || '';
+    const existingImgs = existingRaw ? JSON.parse(existingRaw) : [];
+    
+    // Combine: existing first, then new uploads
+    const allImages = [...existingImgs, ...newUrls].filter(Boolean);
+    
+    // Determine cover/thumbnail
+    // 1. Check if user starred an existing image
+    const coveredExisting = document.querySelector('#existingImgPreviews .img-thumb-wrap[data-is-cover]')?.dataset?.url;
+    // 2. Check if user starred a new uploaded image (index)
+    const newCoverIdx = Array.from(document.querySelectorAll('#prodImagePreviews .img-thumb-wrap')).findIndex(w => w.dataset.isCover === 'true');
+    // 3. URL typed in input
+    const typedUrl = data.thumbnail?.trim();
+    
+    let cover = '';
+    if (coveredExisting) cover = coveredExisting;
+    else if (newCoverIdx >= 0 && newUrls[newCoverIdx]) cover = newUrls[newCoverIdx];
+    else if (newUrls.length > 0) cover = newUrls[0];
+    else if (existingImgs.length > 0) cover = existingImgs[0];
+    else if (typedUrl) cover = typedUrl;
+    
+    if (allImages.length > 0) {
+      data.images = allImages;
+      data.thumbnail = cover || allImages[0];
+    } else if (typedUrl) {
+      data.images = [typedUrl];
+      data.thumbnail = typedUrl;
     }
     
     const editId = document.getElementById('prodEditId').value;
@@ -1343,6 +1449,10 @@ async function saveProduct(e) {
     e.target.reset();
     document.getElementById('addprodTitle').textContent = '➕ Add New Product';
     document.getElementById('prodImagePreviews').innerHTML = '';
+    document.getElementById('existingImgPreviews').innerHTML = '';
+    document.getElementById('existingImgRow').style.display = 'none';
+    document.getElementById('existingImages').value = '';
+    document.getElementById('coverImageUrl').value = '';
     show('products', document.querySelector('[onclick*=products]'));
   } catch(err) { toast('❌ ' + err.message); }
   finally { submitBtn.textContent = '💾 Save Product'; submitBtn.disabled = false; }

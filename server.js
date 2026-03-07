@@ -134,7 +134,7 @@ function emailWrap(title, body, ctaUrl, ctaText) {
 
 async function sendEmail(to, subject, html) {
   try {
-    await mailer.sendMail({ from: `"${BRAND}" <noreply@kidscart.kids>`, to, subject, html });
+    await mailer.sendMail({ from: `"${BRAND}" <${process.env.ZEPTO_FROM_EMAIL || 'noreply@kidscart.kids'}>`, to, subject, html });
     console.log('✉️  Sent:', to); return true;
   } catch (e) { console.error('✉️  FAIL:', e.message); return false; }
 }
@@ -672,6 +672,22 @@ app.post('/api/orders', auth, async (req, res) => {
     });
     const u = await User.findById(req.user._id);
     if (u?.email) emailOrderConfirm(u.email, u.name, { ...ord.toObject(), items: oi }).catch(() => {});
+    // Notify admin of new order
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@kidscart.kids';
+    sendEmail(adminEmail, `🛍️ New Order #${ord.orderId} — ₹${ord.total}`,
+      emailWrap('New Order Received! 🛍️',
+        `<p style="color:#444;font-size:15px;">A new order has been placed.</p>
+         <table style="width:100%;border-collapse:collapse;font-size:14px;">
+           <tr><td style="padding:8px;color:#888">Order ID</td><td style="padding:8px;font-weight:800">#${ord.orderId}</td></tr>
+           <tr style="background:#faf6ff"><td style="padding:8px;color:#888">Customer</td><td style="padding:8px">${u.name} (${u.email})</td></tr>
+           <tr><td style="padding:8px;color:#888">Items</td><td style="padding:8px">${oi.map(i=>i.name+' ×'+i.qty).join(', ')}</td></tr>
+           <tr style="background:#faf6ff"><td style="padding:8px;color:#888">Total</td><td style="padding:8px;font-weight:800;color:#7B2D8B">₹${ord.total}</td></tr>
+           <tr><td style="padding:8px;color:#888">Payment</td><td style="padding:8px">${payment.method?.toUpperCase()} — ${payment.status || 'pending'}</td></tr>
+           <tr style="background:#faf6ff"><td style="padding:8px;color:#888">Ship To</td><td style="padding:8px">${shippingAddress.name}, ${shippingAddress.line1}, ${shippingAddress.city} − ${shippingAddress.pincode}</td></tr>
+         </table>
+         <p style="margin-top:16px"><a href="https://kidscart.kids/admin.html" style="background:#7B2D8B;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:800">Open Admin Panel →</a></p>`
+      )
+    ).catch(() => {});
     res.status(201).json({ success: true, order: ord });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

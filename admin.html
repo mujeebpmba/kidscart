@@ -268,14 +268,15 @@ tr:hover td{background:#FAF7FC;}
 }
 
 /* ── Product image thumbnails ── */
-.img-thumb-wrap{position:relative;display:inline-block;border-radius:10px;overflow:hidden;border:2px solid var(--lt2);cursor:pointer}
-.img-thumb-wrap[data-is-cover="true"],.img-thumb-wrap[data-is-cover]{border-color:#f7c600!important;box-shadow:0 0 0 2px #f7c60044}
-.img-thumb{width:76px;height:76px;object-fit:cover;display:block}
-.img-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,.25);display:flex;flex-direction:column;justify-content:space-between;padding:3px;opacity:0;transition:.15s}
+.img-thumb-wrap{position:relative;display:inline-block;border-radius:10px;overflow:hidden;border:2px solid var(--lt2);cursor:pointer;vertical-align:top}
+.img-thumb-wrap[data-is-cover="yes"]{border-color:#f7c600!important;box-shadow:0 0 0 3px #f7c60066}
+.img-thumb{width:80px;height:80px;object-fit:cover;display:block}
+.img-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);display:flex;flex-direction:column;justify-content:space-between;padding:4px;opacity:0;transition:.15s}
 .img-thumb-wrap:hover .img-thumb-overlay{opacity:1}
-.img-star-btn,.img-del-btn{border:none;cursor:pointer;border-radius:4px;font-size:.7rem;padding:2px 5px;font-weight:900;line-height:1.4}
+.img-star-btn,.img-del-btn{border:none;cursor:pointer;border-radius:4px;font-size:.72rem;padding:3px 6px;font-weight:900;line-height:1.3}
 .img-star-btn{background:rgba(0,0,0,.5);color:#fff;align-self:flex-start}
 .img-del-btn{background:var(--er);color:#fff;align-self:flex-end}
+.img-cover-badge{position:absolute;bottom:0;left:0;right:0;background:#f7c600;color:#333;font-size:.58rem;font-weight:900;text-align:center;padding:2px;letter-spacing:.5px}
 </style>
 </head>
 <body>
@@ -1232,58 +1233,102 @@ function filterProductList() {
 // ── PRODUCT IMAGE UPLOAD ────────────────────
 let uploadedProdImages = [];
 
+// ══════════════════════════════════════════════════════════
+// IMAGE MANAGEMENT — complete rewrite
+// Uses window._newProdFiles[] to store File objects safely
+// ══════════════════════════════════════════════════════════
+
+// Global store for pending file uploads
+window._newProdFiles = window._newProdFiles || [];
+
 function previewProdImages(input) {
   const preview = document.getElementById('prodImagePreviews');
   const files = Array.from(input.files);
+  if (!files.length) return;
+
   files.forEach(file => {
+    const fileIndex = window._newProdFiles.length;
+    window._newProdFiles.push(file);  // ← store File object
+
     const reader = new FileReader();
     reader.onload = e => {
       const div = document.createElement('div');
       div.className = 'img-thumb-wrap';
-      div.dataset.isNew = 'true';
+      div.dataset.fileIndex = fileIndex;  // reference to File in array
       div.innerHTML = `
         <img src="${e.target.result}" class="img-thumb">
         <div class="img-thumb-overlay">
-          <button class="img-star-btn" onclick="setCoverNew(this)" title="Set as cover">⭐</button>
-          <button class="img-del-btn" onclick="this.closest('.img-thumb-wrap').remove()" title="Remove">✕</button>
-        </div>`;
+          <button type="button" class="img-star-btn" onclick="setCoverNew(this)" title="Set as cover">⭐</button>
+          <button type="button" class="img-del-btn" onclick="removeNewImg(this)" title="Remove">✕</button>
+        </div>
+        <div class="img-cover-badge" style="display:none">COVER</div>`;
       preview.appendChild(div);
     };
     reader.readAsDataURL(file);
   });
-  // Reset so same file can be re-selected
+
+  // Reset input so same file can be selected again
   input.value = '';
 }
 
-function setCoverNew(btn) {
-  // Mark all new thumbs as non-cover
-  document.querySelectorAll('#prodImagePreviews .img-thumb-wrap').forEach(w => {
-    w.querySelector('.img-star-btn').style.background = 'rgba(0,0,0,.5)';
-    w.dataset.isCover = '';
-  });
+function removeNewImg(btn) {
   const wrap = btn.closest('.img-thumb-wrap');
-  wrap.dataset.isCover = 'true';
+  const idx = parseInt(wrap.dataset.fileIndex);
+  // Null out the file in array (keep indices stable)
+  if (!isNaN(idx)) window._newProdFiles[idx] = null;
+  wrap.remove();
+}
+
+function setCoverNew(btn) {
+  // Clear all cover marks everywhere
+  document.querySelectorAll('.img-thumb-wrap').forEach(w => {
+    w.dataset.isCover = '';
+    const sb = w.querySelector('.img-star-btn');
+    if (sb) sb.style.background = 'rgba(0,0,0,.5)';
+    const cb = w.querySelector('.img-cover-badge');
+    if (cb) cb.style.display = 'none';
+  });
+  // Mark this one
+  const wrap = btn.closest('.img-thumb-wrap');
+  wrap.dataset.isCover = 'yes';
   btn.style.background = '#f7c600';
+  const cb = wrap.querySelector('.img-cover-badge');
+  if (cb) cb.style.display = 'block';
+  // Clear existing cover selection
+  document.getElementById('coverImageUrl').value = '';
 }
 
 function setCoverExisting(url, btn) {
-  // Mark all existing as non-cover
-  document.querySelectorAll('#existingImgPreviews .img-thumb-wrap').forEach(w => {
-    w.querySelector('.img-star-btn').style.background = 'rgba(0,0,0,.5)';
-    delete w.dataset.isCover;
+  // Clear all cover marks everywhere
+  document.querySelectorAll('.img-thumb-wrap').forEach(w => {
+    w.dataset.isCover = '';
+    const sb = w.querySelector('.img-star-btn');
+    if (sb) sb.style.background = 'rgba(0,0,0,.5)';
+    const cb = w.querySelector('.img-cover-badge');
+    if (cb) cb.style.display = 'none';
   });
+  // Mark this one
   const wrap = btn.closest('.img-thumb-wrap');
-  wrap.dataset.isCover = 'true';
+  wrap.dataset.isCover = 'yes';
   btn.style.background = '#f7c600';
+  const cb = wrap.querySelector('.img-cover-badge');
+  if (cb) cb.style.display = 'block';
   document.getElementById('coverImageUrl').value = url;
 }
 
 function removeExistingImg(url, btn) {
   btn.closest('.img-thumb-wrap').remove();
-  // Update existingImages hidden input
-  const current = document.getElementById('existingImages').value;
-  const arr = current ? JSON.parse(current) : [];
-  document.getElementById('existingImages').value = JSON.stringify(arr.filter(u => u !== url));
+  // Remove from hidden JSON list
+  try {
+    const raw = document.getElementById('existingImages').value;
+    const arr = raw ? JSON.parse(raw) : [];
+    const filtered = arr.filter(u => u !== url && fixImgSrc(u) !== url);
+    document.getElementById('existingImages').value = JSON.stringify(filtered);
+  } catch(e) {}
+  // If this was the cover, clear coverImageUrl
+  if (document.getElementById('coverImageUrl').value === url) {
+    document.getElementById('coverImageUrl').value = '';
+  }
 }
 
 function renderExistingImages(images, thumbnail) {
@@ -1292,36 +1337,65 @@ function renderExistingImages(images, thumbnail) {
   if (!images || !images.length) { row.style.display = 'none'; return; }
   row.style.display = 'block';
   preview.innerHTML = '';
+
+  const thumbNorm = fixImgSrc(thumbnail) || '';
+
   images.forEach(img => {
-    const url = fixImgSrc(img);
-    const isCover = url === fixImgSrc(thumbnail) || img === thumbnail;
+    const url = fixImgSrc(img) || img;
+    const isCover = url === thumbNorm || img === thumbnail;
     const div = document.createElement('div');
     div.className = 'img-thumb-wrap';
     div.dataset.url = url;
-    if (isCover) div.dataset.isCover = 'true';
+    if (isCover) {
+      div.dataset.isCover = 'yes';
+    }
     div.innerHTML = `
       <img src="${url}" class="img-thumb" onerror="this.style.opacity='.3'">
       <div class="img-thumb-overlay">
-        <button class="img-star-btn" style="background:${isCover?'#f7c600':'rgba(0,0,0,.5)'}" onclick="setCoverExisting('${url}',this)" title="Set as cover">⭐</button>
-        <button class="img-del-btn" onclick="removeExistingImg('${url}',this)" title="Delete">✕</button>
-      </div>`;
+        <button type="button" class="img-star-btn" 
+          style="background:${isCover ? '#f7c600' : 'rgba(0,0,0,.5)'}"
+          onclick="setCoverExisting('${url.replace(/'/g,"\'")}',this)" 
+          title="Set as cover">⭐</button>
+        <button type="button" class="img-del-btn" 
+          onclick="removeExistingImg('${url.replace(/'/g,"\'")}',this)" 
+          title="Delete">✕</button>
+      </div>
+      <div class="img-cover-badge" style="display:${isCover ? 'block' : 'none'}">COVER</div>`;
     preview.appendChild(div);
   });
+
+  // Store as JSON for saveProduct to read
   document.getElementById('existingImages').value = JSON.stringify(images);
-  document.getElementById('coverImageUrl').value = fixImgSrc(thumbnail) || fixImgSrc(images[0]);
+  document.getElementById('coverImageUrl').value = thumbNorm || fixImgSrc(images[0]) || images[0];
 }
 
 async function uploadProdImages() {
-  const input = document.getElementById('prodImageInput');
-  if (!input.files.length) return [];
+  // Upload from our stored File array (not input.files which may be cleared)
+  const validFiles = (window._newProdFiles || []).filter(Boolean);
+  if (!validFiles.length) return [];
+
   const fd = new FormData();
-  Array.from(input.files).forEach(f => fd.append('images', f));
-  const r = await fetch(API.replace('/api','') + '/api/admin/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+  validFiles.forEach(f => fd.append('images', f));
+
+  const r = await fetch(
+    API.replace('/api','') + '/api/admin/upload',
+    { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd }
+  );
   const d = await r.json();
   if (!r.ok) throw new Error(d.error || 'Upload failed');
-  // Return absolute URLs so images always load correctly
   return (d.urls || []).map(url => fixImgSrc(url));
 }
+
+function resetImageForm() {
+  window._newProdFiles = [];
+  document.getElementById('prodImagePreviews').innerHTML = '';
+  document.getElementById('existingImgPreviews').innerHTML = '';
+  document.getElementById('existingImgRow').style.display = 'none';
+  document.getElementById('existingImages').value = '';
+  document.getElementById('coverImageUrl').value = '';
+  document.getElementById('prodThumbUrl').value = '';
+}
+
 
 function editProduct(id) {
   const p = prodsData.find(x => x._id === id);
@@ -1347,10 +1421,8 @@ function editProduct(id) {
     form.isFeatured.value = p.isFeatured ? 'true' : 'false';
     form.isActive.value = p.isActive !== false ? 'true' : 'false';
     form.codEnabled.value = p.codEnabled !== false ? 'true' : 'false';
-    // Show existing images with cover selector
-    const thumbInput = document.getElementById('prodThumbUrl');
-    if (thumbInput) thumbInput.value = '';  // Clear URL field when editing (use uploaded images)
-    document.getElementById('prodImagePreviews').innerHTML = '';
+    // Reset image state for this edit session
+    resetImageForm();
     renderExistingImages(p.images || (p.thumbnail ? [p.thumbnail] : []), p.thumbnail);
     // sizes
     const sizeMap = {};
@@ -1404,38 +1476,64 @@ async function saveProduct(e) {
     submitBtn.textContent = '⏳ Uploading...';
     submitBtn.disabled = true;
     
-    // Upload any new images
-    const newUrls = await uploadProdImages().catch(() => []);
-    
-    // Get remaining existing images (ones not deleted)
-    const existingRaw = document.getElementById('existingImages')?.value || '';
-    const existingImgs = existingRaw ? JSON.parse(existingRaw) : [];
-    
-    // Combine: existing first, then new uploads
+    // ── STEP 1: Upload new files (stored in window._newProdFiles)
+    submitBtn.textContent = '⏳ Uploading images...';
+    const newUrls = await uploadProdImages().catch(err => { console.warn('Upload err:', err); return []; });
+
+    // ── STEP 2: Get surviving existing images (after user deletes)
+    let existingImgs = [];
+    try {
+      const raw = document.getElementById('existingImages')?.value || '';
+      existingImgs = raw ? JSON.parse(raw) : [];
+    } catch(e) {}
+
+    // ── STEP 3: Combine existing + new
     const allImages = [...existingImgs, ...newUrls].filter(Boolean);
-    
-    // Determine cover/thumbnail
-    // 1. Check if user starred an existing image
-    const coveredExisting = document.querySelector('#existingImgPreviews .img-thumb-wrap[data-is-cover]')?.dataset?.url;
-    // 2. Check if user starred a new uploaded image (index)
-    const newCoverIdx = Array.from(document.querySelectorAll('#prodImagePreviews .img-thumb-wrap')).findIndex(w => w.dataset.isCover === 'true');
-    // 3. URL typed in input
-    const typedUrl = data.thumbnail?.trim();
-    
+
+    // ── STEP 4: Determine cover/thumbnail
+    // Priority: a) explicit cover button clicked, b) typed URL, c) first image
     let cover = '';
-    if (coveredExisting) cover = coveredExisting;
-    else if (newCoverIdx >= 0 && newUrls[newCoverIdx]) cover = newUrls[newCoverIdx];
-    else if (newUrls.length > 0) cover = newUrls[0];
-    else if (existingImgs.length > 0) cover = existingImgs[0];
-    else if (typedUrl) cover = typedUrl;
     
+    // a) User clicked ⭐ on existing image
+    const markedExisting = document.querySelector('#existingImgPreviews .img-thumb-wrap[data-is-cover="yes"]');
+    if (markedExisting) cover = markedExisting.dataset.url || '';
+
+    // b) User clicked ⭐ on a new image
+    if (!cover) {
+      const markedNew = document.querySelector('#prodImagePreviews .img-thumb-wrap[data-is-cover="yes"]');
+      if (markedNew) {
+        const fileIdx = parseInt(markedNew.dataset.fileIndex);
+        // The uploaded URL at same position in newUrls array
+        // Count how many valid files came before this index
+        const validBefore = (window._newProdFiles || [])
+          .slice(0, fileIdx).filter(Boolean).length;
+        if (newUrls[validBefore]) cover = newUrls[validBefore];
+      }
+    }
+
+    // c) coverImageUrl hidden field (set by setCoverExisting)
+    if (!cover) {
+      const storedCover = document.getElementById('coverImageUrl')?.value;
+      if (storedCover) cover = storedCover;
+    }
+
+    // d) typed URL fallback
+    const typedUrl = data.thumbnail?.trim();
+    if (!cover && typedUrl) cover = typedUrl;
+
+    // e) just use first image
+    if (!cover && allImages.length) cover = allImages[0];
+
+    // ── STEP 5: Apply to data
     if (allImages.length > 0) {
       data.images = allImages;
-      data.thumbnail = cover || allImages[0];
+      data.thumbnail = cover;
     } else if (typedUrl) {
       data.images = [typedUrl];
       data.thumbnail = typedUrl;
     }
+    // Remove thumbnail from form data (we set it above)
+    delete data.thumbnail_url;
     
     const editId = document.getElementById('prodEditId').value;
     if (editId) {
@@ -1448,11 +1546,8 @@ async function saveProduct(e) {
     }
     e.target.reset();
     document.getElementById('addprodTitle').textContent = '➕ Add New Product';
-    document.getElementById('prodImagePreviews').innerHTML = '';
-    document.getElementById('existingImgPreviews').innerHTML = '';
-    document.getElementById('existingImgRow').style.display = 'none';
-    document.getElementById('existingImages').value = '';
-    document.getElementById('coverImageUrl').value = '';
+    document.getElementById('prodEditId').value = '';
+    resetImageForm();
     show('products', document.querySelector('[onclick*=products]'));
   } catch(err) { toast('❌ ' + err.message); }
   finally { submitBtn.textContent = '💾 Save Product'; submitBtn.disabled = false; }

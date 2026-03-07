@@ -3,21 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KidsCart – Premium Kids Fashion India | Boys, Girls & Baby Clothes</title>
-<meta name="description" content="KidsCart – India's best kids fashion store. Shop premium clothes for boys, girls and babies. Ages 0-12 years. COD available. Fast delivery across India.">
-<link rel="canonical" href="https://kidscart.kids/">
-<!-- Open Graph (WhatsApp / Facebook previews) -->
-<meta property="og:type"        content="website">
-<meta property="og:url"         content="https://kidscart.kids/">
-<meta property="og:title"       content="KidsCart – Premium Kids Fashion India">
-<meta property="og:description" content="Shop premium kids clothes for boys, girls & babies. Ages 0-12 years. COD + UPI. Fast delivery across India.">
-<meta property="og:image"       content="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png">
-<meta property="og:site_name"   content="KidsCart">
-<meta name="twitter:card"       content="summary_large_image">
-<!-- JSON-LD Structured Data for Google -->
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Store","name":"KidsCart","url":"https://kidscart.kids","logo":"https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png","description":"Premium kids fashion for boys, girls and babies. Ages 0-12 years.","address":{"@type":"PostalAddress","addressLocality":"Kondotty","addressRegion":"Kerala","postalCode":"673642","addressCountry":"IN"},"telephone":"+919497596110","sameAs":["https://www.instagram.com/kids_cart.kids/"]}
-</script>
+<title>KidsCart – Premium Kids Fashion</title>
+<meta name="description" content="KidsCart – India's favourite kids fashion store. Premium clothes for boys, girls and babies.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <!-- Socket.io loaded conditionally to avoid CDN errors -->
@@ -434,8 +421,6 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 
 <!-- ── PRODUCTS ── -->
 <section class="section" id="products">
-  <h1 style="font-size:1.6rem;font-weight:900;color:#1a0033;margin-bottom:4px;font-family:'Nunito',sans-serif;">Kids Fashion Collection</h1>
-  <p style="color:#888;font-size:.88rem;margin-bottom:20px;">Premium clothes for boys, girls & babies — Ages 0-12 years</p>
   <div class="sec-head">
     <div class="label">Collection</div>
     <h2 id="prodSectionTitle">All Products</h2>
@@ -504,8 +489,8 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
     <div class="footer-col">
       <h4>Help</h4>
       <a href="#">Track Order</a>
-      <a href="#" onclick="openSizeGuide();return false;">Size Guide</a>
-      <a href="#" onclick="openFAQ();return false;">FAQs</a>
+      <a href="#">Size Guide</a>
+      <a href="#">FAQs</a>
       <a href="#" onclick="openChat()">Live Chat</a>
       <a href="https://www.instagram.com/kids_cart.kids/" target="_blank">Instagram</a>
     </div>
@@ -580,21 +565,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
         <div class="ok-msg" id="otpOk"></div>
         <div id="otpStep1">
           <p style="font-size:.82rem;color:var(--gy);margin-bottom:12px">Enter your mobile or email to receive OTP</p>
-          <div class="fgroup"><label>Mobile Number or Email</label>
-          <div style="display:flex;gap:8px;">
-            <select id="otpCountryCode" style="width:90px;padding:10px 8px;border:1.5px solid #ddd;border-radius:10px;font-family:inherit;font-size:.88rem;">
-              <option value="+91">🇮🇳 +91</option>
-              <option value="+1">🇺🇸 +1</option>
-              <option value="+44">🇬🇧 +44</option>
-              <option value="+971">🇦🇪 +971</option>
-              <option value="+60">🇲🇾 +60</option>
-              <option value="+65">🇸🇬 +65</option>
-              <option value="+61">🇦🇺 +61</option>
-              <option value="+966">🇸🇦 +966</option>
-            </select>
-            <input type="text" id="otpPhone" placeholder="Phone number or email" style="flex:1;">
-          </div>
-        </div>
+          <div class="fgroup"><label>Mobile Number or Email</label><input type="text" id="otpPhone" placeholder="+91 9876543210 or email"></div>
           <button class="btn-full" onclick="sendOTP()">Send OTP →</button>
           <button style="width:100%;margin-top:8px;background:none;color:var(--pp);font-weight:700;font-size:.85rem;padding:8px" onclick="switchAuth('login')">← Back to Login</button>
         </div>
@@ -752,7 +723,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 // ══════════════════════════════════════════════
 const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:5000/api'
-  : '/api';
+  : 'https://kidscart-production.up.railway.app/api';
 
 // ══════════════════════════════════════════════
 // STATE
@@ -1329,24 +1300,14 @@ async function doRegister() {
   const email = document.getElementById('regEmail').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
   const pass  = document.getElementById('regPass').value;
-  // Require both email AND phone (to prevent duplicates and enable verification)
-  if (!name || !email || !phone) { showErr('regErr', 'Name, email and phone are all required'); return; }
-  if (!pass || pass.length < 8)  { showErr('regErr', 'Password must be at least 8 characters'); return; }
-  // Basic email format check
-  if (!email.includes('@') || !email.includes('.')) { showErr('regErr', 'Enter a valid email address'); return; }
-  // Basic phone format (min 10 digits)
-  const digits = phone.replace(/[^0-9]/g,'');
-  if (digits.length < 10) { showErr('regErr', 'Enter a valid 10-digit phone number'); return; }
+  if (!name || !email || !pass) { showErr('regErr', 'Name, email and password required'); return; }
+  if (pass.length < 6) { showErr('regErr', 'Password must be at least 6 characters'); return; }
   try {
     const d = await api('/auth/register', 'POST', { name, email, phone, password: pass });
     token = d.token; user = d.user;
     localStorage.setItem('kc_token', token);
-    updateNavUser(); closeAuth();
-    toast('🎉 Account created! Welcome, ' + user.name.split(' ')[0] + '!');
-  } catch (e) {
-    // Server returns friendly duplicate message
-    showErr('regErr', e.message || 'Account already exists with this email or phone');
-  }
+    updateNavUser(); closeAuth(); toast('🎉 Account created! Welcome, ' + user.name.split(' ')[0] + '!');
+  } catch (e) { showErr('regErr', e.message); }
 }
 
 async function sendOTP() {
@@ -1354,15 +1315,12 @@ async function sendOTP() {
   const val = document.getElementById('otpPhone').value.trim();
   if (!val) { showErr('otpErr', 'Phone number or email required'); return; }
   const isEmail = val.includes('@');
-  // Prepend country code for phone numbers
-  const countryCode = document.getElementById('otpCountryCode')?.value || '+91';
-  const phone = isEmail ? val : (val.startsWith('+') ? val : countryCode + val.replace(/^0/, ''));
-  const payload = isEmail ? { email: val } : { phone };
+  const payload = isEmail ? { email: val } : { phone: val };
   try {
     await api('/auth/send-otp', 'POST', payload);
     document.getElementById('otpStep1').style.display = 'none';
     document.getElementById('otpStep2').style.display = 'block';
-    showOk('otpOk', 'OTP sent to ' + (isEmail ? val : phone));
+    showOk('otpOk', 'OTP sent to ' + val);
   } catch (e) { showErr('otpErr', e.message); }
 }
 
@@ -1371,9 +1329,7 @@ async function verifyOTP() {
   const val = document.getElementById('otpPhone').value.trim();
   const otp = document.getElementById('otpCode').value.trim();
   const isEmail = val.includes('@');
-  const countryCode = document.getElementById('otpCountryCode')?.value || '+91';
-  const phone = isEmail ? val : (val.startsWith('+') ? val : countryCode + val.replace(/^0/, ''));
-  const payload = isEmail ? { email: val, otp } : { phone, otp };
+  const payload = isEmail ? { email: val, otp } : { phone: val, otp };
   try {
     const d = await api('/auth/verify-otp', 'POST', payload);
     token = d.token; user = d.user;
@@ -1786,7 +1742,7 @@ function initSocket() {
 }
 
 function _connectSocket() {
-  const baseURL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin;
+  const baseURL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://kidscart-production.up.railway.app';
   try {
     socket = io(baseURL, { 
       transports: ['websocket', 'polling'],
@@ -1865,311 +1821,5 @@ function appendChatMsg(sender, text) {
 // START THE APP
 document.addEventListener('DOMContentLoaded', init);
 </script>
-
-<!-- ══════════════════════════════════════════════════════════ -->
-<!-- MISSING PAGES AS MODALS (Size Guide, FAQ, Policies)       -->
-<!-- ══════════════════════════════════════════════════════════ -->
-<style>
-.page-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px;}
-.page-modal.open{display:flex;}
-.page-modal-box{background:#fff;border-radius:18px;max-width:700px;width:100%;padding:32px 28px;margin:auto;position:relative;max-height:90vh;overflow-y:auto;}
-.page-modal-box h2{font-family:'Nunito',sans-serif;font-size:1.4rem;font-weight:900;color:#1a0033;margin-bottom:6px;}
-.page-modal-box h3{font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;color:#7B2D8B;margin:18px 0 6px;}
-.page-modal-box p,.page-modal-box li{font-size:.88rem;color:#444;line-height:1.7;margin-bottom:6px;}
-.page-modal-box ul{padding-left:18px;margin-bottom:10px;}
-.page-modal-close{position:sticky;top:0;float:right;background:#f0ebf8;border:none;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;color:#7B2D8B;font-weight:900;z-index:1;}
-.size-table{width:100%;border-collapse:collapse;font-size:.83rem;margin:10px 0 16px;}
-.size-table th{background:#f0ebf8;color:#7B2D8B;padding:8px 10px;text-align:left;font-weight:800;}
-.size-table td{padding:7px 10px;border-bottom:1px solid #f5f5f5;}
-.size-table tr:hover td{background:#faf7fc;}
-.faq-item{border-bottom:1px solid #f0ebf8;padding:12px 0;}
-.faq-q{font-weight:800;color:#1a0033;cursor:pointer;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;}
-.faq-a{color:#555;font-size:.85rem;margin-top:8px;line-height:1.65;display:none;}
-.faq-item.open .faq-a{display:block;}
-.faq-item.open .faq-q::after{content:'▲';}
-.faq-q::after{content:'▼';color:#7B2D8B;font-size:.75rem;}
-</style>
-
-<!-- SIZE GUIDE MODAL -->
-<div class="page-modal" id="sizeGuideModal">
-  <div class="page-modal-box">
-    <button class="page-modal-close" onclick="closeSizeGuide()">✕</button>
-    <h2>📏 Size Guide</h2>
-    <p style="color:#888;font-size:.82rem;margin-bottom:16px;">All sizes are approximate. When in doubt, size up — kids grow fast! 😊</p>
-
-    <h3>👦 Boys & 👧 Girls — Age to Size Chart</h3>
-    <table class="size-table">
-      <thead><tr><th>Age</th><th>Size Label</th><th>Height (cm)</th><th>Chest (cm)</th><th>Weight (kg)</th></tr></thead>
-      <tbody>
-        <tr><td>0–6 months</td><td>0–3M / NB</td><td>50–67</td><td>40–44</td><td>3–7</td></tr>
-        <tr><td>6–12 months</td><td>6–12M</td><td>67–76</td><td>44–46</td><td>7–10</td></tr>
-        <tr><td>1–2 years</td><td>12–24M / 1T–2T</td><td>76–92</td><td>46–52</td><td>10–13</td></tr>
-        <tr><td>2–3 years</td><td>3T / S</td><td>92–99</td><td>52–54</td><td>13–15</td></tr>
-        <tr><td>3–4 years</td><td>4T / S–M</td><td>99–107</td><td>54–57</td><td>15–18</td></tr>
-        <tr><td>4–5 years</td><td>5 / M</td><td>107–114</td><td>57–60</td><td>18–21</td></tr>
-        <tr><td>5–6 years</td><td>6 / M–L</td><td>114–120</td><td>60–63</td><td>21–24</td></tr>
-        <tr><td>6–8 years</td><td>7–8 / L</td><td>120–128</td><td>63–66</td><td>24–28</td></tr>
-        <tr><td>8–10 years</td><td>9–10 / XL</td><td>128–138</td><td>66–70</td><td>28–34</td></tr>
-        <tr><td>10–12 years</td><td>11–12 / XXL</td><td>138–148</td><td>70–75</td><td>34–40</td></tr>
-      </tbody>
-    </table>
-
-    <h3>🍼 Baby — Age to Size Chart</h3>
-    <table class="size-table">
-      <thead><tr><th>Age</th><th>Size</th><th>Height (cm)</th><th>Weight (kg)</th></tr></thead>
-      <tbody>
-        <tr><td>Newborn</td><td>NB</td><td>Up to 50</td><td>Up to 3.5</td></tr>
-        <tr><td>0–3 months</td><td>0–3M</td><td>50–60</td><td>3.5–6</td></tr>
-        <tr><td>3–6 months</td><td>3–6M</td><td>60–67</td><td>6–8</td></tr>
-        <tr><td>6–9 months</td><td>6–9M</td><td>67–72</td><td>8–9.5</td></tr>
-        <tr><td>9–12 months</td><td>9–12M</td><td>72–80</td><td>9.5–11</td></tr>
-        <tr><td>12–18 months</td><td>12–18M</td><td>80–86</td><td>11–13</td></tr>
-        <tr><td>18–24 months</td><td>18–24M</td><td>86–92</td><td>13–15</td></tr>
-      </tbody>
-    </table>
-
-    <div style="background:#fff8e1;border-radius:10px;padding:14px 16px;font-size:.83rem;color:#e65100;margin-top:8px;">
-      💡 <b>Tip:</b> Check the product description for any specific size notes. If you're between sizes, we recommend sizing up. Still unsure? WhatsApp us at <a href="https://wa.me/919497596110" style="color:#25D366;font-weight:700;">+91 94975 96110</a>
-    </div>
-  </div>
-</div>
-
-<!-- FAQ MODAL -->
-<div class="page-modal" id="faqModal">
-  <div class="page-modal-box">
-    <button class="page-modal-close" onclick="closeFAQ()">✕</button>
-    <h2>❓ Frequently Asked Questions</h2>
-
-    <h3>🚚 Shipping & Delivery</h3>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">How long does delivery take?</div>
-      <div class="faq-a">We deliver across India in 3–7 business days via Indian Post or Shiprocket. You'll get a WhatsApp update when your order ships.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">What is the delivery charge?</div>
-      <div class="faq-a">Delivery is ₹60 for orders below ₹999. Orders above ₹999 get FREE delivery! 🎉</div>
-    </div>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">Do you deliver outside India?</div>
-      <div class="faq-a">Currently we deliver within India only. International shipping is coming soon — stay tuned!</div>
-    </div>
-
-    <h3>💳 Payments</h3>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">What payment methods do you accept?</div>
-      <div class="faq-a">We accept Cash on Delivery (COD) on selected products, and UPI payment via WhatsApp. After placing a UPI order, you'll receive our UPI ID on WhatsApp to complete the payment.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">How does UPI payment work?</div>
-      <div class="faq-a">1. Place your order and select UPI payment. 2. You'll receive a WhatsApp message with our UPI ID (mujeebpmba@ybl). 3. Pay and send the screenshot on WhatsApp. 4. We confirm and ship your order! ✅</div>
-    </div>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">Is my payment safe?</div>
-      <div class="faq-a">Absolutely. All payments are verified manually by our team. We never ask for your OTP, PIN or card details. Only UPI transfers to our official ID.</div>
-    </div>
-
-    <h3>🔄 Exchange & Returns</h3>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">Can I return a product?</div>
-      <div class="faq-a">We do not offer returns or refunds. However, we do offer exchanges for wrong items delivered or damaged products. See our Exchange Policy for full details.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">How do I request an exchange?</div>
-      <div class="faq-a">WhatsApp us at +91 94975 96110 within 48 hours of delivery with your order number and a photo of the issue. We'll sort it out for you!</div>
-    </div>
-
-    <h3>📦 Orders & Tracking</h3>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">How do I track my order?</div>
-      <div class="faq-a">Login to your account and go to "My Orders" to see real-time order status. You'll also get WhatsApp updates at every step.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">Can I cancel my order?</div>
-      <div class="faq-a">You can cancel before the order is shipped. After shipping, cancellation is not possible. WhatsApp us immediately if you need to cancel.</div>
-    </div>
-
-    <h3>📏 Sizing</h3>
-    <div class="faq-item" onclick="toggleFAQ(this)">
-      <div class="faq-q">How do I know what size to order?</div>
-      <div class="faq-a">Check our Size Guide (available in the footer and product pages) for age-to-size charts. When in doubt, size up — kids grow fast! Still not sure? WhatsApp us.</div>
-    </div>
-  </div>
-</div>
-
-<!-- EXCHANGE POLICY MODAL -->
-<div class="page-modal" id="exchangePolicyModal">
-  <div class="page-modal-box">
-    <button class="page-modal-close" onclick="closeExchangePolicy()">✕</button>
-    <h2>🔄 Exchange Policy</h2>
-    <p style="color:#e65100;font-weight:700;font-size:.88rem;margin-bottom:12px;">⚠️ KidsCart does not offer returns or refunds. Exchange only.</p>
-
-    <h3>When is an Exchange Accepted?</h3>
-    <ul>
-      <li>Wrong item delivered (different product or size than ordered)</li>
-      <li>Item received in damaged or defective condition</li>
-    </ul>
-
-    <h3>Exchange Conditions</h3>
-    <ul>
-      <li>Request must be raised <b>within 48 hours of delivery</b> via WhatsApp</li>
-      <li>Photo proof of the wrong/damaged item is required</li>
-      <li>Item must be unused, unwashed, and with original tags</li>
-      <li>Exchange is for the same or equivalent product only</li>
-    </ul>
-
-    <h3>What is NOT Eligible</h3>
-    <ul>
-      <li>Change of mind or wrong size ordered by customer</li>
-      <li>Colour variation due to lighting or screen differences</li>
-      <li>Items without tags or that have been washed/used</li>
-      <li>Requests raised after 48 hours of delivery</li>
-    </ul>
-
-    <h3>Exchange Process</h3>
-    <ol style="padding-left:18px;font-size:.88rem;color:#444;line-height:1.8;">
-      <li>WhatsApp us at <b>+91 94975 96110</b> within 48 hours</li>
-      <li>Share your order number and photo of the issue</li>
-      <li>Our team will review within 24 hours</li>
-      <li>If approved, ship back the item (we share the address)</li>
-      <li>Replacement shipped within 5–7 business days after receiving item</li>
-    </ol>
-
-    <div style="background:#e8f5e9;border-radius:10px;padding:14px;margin-top:12px;font-size:.83rem;color:#2e7d32;">
-      📱 To raise an exchange request: <a href="https://wa.me/919497596110?text=Hi! I need to raise an exchange request for my KidsCart order." style="color:#25D366;font-weight:700;">WhatsApp us here</a>
-    </div>
-  </div>
-</div>
-
-<!-- PRIVACY POLICY MODAL -->
-<div class="page-modal" id="privacyPolicyModal">
-  <div class="page-modal-box">
-    <button class="page-modal-close" onclick="closePrivacyPolicy()">✕</button>
-    <h2>🔒 Privacy Policy</h2>
-    <p style="color:#888;font-size:.8rem;">Last updated: March 2026</p>
-
-    <h3>What Information We Collect</h3>
-    <ul>
-      <li>Name, email address, and phone number when you create an account</li>
-      <li>Delivery address when you place an order</li>
-      <li>Order history and shopping activity on our site</li>
-      <li>Device and browser information for site functionality</li>
-    </ul>
-
-    <h3>How We Use Your Information</h3>
-    <ul>
-      <li>To process and deliver your orders</li>
-      <li>To send order confirmations and shipping updates via WhatsApp and email</li>
-      <li>To send OTP verification codes for login security</li>
-      <li>To respond to your questions and support requests</li>
-      <li>To improve our products and shopping experience</li>
-    </ul>
-
-    <h3>Data Sharing</h3>
-    <p>We do <b>not</b> sell or share your personal data with third parties for marketing. We share data only with:</p>
-    <ul>
-      <li>Delivery partners (name, address, phone for shipping only)</li>
-      <li>Payment processors (UPI transaction verification)</li>
-    </ul>
-
-    <h3>Data Security</h3>
-    <p>Your data is stored securely on MongoDB Atlas (Mumbai region). Passwords are encrypted with bcrypt. We use HTTPS for all connections.</p>
-
-    <h3>Your Rights</h3>
-    <p>You can request deletion of your account and data by WhatsApping us at +91 94975 96110 or emailing info@kidscart.kids.</p>
-
-    <h3>Contact</h3>
-    <p>KidsCart | Kondotty, Kerala 673642 | info@kidscart.kids | +91 94975 96110</p>
-  </div>
-</div>
-
-<!-- TERMS OF SERVICE MODAL -->
-<div class="page-modal" id="termsModal">
-  <div class="page-modal-box">
-    <button class="page-modal-close" onclick="closeTerms()">✕</button>
-    <h2>📋 Terms of Service</h2>
-    <p style="color:#888;font-size:.8rem;">Last updated: March 2026 | Governing law: India</p>
-
-    <h3>1. Acceptance of Terms</h3>
-    <p>By using KidsCart (kidscart.kids), you agree to these terms. If you disagree, please do not use the site.</p>
-
-    <h3>2. Products & Pricing</h3>
-    <ul>
-      <li>All prices are in Indian Rupees (₹) and include GST where applicable</li>
-      <li>We reserve the right to change prices without notice</li>
-      <li>Product images are for illustration — slight colour variations may occur</li>
-    </ul>
-
-    <h3>3. Orders & Payment</h3>
-    <ul>
-      <li>Orders are confirmed only after payment verification (COD confirmed at delivery; UPI confirmed after screenshot verification)</li>
-      <li>We reserve the right to cancel orders due to stock unavailability</li>
-      <li>UPI payments must be made to the official UPI ID: <b>mujeebpmba@ybl</b></li>
-    </ul>
-
-    <h3>4. Delivery</h3>
-    <p>Estimated delivery is 3–7 business days. KidsCart is not liable for delays caused by courier partners, weather, or force majeure events.</p>
-
-    <h3>5. Exchange Policy</h3>
-    <p>We offer exchange only (no returns or refunds) as per our Exchange Policy. See full details in the Exchange Policy page.</p>
-
-    <h3>6. User Accounts</h3>
-    <p>You are responsible for maintaining the security of your account. Do not share your OTP or password with anyone.</p>
-
-    <h3>7. Limitation of Liability</h3>
-    <p>KidsCart's liability is limited to the value of the products purchased. We are not liable for indirect or consequential damages.</p>
-
-    <h3>8. Contact</h3>
-    <p>KidsCart | info@kidscart.kids | +91 94975 96110 | Kondotty, Kerala, India</p>
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════════
-// PAGE MODALS JS
-// ══════════════════════════════════════════════
-function openSizeGuide()     { document.getElementById('sizeGuideModal').classList.add('open'); document.body.style.overflow='hidden'; }
-function closeSizeGuide()    { document.getElementById('sizeGuideModal').classList.remove('open'); document.body.style.overflow=''; }
-function openFAQ()           { document.getElementById('faqModal').classList.add('open'); document.body.style.overflow='hidden'; }
-function closeFAQ()          { document.getElementById('faqModal').classList.remove('open'); document.body.style.overflow=''; }
-function openExchangePolicy(){ document.getElementById('exchangePolicyModal').classList.add('open'); document.body.style.overflow='hidden'; }
-function closeExchangePolicy(){ document.getElementById('exchangePolicyModal').classList.remove('open'); document.body.style.overflow=''; }
-function openPrivacyPolicy() { document.getElementById('privacyPolicyModal').classList.add('open'); document.body.style.overflow='hidden'; }
-function closePrivacyPolicy(){ document.getElementById('privacyPolicyModal').classList.remove('open'); document.body.style.overflow=''; }
-function openTerms()         { document.getElementById('termsModal').classList.add('open'); document.body.style.overflow='hidden'; }
-function closeTerms()        { document.getElementById('termsModal').classList.remove('open'); document.body.style.overflow=''; }
-
-// FAQ accordion
-function toggleFAQ(el) { el.classList.toggle('open'); }
-
-// Close modals on overlay click
-['sizeGuideModal','faqModal','exchangePolicyModal','privacyPolicyModal','termsModal'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('click', e => { if (e.target === el) { el.classList.remove('open'); document.body.style.overflow = ''; }});
-});
-
-// ══════════════════════════════════════════════
-// COD PER PRODUCT CHECK
-// Check if all cart items have COD enabled
-// ══════════════════════════════════════════════
-function checkCODEligibility() {
-  const codOption = document.getElementById('codOption');
-  if (!codOption) return;
-  // If any item in cart has codEnabled=false, hide COD option
-  const allCOD = cart.every(item => item.codEnabled !== false);
-  if (!allCOD) {
-    codOption.disabled = true;
-    codOption.textContent = 'Cash on Delivery (Not available for some items in cart)';
-    codOption.style.color = '#aaa';
-    // Switch to UPI if COD was selected
-    const paySelect = codOption.closest('select');
-    if (paySelect && paySelect.value === 'cod') paySelect.value = 'upi';
-  } else {
-    codOption.disabled = false;
-    codOption.textContent = 'Cash on Delivery (COD)';
-    codOption.style.color = '';
-  }
-}
-</script>
-
 </body>
 </html>

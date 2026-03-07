@@ -1,8 +1,8 @@
 // ============================================================
-// KIDSCART – Backend API v5
-// v4: secrets in .env, Cloudinary, admin login fix, CORS, rate limiting
-// v5: CRM Leads, Exchange Requests, WhatsApp routes, Support role,
-//     Admin forgot-password, Activity log, Settings POST alias, Admin login returns role
+// KIDSCART – Backend API v4
+// Fixes: secrets in .env, Cloudinary uploads, admin login bug,
+//        CORS hardened, email-only OTP (WhatsApp OTP coming soon),
+//        rate limiting on register, RegExp safety, banner crash fixed
 // ============================================================
 
 const express    = require('express');
@@ -26,6 +26,7 @@ const PORT   = process.env.PORT || 5000;
 
 // ── CORS – only your domain ────────────────────────────────
 const allowedOrigins = [
+  'https://kidscart-peach.vercel.app',
   'https://kidscart.kids',
   'https://www.kidscart.kids',
   'http://localhost:5000',
@@ -335,46 +336,6 @@ const Banner   = mongoose.model('Banner',   BannerSchema);
 const Chat     = mongoose.model('Chat',     ChatSchema);
 const Settings = mongoose.model('Settings', SettingsSchema);
 
-// ── NEW MODELS (v5) ────────────────────────────────────────
-
-const CrmLeadSchema = new mongoose.Schema({
-  name:        { type: String, required: true, trim: true },
-  phone:       { type: String, required: true, trim: true },
-  source:      { type: String, enum: ['WhatsApp','Website','Instagram','Other'], default: 'WhatsApp' },
-  stage:       { type: String, enum: ['new','contacted','interested','placed','converted','lost'], default: 'new' },
-  assigned:    { type: String, default: '' },
-  notes:       [{ text: String, addedBy: String, addedAt: { type: Date, default: Date.now } }],
-  orderId:     { type: mongoose.Schema.Types.ObjectId, ref: 'Order', default: null },
-  createdAt:   { type: Date, default: Date.now },
-  updatedAt:   { type: Date, default: Date.now }
-});
-
-const ExchangeSchema = new mongoose.Schema({
-  reqId:       { type: String, unique: true },
-  customer:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  orderId:     { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
-  reason:      { type: String, required: true },
-  photo:       String,   // Cloudinary URL of proof photo
-  status:      { type: String, enum: ['pending','approved','rejected','shipped'], default: 'pending' },
-  adminNote:   String,
-  handledBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  createdAt:   { type: Date, default: Date.now },
-  updatedAt:   { type: Date, default: Date.now }
-});
-
-const ActivityLogSchema = new mongoose.Schema({
-  admin:     { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  adminName: String,
-  action:    String,
-  details:   String,
-  ip:        String,
-  createdAt: { type: Date, default: Date.now }
-});
-
-const CrmLead    = mongoose.model('CrmLead',    CrmLeadSchema);
-const Exchange   = mongoose.model('Exchange',   ExchangeSchema);
-const ActivityLog = mongoose.model('ActivityLog', ActivityLogSchema);
-
 // ── HELPERS ───────────────────────────────────────────────
 const genOTP     = () => Math.floor(100000 + Math.random() * 900000).toString();
 const genOrderId = () => 'KC' + Date.now().toString(36).toUpperCase();
@@ -414,28 +375,6 @@ const superAdminAuth = async (req, res, next) => {
       return res.status(403).json({ error: 'Super admin access required' });
     next();
   });
-};
-
-// Support role: WhatsApp inbox, CRM, view orders only
-const supportAuth = async (req, res, next) => {
-  await auth(req, res, () => {
-    if (!['admin', 'super_admin', 'support'].includes(req.user.role))
-      return res.status(403).json({ error: 'Staff access required' });
-    next();
-  });
-};
-
-// Activity logging helper
-const logActivity = async (req, action, details = '') => {
-  try {
-    await ActivityLog.create({
-      admin: req.user?._id,
-      adminName: req.user?.name || 'Unknown',
-      action,
-      details,
-      ip: req.ip || req.headers['x-forwarded-for'] || 'unknown'
-    });
-  } catch (e) { /* non-fatal */ }
 };
 
 // ── RATE LIMITING ─────────────────────────────────────────
@@ -489,8 +428,7 @@ app.post('/api/auth/login', rateLimitMW(10, 60000), async (req, res) => {
     if (!user || !user.password || !await bcrypt.compare(password, user.password))
       return res.status(401).json({ error: 'Invalid email or password' });
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30d' });
-    await logActivity({ user, ip: req.ip }, 'LOGIN', `${user.email} logged in`).catch(()=>{});
-    res.json({ success: true, token, role: user.role, user: { id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role } });
+    res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -675,19 +613,6 @@ app.get('/api/admin/settings', adminAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// POST alias so admin panel can use both PUT and POST
-app.post('/api/admin/settings', adminAuth, async (req, res) => {
-  try {
-    const updates = req.body;
-    const ops = Object.entries(updates).map(([key, value]) =>
-      Settings.findOneAndUpdate({ key }, { value, updatedAt: new Date() }, { upsert: true, new: true })
-    );
-    await Promise.all(ops);
-    await logActivity(req, 'SETTINGS_UPDATE', JSON.stringify(Object.keys(updates)));
-    res.json({ success: true, message: 'Settings saved' });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
 app.put('/api/admin/settings', adminAuth, async (req, res) => {
   try {
     for (const [key, value] of Object.entries(req.body))
@@ -850,23 +775,6 @@ app.get('/api/chat/:sid', async (req, res) => {
     const s = await Chat.findOne({ sessionId: req.params.sid });
     if (!s) return res.status(404).json({ error: 'Chat session not found' });
     res.json({ success: true, session: s });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// ── ADMIN AUTH ROUTES ────────────────────────────────────
-// Admin forgot password (uses same flow as customer - sends reset email)
-app.post('/api/admin/auth/forgot-password', rateLimitMW(5, 60000), async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email: email?.toLowerCase(), role: { $in: ['admin', 'super_admin', 'support'] } });
-    // Always return success (don't reveal if admin email exists)
-    if (!user) return res.json({ success: true, message: 'If registered, a reset link has been sent' });
-    const token = crypto.randomBytes(32).toString('hex');
-    user.resetToken = token; user.resetTokenExpiry = new Date(Date.now() + 3600000);
-    await user.save();
-    // Send reset email
-    emailForgot(email, user.name, token, user._id).catch(e => console.error('Admin forgot email:', e.message));
-    res.json({ success: true, message: 'Password reset link sent to your email' });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -1115,257 +1023,6 @@ app.get('/api/admin/chats', adminAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── CRM LEADS ────────────────────────────────────────────
-app.get('/api/admin/crm/leads', supportAuth, async (req, res) => {
-  try {
-    const { stage, assigned, source } = req.query;
-    const filter = {};
-    if (stage)    filter.stage    = stage;
-    if (assigned) filter.assigned = assigned;
-    if (source)   filter.source   = source;
-    const leads = await CrmLead.find(filter).sort({ updatedAt: -1 }).limit(200);
-    res.json({ success: true, leads });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/admin/crm/leads', supportAuth, async (req, res) => {
-  try {
-    const { name, phone, source, assigned, notes, stage } = req.body;
-    if (!name || !phone) return res.status(400).json({ error: 'Name and phone required' });
-    const reqId = 'L' + Date.now().toString(36).toUpperCase();
-    const noteArr = notes ? [{ text: notes, addedBy: req.user.name }] : [];
-    const lead = await CrmLead.create({ name, phone, source, assigned, notes: noteArr, stage: stage || 'new' });
-    await logActivity(req, 'CRM_LEAD_ADDED', `${name} (${phone})`);
-    res.status(201).json({ success: true, lead });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.patch('/api/admin/crm/leads/:id', supportAuth, async (req, res) => {
-  try {
-    const { stage, assigned, note } = req.body;
-    const update = { updatedAt: new Date() };
-    if (stage)    update.stage    = stage;
-    if (assigned !== undefined) update.assigned = assigned;
-    const lead = await CrmLead.findByIdAndUpdate(req.params.id, update, { new: true });
-    if (!lead) return res.status(404).json({ error: 'Lead not found' });
-    if (note) {
-      lead.notes.push({ text: note, addedBy: req.user.name });
-      await lead.save();
-    }
-    await logActivity(req, 'CRM_LEAD_UPDATED', `${lead.name} → ${stage || assigned || 'note added'}`);
-    res.json({ success: true, lead });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.delete('/api/admin/crm/leads/:id', adminAuth, async (req, res) => {
-  try {
-    await CrmLead.findByIdAndDelete(req.params.id);
-    await logActivity(req, 'CRM_LEAD_DELETED', req.params.id);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// ── EXCHANGE REQUESTS ─────────────────────────────────────
-const genExchangeId = () => 'EX-' + Date.now().toString(36).toUpperCase();
-
-// Customer submits exchange request
-app.post('/api/exchanges', auth, async (req, res) => {
-  try {
-    const { orderId, reason, photo } = req.body;
-    if (!orderId || !reason) return res.status(400).json({ error: 'Order ID and reason required' });
-    // Verify order belongs to customer
-    const order = await Order.findOne({ _id: orderId, user: req.user._id });
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    // Check 48hr window
-    const deliveredAt = order.deliveredAt || order.createdAt;
-    const hours = (Date.now() - new Date(deliveredAt).getTime()) / 3600000;
-    if (hours > 48) return res.status(400).json({ error: 'Exchange window is 48 hours from delivery. This order is no longer eligible.' });
-    const exchange = await Exchange.create({
-      reqId: genExchangeId(),
-      customer: req.user._id,
-      orderId: order._id,
-      reason,
-      photo: photo || null,
-      status: 'pending'
-    });
-    // Notify admin via email
-    sendEmail(
-      process.env.ADMIN_EMAIL || 'admin@kidscart.kids',
-      `🔄 Exchange Request ${exchange.reqId} — Order #${order.orderId}`,
-      emailWrap('New Exchange Request', `
-        <p><b>Request ID:</b> ${exchange.reqId}</p>
-        <p><b>Customer:</b> ${req.user.name} (${req.user.phone || req.user.email})</p>
-        <p><b>Order:</b> #${order.orderId}</p>
-        <p><b>Reason:</b> ${reason}</p>
-        <p>Login to admin panel to review this request.</p>`)
-    ).catch(()=>{});
-    res.status(201).json({ success: true, exchange, message: 'Exchange request submitted. We will contact you within 24 hours via WhatsApp.' });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// Admin views all exchange requests
-app.get('/api/admin/exchanges', adminAuth, async (req, res) => {
-  try {
-    const { status } = req.query;
-    const filter = {};
-    if (status && status !== 'all') filter.status = status;
-    const exchanges = await Exchange.find(filter)
-      .populate('customer', 'name phone email')
-      .populate('orderId', 'orderId total')
-      .sort({ createdAt: -1 })
-      .limit(100);
-    const formatted = exchanges.map(e => ({
-      id:          e._id,
-      reqId:       e.reqId,
-      customer:    e.customer?.name || 'N/A',
-      phone:       e.customer?.phone || e.customer?.email || '',
-      orderId:     e.orderId?.orderId || e.orderId,
-      orderTotal:  e.orderId?.total || 0,
-      reason:      e.reason,
-      photo:       e.photo,
-      status:      e.status,
-      adminNote:   e.adminNote,
-      requestedAt: e.createdAt?.toISOString().slice(0,10)
-    }));
-    res.json({ success: true, exchanges: formatted });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// Admin updates exchange status
-app.patch('/api/admin/exchanges/:id', adminAuth, async (req, res) => {
-  try {
-    const { status, adminNote } = req.body;
-    if (!['approved','rejected','shipped'].includes(status))
-      return res.status(400).json({ error: 'Invalid status' });
-    const exchange = await Exchange.findByIdAndUpdate(
-      req.params.id,
-      { status, adminNote, handledBy: req.user._id, updatedAt: new Date() },
-      { new: true }
-    ).populate('customer', 'name phone email').populate('orderId', 'orderId');
-    if (!exchange) return res.status(404).json({ error: 'Exchange not found' });
-    await logActivity(req, 'EXCHANGE_' + status.toUpperCase(), `${exchange.reqId} — ${exchange.customer?.name}`);
-    // Send notification email to customer
-    const customerEmail = exchange.customer?.email;
-    if (customerEmail) {
-      const statusMsg = { approved: 'approved ✅ We will ship your replacement shortly.', rejected: 'reviewed. Unfortunately it does not meet exchange criteria.', shipped: 'processed ✅ Your replacement has been shipped!' };
-      sendEmail(customerEmail, `KidsCart Exchange Update — ${exchange.reqId}`,
-        emailWrap('Exchange Request Update', `
-          <p>Hi ${exchange.customer?.name},</p>
-          <p>Your exchange request <b>${exchange.reqId}</b> for order <b>#${exchange.orderId?.orderId}</b> has been ${statusMsg[status] || status}.</p>
-          ${adminNote ? `<p><b>Note from us:</b> ${adminNote}</p>` : ''}
-          <p>Questions? WhatsApp us at +91 94975 96110</p>`)
-      ).catch(()=>{});
-    }
-    res.json({ success: true, exchange });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// ── WHATSAPP ROUTES (Meta Cloud API ready) ────────────────
-// These routes are ready — connect Meta API credentials in .env to activate
-
-// Webhook verification (Meta requires GET to verify)
-app.get('/api/whatsapp/webhook', (req, res) => {
-  const { 'hub.mode': mode, 'hub.verify_token': token, 'hub.challenge': challenge } = req.query;
-  if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
-    console.log('✅ WhatsApp webhook verified');
-    res.status(200).send(challenge);
-  } else {
-    res.status(403).json({ error: 'Verification failed' });
-  }
-});
-
-// Webhook receives messages from WhatsApp
-app.post('/api/whatsapp/webhook', async (req, res) => {
-  try {
-    res.sendStatus(200); // Always respond 200 immediately to Meta
-    const body = req.body;
-    if (body.object !== 'whatsapp_business_account') return;
-    const entry    = body.entry?.[0];
-    const change   = entry?.changes?.[0];
-    const value    = change?.value;
-    const messages = value?.messages;
-    if (!messages?.length) return;
-    for (const msg of messages) {
-      const phone = msg.from; // e.g. '919497596110'
-      const text  = msg.text?.body || (msg.type === 'image' ? '[Image/Photo]' : `[${msg.type}]`);
-      const name  = value.contacts?.find(c => c.wa_id === phone)?.profile?.name || 'Customer';
-      console.log(`📱 WA message from ${name} (${phone}): ${text}`);
-      // Auto-create or update CRM lead
-      await CrmLead.findOneAndUpdate(
-        { phone: '+' + phone },
-        { $set: { name, source: 'WhatsApp', updatedAt: new Date() } },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      ).catch(()=>{});
-      // Emit to admin panel in real-time via Socket.io
-      io.to('admins').emit('wa:message', { phone: '+' + phone, name, text, time: new Date(), type: msg.type });
-    }
-  } catch (e) { console.error('WA webhook error:', e); }
-});
-
-// Admin sends a WhatsApp message
-app.post('/api/admin/whatsapp/send', adminAuth, async (req, res) => {
-  try {
-    const { to, message } = req.body;
-    if (!to || !message) return res.status(400).json({ error: 'Recipient and message required' });
-    const WA_TOKEN  = process.env.WHATSAPP_ACCESS_TOKEN;
-    const WA_PHONE_ID = process.env.WHATSAPP_PHONE_ID;
-    if (!WA_TOKEN || !WA_PHONE_ID) {
-      // WhatsApp API not yet configured — log and return mock success
-      console.log(`📱 [WA MOCK] To: ${to} | Msg: ${message}`);
-      return res.json({ success: true, mock: true, message: 'WhatsApp API not configured yet — message logged' });
-    }
-    const resp = await fetch(`https://graph.facebook.com/v18.0/${WA_PHONE_ID}/messages`, {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + WA_TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: to.replace(/[^0-9]/g, ''),
-        type: 'text',
-        text: { preview_url: false, body: message }
-      })
-    });
-    const data = await resp.json();
-    if (!resp.ok) return res.status(500).json({ error: data.error?.message || 'WhatsApp send failed' });
-    await logActivity(req, 'WA_MESSAGE_SENT', `To: ${to}`);
-    res.json({ success: true, data });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// Verify payment from WhatsApp slip
-app.post('/api/admin/whatsapp/verify-payment', adminAuth, async (req, res) => {
-  try {
-    const { orderId, convId } = req.body;
-    if (orderId) {
-      await Order.findByIdAndUpdate(orderId, {
-        'payment.status': 'paid',
-        status: 'confirmed',
-        $push: { tracking: { status: 'confirmed', message: 'Payment verified by admin via WhatsApp' } }
-      });
-      await logActivity(req, 'PAYMENT_VERIFIED', `Order: ${orderId}`);
-    }
-    res.json({ success: true, message: 'Payment verified and order confirmed' });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// Get WhatsApp conversations (stored as CRM leads with messages)
-app.get('/api/admin/whatsapp/conversations', supportAuth, async (req, res) => {
-  try {
-    // In production this would come from Meta API or a WAMessage collection
-    // For now returns CRM leads sourced from WhatsApp
-    const leads = await CrmLead.find({ source: 'WhatsApp' }).sort({ updatedAt: -1 }).limit(50);
-    res.json({ success: true, conversations: leads });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// ── ACTIVITY LOG ─────────────────────────────────────────
-app.get('/api/admin/activity-log', superAdminAuth, async (req, res) => {
-  try {
-    const logs = await ActivityLog.find().sort({ createdAt: -1 }).limit(100);
-    res.json({ success: true, logs });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
 // ── ADMIN UTILITIES ───────────────────────────────────────
 app.get('/api/admin/test-email', adminAuth, async (req, res) => {
   const ok = await sendEmail('admin@kidscart.kids', 'KidsCart Email Test ✅',
@@ -1388,7 +1045,7 @@ app.post('/api/admin/fix-admin', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/health', (req, res) => res.json({ status: 'OK', version: '5.0', time: new Date(), domain: 'kidscart.kids' }));
+app.get('/api/health', (req, res) => res.json({ status: 'OK', version: '4.0', time: new Date(), domain: 'kidscart.kids' }));
 
 // ── SOCKET.IO LIVE CHAT ───────────────────────────────────
 io.on('connection', socket => {

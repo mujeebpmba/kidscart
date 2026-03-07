@@ -764,6 +764,34 @@ tr:hover td{background:#FAF7FC;}
               </div>
             </form>
           </div>
+          <!-- Announcement Bar Manager -->
+          <div class="card" style="margin-bottom:18px">
+            <div class="card-head"><h3>📢 Announcement Bar</h3><span style="font-size:.78rem;color:var(--gy)">Purple strip at the top of the shop page</span></div>
+            <div style="padding:16px 18px">
+              <div class="fgroup">
+                <label>Bar Text</label>
+                <input type="text" id="announceText" placeholder="e.g. 🎉 Sale is Live! Use CODE10 for 10% off" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="fgroup">
+                  <label>Link (optional)</label>
+                  <input type="text" id="announceLink" placeholder="#products or https://..." style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none">
+                </div>
+                <div class="fgroup">
+                  <label>Link Button Text</label>
+                  <input type="text" id="announceLinkText" placeholder="Shop Now →" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none">
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;margin-top:8px">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;font-weight:700">
+                  <input type="checkbox" id="announceHidden" style="width:16px;height:16px"> Hide bar (turn off)
+                </label>
+                <button onclick="saveAnnouncement()" style="background:var(--pp);color:#fff;border:none;padding:9px 22px;border-radius:8px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.85rem">💾 Save</button>
+              </div>
+              <div id="announcePreview" style="margin-top:12px;background:linear-gradient(135deg,#7B2D8B,#9b3db5);color:#fff;text-align:center;padding:8px 16px;border-radius:8px;font-size:.8rem;font-weight:700;display:none"></div>
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-head"><h3>All Banners</h3><span style="font-size:.78rem;color:var(--gy)">Banners show full-width at top of shop</span></div>
             <div id="bannersList"><p style="color:var(--gy);text-align:center;padding:24px;">Loading…</p></div>
@@ -929,7 +957,7 @@ function show(id, navEl) {
   const loaders = {
     dashboard: loadDashboard, orders: loadOrders, products: loadProducts,
     stock: loadStock, customers: loadCustomers, coupons: loadCoupons,
-    banners: loadBanners, chat: loadChats, reports: () => setReportRange(30),
+    banners: () => { loadBanners(); loadAnnouncement(); }, chat: loadChats, reports: () => setReportRange(30),
     adminusers: loadAdminUsers
   };
   if (loaders[id]) loaders[id]();
@@ -1809,6 +1837,42 @@ async function previewBannerImage(input) {
   if(input.files&&input.files[0])showBannerDragger(URL.createObjectURL(input.files[0]));
 }
 
+async function loadAnnouncement() {
+  try {
+    const d = await apiFetch('/admin/announcement');
+    if (d) {
+      document.getElementById('announceText').value = d.text || '';
+      document.getElementById('announceLink').value = d.link || '';
+      document.getElementById('announceLinkText').value = d.linkText || '';
+      document.getElementById('announceHidden').checked = !!d.hidden;
+      updateAnnouncePreview();
+    }
+  } catch(e) {}
+}
+
+function updateAnnouncePreview() {
+  const text = document.getElementById('announceText').value;
+  const preview = document.getElementById('announcePreview');
+  if (text) {
+    preview.style.display = 'block';
+    preview.textContent = text;
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+async function saveAnnouncement() {
+  const text = document.getElementById('announceText').value.trim();
+  const link = document.getElementById('announceLink').value.trim();
+  const linkText = document.getElementById('announceLinkText').value.trim();
+  const hidden = document.getElementById('announceHidden').checked;
+  try {
+    await apiFetch('/admin/announcement', 'PUT', { text, link, linkText, hidden });
+    toast('✅ Announcement bar updated!');
+    updateAnnouncePreview();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
 async function loadBanners() {
   try {
     const r = await apiFetch('/admin/banners');
@@ -1912,6 +1976,14 @@ async function deleteBanner(id) {
   try { await apiFetch(`/admin/banners/${id}`, 'DELETE'); toast('🗑️ Banner deleted'); loadBanners(); }
   catch(e) { toast('❌ ' + e.message); }
 }
+
+// Live preview of announcement
+document.addEventListener('DOMContentLoaded', () => {
+  ['announceText','announceLink','announceLinkText'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateAnnouncePreview);
+  });
+});
 
 // ── CHAT ────────────────────────────────────
 let chatSessions = [];

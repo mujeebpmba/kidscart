@@ -208,7 +208,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:20px;display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:rgba(255,255,255,.45);flex-wrap:wrap;gap:10px}
 
 /* ── MODALS ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:none;align-items:center;justify-content:center;padding:16px}
 .overlay.open{display:flex}
 .modal{background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;position:relative;animation:slideUp .25s ease}
 @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -369,7 +369,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 .chat-start-form h4{font-size:.9rem;font-weight:800;margin-bottom:12px;color:#1a0033}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a0033;color:#fff;padding:12px 24px;border-radius:50px;font-size:.88rem;font-weight:700;z-index:1000;transition:transform .3s ease;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1a0033;color:#fff;padding:12px 24px;border-radius:50px;font-size:.88rem;font-weight:700;z-index:2000;transition:transform .3s ease,opacity .3s ease;pointer-events:none;max-width:90vw;text-align:center;white-space:normal}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* ── RESPONSIVE ── */
@@ -406,6 +406,11 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
   .section{padding:20px 14px}
   .mobile-search{display:block}
 }
+.checkout-modal-box{max-width:540px}
+@media(max-width:600px){
+  #checkoutOverlay{padding:0!important;align-items:stretch!important}
+  .checkout-modal-box{border-radius:0!important;max-height:100vh!important;height:100%;max-width:100%!important;margin:0!important;overflow-y:auto}
+}
 </style>
   <!-- Performance hints -->
   <link rel="dns-prefetch" href="https://res.cloudinary.com">
@@ -418,7 +423,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 <div class="toast" id="toast"></div>
 
 <!-- ── ANNOUNCEMENT BAR ── -->
-<div class="announce-bar" id="announceBar">🎉 New AW25 Collection Live! Use <strong>WELCOME10</strong> for 10% off your first order <a href="#products" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop Now →</a></div>
+<div class="announce-bar" id="announceBar">🎉 New AW25 Collection Live! Use <strong>WELCOME10</strong> for 10% off your first order &nbsp;<a href="#products" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop Now →</a></div>
 
 <!-- ── NAV ── -->
 <nav>
@@ -727,7 +732,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 
 <!-- ── CHECKOUT MODAL ── -->
 <div class="overlay" id="checkoutOverlay">
-  <div class="modal" style="max-width:540px">
+  <div class="modal checkout-modal-box" style="max-width:540px">
     <button class="modal-close" onclick="closeCheckout()">✕</button>
     <div class="modal-body" id="checkoutBody"></div>
   </div>
@@ -878,6 +883,7 @@ async function init() {
   loadSettings();
   loadBanners();
   loadProducts();
+  loadAnnouncement();
   initSocket();
 }
 
@@ -889,6 +895,19 @@ function updateNavUser() {
 // ══════════════════════════════════════════════
 // BANNERS
 // ══════════════════════════════════════════════
+async function loadAnnouncement() {
+  try {
+    const d = await api('/settings/announcement');
+    if (d && d.text) {
+      const bar = document.getElementById('announceBar');
+      if (bar) {
+        bar.style.display = d.hidden ? 'none' : '';
+        if (d.text) bar.innerHTML = d.text + (d.link ? ` &nbsp;<a href="${d.link}" style="color:#fff;font-weight:800;text-decoration:underline">${d.linkText||'Shop Now →'}</a>` : '');
+      }
+    }
+  } catch(e) {}
+}
+
 async function loadBanners() {
   try {
     const d = await api('/banners');
@@ -1693,6 +1712,9 @@ function startCheckout() {
   _openCheckout();
 }
 function _openCheckout() {
+  // Close cart sidebar first
+  document.getElementById('cartSide').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
   checkoutStep = 1; selAddr = null; selPay = 'cod';
   window._newAddr = null;
   renderCheckout();
@@ -1898,9 +1920,25 @@ async function placeOrder() {
     loadOrders();
     showOrderSuccess(orderId, total, payMethod);
   } catch (e) {
-    toast('❌ ' + e.message);
+    // Show centered error inside checkout body
+    showCheckoutError(e.message);
     if (btn) { btn.textContent = 'Place Order 🎉'; btn.disabled = false; }
   }
+}
+
+function showCheckoutError(msg) {
+  // Remove any existing error banner
+  const old = document.getElementById('checkoutErrBanner');
+  if (old) old.remove();
+  const body = document.getElementById('checkoutBody');
+  if (!body) { toast('❌ ' + msg); return; }
+  const banner = document.createElement('div');
+  banner.id = 'checkoutErrBanner';
+  banner.style.cssText = 'background:#fff0f0;border:2px solid #e74c3c;border-radius:12px;padding:14px 18px;margin-bottom:14px;text-align:center;font-weight:700;font-size:.88rem;color:#c0392b;animation:slideUp .2s ease';
+  banner.innerHTML = `<div style="font-size:1.4rem;margin-bottom:4px">⚠️</div>${msg}<br><small style="font-weight:400;color:#888;font-size:.75rem">Please fix the issue and try again</small>`;
+  body.insertAdjacentElement('afterbegin', banner);
+  banner.scrollIntoView({behavior:'smooth', block:'nearest'});
+  setTimeout(() => { if(banner.parentNode) banner.remove(); }, 7000);
 }
 
 function showOrderSuccess(orderId, total, payMethod) {
@@ -2105,7 +2143,7 @@ const POLICIES = {
       <p>KidsCart shall not be liable for any indirect, incidental, or consequential damages arising from the use of our products or website.</p>
       <h3 style="color:#7B2D8B;margin:16px 0 8px">6. Governing Law</h3>
       <p>These terms are governed by the laws of India. Any disputes shall be subject to the jurisdiction of courts in Kerala, India.</p>
-      <p style="margin-top:16px;color:#888;font-size:.8rem">For queries: <a href="mailto:info@kidscart.kids" style="color:#7B2D8B">info@kidscart.kids</a> | +91 94975 96110</p>
+      <p style="margin-top:16px;color:#888;font-size:.8rem">For queries: <a href="#" onclick="location.href='mai'+'lto:info@kidscart.kids'" style="color:#7B2D8B">info&#64;kidscart.kids</a> | +91 94975 96110</p>
     `
   },
   refund: {
@@ -2126,7 +2164,7 @@ const POLICIES = {
       <p>Once we receive and inspect the returned item, refunds are processed within <strong>5-7 business days</strong> to the original payment method. COD orders will be refunded via bank transfer.</p>
       <h3 style="color:#7B2D8B;margin:16px 0 8px">Non-Returnable Items</h3>
       <p>Sale items, innerwear, and customised products are not eligible for return or refund.</p>
-      <p style="margin-top:16px;color:#888;font-size:.8rem">To initiate a return: <a href="mailto:info@kidscart.kids" style="color:#7B2D8B">info@kidscart.kids</a> | +91 94975 96110</p>
+      <p style="margin-top:16px;color:#888;font-size:.8rem">To initiate a return: <a href="#" onclick="location.href='mai'+'lto:info@kidscart.kids'" style="color:#7B2D8B">info&#64;kidscart.kids</a> | +91 94975 96110</p>
     `
   },
   shipping: {
@@ -2155,7 +2193,7 @@ const POLICIES = {
       <div style="display:grid;gap:16px">
         <div style="background:#F5F0F8;border-radius:12px;padding:16px">
           <h3 style="color:#7B2D8B;margin:0 0 10px">📧 Email</h3>
-          <p style="margin:4px 0"><a href="mailto:info@kidscart.kids" style="color:#7B2D8B;font-weight:700">info@kidscart.kids</a></p>
+          <p style="margin:4px 0"><a href="#" onclick="location.href='mai'+'lto:info@kidscart.kids'" style="color:#7B2D8B;font-weight:700">info&#64;kidscart.kids</a></p>
           <p style="font-size:.82rem;color:#888">We reply within 24 hours on business days</p>
         </div>
         <div style="background:#F5F0F8;border-radius:12px;padding:16px">

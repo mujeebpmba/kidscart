@@ -1078,6 +1078,33 @@ app.put('/api/admin/products/:id/order', adminAuth, async (req, res) => {
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
+// ── ANNOUNCEMENT BAR ─────────────────────────────────────
+app.get('/api/settings/announcement', async (req, res) => {
+  try {
+    const s = await Settings.findOne({ key: 'announcement' });
+    res.json(s ? s.value : { text: '', link: '', linkText: 'Shop Now →', hidden: false });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/admin/announcement', adminAuth, async (req, res) => {
+  try {
+    const s = await Settings.findOne({ key: 'announcement' });
+    res.json(s ? s.value : { text: '', link: '', linkText: 'Shop Now →', hidden: false });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/admin/announcement', adminAuth, async (req, res) => {
+  try {
+    const { text, link, linkText, hidden } = req.body;
+    await Settings.findOneAndUpdate(
+      { key: 'announcement' },
+      { key: 'announcement', value: { text: text || '', link: link || '', linkText: linkText || 'Shop Now →', hidden: !!hidden }, updatedAt: new Date() },
+      { upsert: true }
+    );
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/admin/test-email', adminAuth, async (req, res) => {
   const ok = await sendEmail('admin@kidscart.kids', 'KidsCart Email Test ✅',
     emailWrap('Email Working!', '<p style="color:#444;font-size:15px;">ZeptoMail is configured correctly. ✅</p>'));

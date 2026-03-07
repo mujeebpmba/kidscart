@@ -289,10 +289,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 .ci-qty span{font-weight:800;font-size:.9rem;min-width:18px;text-align:center}
 .ci-del{background:none;color:var(--er);font-size:1.1rem;padding:4px}
 .cart-ftr{padding:16px 20px;border-top:2px solid var(--lt2)}
-.cart-drag-handle{display:none;width:40px;height:4px;background:#ddd;border-radius:4px;margin:0 auto}
 @media(max-width:600px){
-  .cart-side{padding-top:env(safe-area-inset-top,0px)}
-  .cart-drag-handle{display:block;margin:10px auto 0}
 }
 .coupon-row{display:flex;gap:8px;margin-bottom:12px}
 .coupon-row input{flex:1;padding:9px 14px;border:2px solid var(--lt2);border-radius:var(--rs);font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;transition:var(--tr)}
@@ -349,7 +346,8 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 .track-info p{font-size:.78rem;color:var(--gy)}
 
 /* ── CHAT ── */
-.chat-bubble{position:fixed;bottom:24px;right:16px;z-index:499;display:flex;flex-direction:column;align-items:flex-end;gap:10px;transition:opacity .2s}
+.chat-bubble{position:fixed;bottom:24px;right:16px;z-index:499;display:flex;flex-direction:column;align-items:flex-end;gap:10px;transition:opacity .2s,visibility .2s}
+body.cart-open .chat-bubble,body.checkout-open .chat-bubble{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 .chat-bubble-btn{width:54px;height:54px;border-radius:50%;background:var(--pp);color:#fff;font-size:1.4rem;box-shadow:var(--sh2);transition:var(--tr);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .chat-bubble-btn:hover{transform:scale(1.1)}
 .whatsapp-btn{width:54px;height:54px;border-radius:50%;background:#25D366;color:#fff;font-size:1.5rem;box-shadow:0 4px 20px rgba(37,211,102,.4);transition:var(--tr);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
@@ -428,7 +426,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 <div class="toast" id="toast"></div>
 
 <!-- ── ANNOUNCEMENT BAR ── -->
-<div class="announce-bar" id="announceBar">🎉 New AW25 Collection Live! Use <strong>WELCOME10</strong> for 10% off your first order &nbsp;<a href="#products" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop Now →</a></div>
+<div class="announce-bar" id="announceBar" style="display:none"></div>
 
 <!-- ── NAV ── -->
 <nav>
@@ -575,7 +573,6 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 <!-- ── CART SIDEBAR ── -->
 <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
 <div class="cart-side" id="cartSide">
-  <div class="cart-drag-handle"></div>
   <div class="cart-hdr">
     <h3>🛒 Your Cart</h3>
     <button class="cart-close" onclick="toggleCart()">✕</button>

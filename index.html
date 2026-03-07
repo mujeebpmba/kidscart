@@ -289,6 +289,11 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 .ci-qty span{font-weight:800;font-size:.9rem;min-width:18px;text-align:center}
 .ci-del{background:none;color:var(--er);font-size:1.1rem;padding:4px}
 .cart-ftr{padding:16px 20px;border-top:2px solid var(--lt2)}
+.cart-drag-handle{display:none;width:40px;height:4px;background:#ddd;border-radius:4px;margin:0 auto}
+@media(max-width:600px){
+  .cart-side{padding-top:env(safe-area-inset-top,0px)}
+  .cart-drag-handle{display:block;margin:10px auto 0}
+}
 .coupon-row{display:flex;gap:8px;margin-bottom:12px}
 .coupon-row input{flex:1;padding:9px 14px;border:2px solid var(--lt2);border-radius:var(--rs);font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;transition:var(--tr)}
 .coupon-row input:focus{border-color:var(--pp)}
@@ -570,6 +575,7 @@ footer{background:#1a0033;color:#fff;padding:40px 20px 20px}
 <!-- ── CART SIDEBAR ── -->
 <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
 <div class="cart-side" id="cartSide">
+  <div class="cart-drag-handle"></div>
   <div class="cart-hdr">
     <h3>🛒 Your Cart</h3>
     <button class="cart-close" onclick="toggleCart()">✕</button>
@@ -898,14 +904,24 @@ function updateNavUser() {
 async function loadAnnouncement() {
   try {
     const d = await api('/settings/announcement');
-    if (d && d.text) {
-      const bar = document.getElementById('announceBar');
-      if (bar) {
-        bar.style.display = d.hidden ? 'none' : '';
-        if (d.text) bar.innerHTML = d.text + (d.link ? ` &nbsp;<a href="${d.link}" style="color:#fff;font-weight:800;text-decoration:underline">${d.linkText||'Shop Now →'}</a>` : '');
-      }
+    const bar = document.getElementById('announceBar');
+    if (!bar) return;
+    if (!d) return; // no response - keep hardcoded default
+    if (d.hidden) { bar.style.display = 'none'; return; }
+    if (d.text) {
+      // Replace content with API data
+      const link = d.link
+        ? ` &nbsp;<a href="${d.link}" style="color:#fff;font-weight:800;text-decoration:underline">${d.linkText||'Shop Now →'}</a>`
+        : '';
+      bar.innerHTML = d.text + link;
+      bar.style.display = '';
+    } else {
+      // text is empty string - hide bar (admin cleared it)
+      bar.style.display = 'none';
     }
-  } catch(e) {}
+  } catch(e) {
+    // API error - keep default hardcoded text visible
+  }
 }
 
 async function loadBanners() {
@@ -1348,8 +1364,9 @@ function updateCartTotals() {
 }
 
 function toggleCart() {
-  document.getElementById('cartSide').classList.toggle('open');
+  const isOpen = document.getElementById('cartSide').classList.toggle('open');
   document.getElementById('cartOverlay').classList.toggle('open');
+  document.body.classList.toggle('cart-open', isOpen);
 }
 
 async function applyCoupon() {
@@ -1715,6 +1732,7 @@ function _openCheckout() {
   // Close cart sidebar first
   document.getElementById('cartSide').classList.remove('open');
   document.getElementById('cartOverlay').classList.remove('open');
+  document.body.classList.remove('cart-open');
   checkoutStep = 1; selAddr = null; selPay = 'cod';
   window._newAddr = null;
   renderCheckout();

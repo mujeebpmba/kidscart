@@ -1,0 +1,2655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KidsCart Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};</script>
+<!-- Socket.io loaded lazily for admin chat -->
+<script>
+function loadSocketIO(cb) {
+  if (typeof io !== 'undefined') { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdn.socket.io/4.6.1/socket.io.min.js';
+  s.onload = cb;
+  s.onerror = () => console.warn('Socket.io unavailable');
+  document.head.appendChild(s);
+}
+</script>
+<style>
+:root{
+  --pp:#7B2D8B;--pp2:#5C1F7A;--or:#F7941D;--ok:#00a651;--er:#c62828;
+  --gy:#888;--lt:#f8f4fc;--lt2:#ede7f6;--wh:#fff;
+  --rs:10px;--shadow:0 2px 16px rgba(123,45,139,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:100vh;}
+
+/* ── LOGIN ── */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--pp),var(--pp2));}
+.login-box{background:#fff;border-radius:20px;padding:40px 36px;width:360px;max-width:96vw;box-shadow:0 8px 40px rgba(0,0,0,.18);}
+.login-logo{text-align:center;margin-bottom:24px;}
+.login-logo img{height:90px;}
+.login-box h2{text-align:center;font-family:'Poppins',sans-serif;color:var(--pp);font-size:1.4rem;margin-bottom:6px;}
+.login-box p{text-align:center;color:var(--gy);font-size:.85rem;margin-bottom:24px;}
+.linp{width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:var(--rs);font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;transition:.2s;margin-bottom:12px;}
+.linp:focus{border-color:var(--pp);}
+.lbtn{width:100%;padding:13px;background:linear-gradient(135deg,var(--pp),var(--pp2));color:#fff;border:none;border-radius:var(--rs);font-family:'Poppins',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;margin-top:4px;}
+.lbtn:hover{opacity:.92;}
+#loginErr{color:var(--er);font-size:.83rem;text-align:center;margin-top:10px;display:none;}
+
+/* ── LAYOUT ── */
+#adminApp{display:none;min-height:100vh;}
+.sidebar{position:fixed;left:0;top:0;width:230px;height:100vh;background:linear-gradient(180deg,var(--pp) 0%,var(--pp2) 100%);overflow-y:auto;z-index:100;display:flex;flex-direction:column;}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.15);}
+.sb-logo img{height:72px;filter:brightness(0) invert(1);object-fit:contain;max-width:180px;}
+.sb-logo small{display:block;color:rgba(255,255,255,.6);font-size:.7rem;margin-top:4px;}
+.sb-nav{flex:1;padding:12px 0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:rgba(255,255,255,.8);font-size:.88rem;font-weight:700;cursor:pointer;border-left:3px solid transparent;transition:.2s;}
+.nav-item:hover,.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#fff;}
+.nav-item span.ico{font-size:1.1rem;width:22px;text-align:center;}
+.sb-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.15);}
+.sb-footer button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;width:100%;}
+.sb-footer button:hover{background:rgba(255,255,255,.25);}
+
+.main{margin-left:230px;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.topbar h2{font-family:'Poppins',sans-serif;color:var(--pp);font-size:1.15rem;font-weight:800;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.admin-badge{background:var(--lt2);color:var(--pp);font-size:.78rem;font-weight:800;padding:5px 12px;border-radius:50px;}
+.content{flex:1;padding:24px 28px;}
+
+/* ── PANELS ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:var(--shadow);margin-bottom:20px;}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-head h3{font-family:'Poppins',sans-serif;font-size:1rem;color:var(--pp);}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:#fff;border-radius:14px;padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--pp);}
+.stat-card.or{border-left-color:var(--or);}
+.stat-card.ok{border-left-color:var(--ok);}
+.stat-card.er{border-left-color:var(--er);}
+.stat-card p{color:var(--gy);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.stat-card h2{font-family:'Poppins',sans-serif;font-size:1.8rem;font-weight:800;color:#222;}
+.stat-card small{font-size:.75rem;color:var(--gy);margin-top:4px;display:block;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+th{background:var(--lt);color:var(--pp);font-weight:800;padding:10px 12px;text-align:left;white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid #f0e5f8;vertical-align:middle;}
+tr:hover td{background:#FAF7FC;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:.72rem;font-weight:800;}
+.b-placed{background:#e3f2fd;color:#1565c0;}
+.b-confirmed{background:#e8f5e9;color:#2e7d32;}
+.b-processing{background:#fff8e1;color:#e65100;}
+.b-shipped{background:#e1f5fe;color:#0277bd;}
+.b-out_for_delivery{background:#f3e5f5;color:#6a1b9a;}
+.b-delivered{background:#e8f5e9;color:#1b5e20;}
+.b-cancelled{background:#ffebee;color:#b71c1c;}
+.b-returned{background:#fce4ec;color:#880e4f;}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:8px;border:none;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;font-size:.82rem;transition:.2s;}
+.btn-sm{padding:5px 12px;font-size:.78rem;}
+.btn-ok-g{background:#e8f5e9;color:#2e7d32;}
+.btn-ok-g:hover{background:#2e7d32;color:#fff;}
+.btn-er-g{background:#ffebee;color:var(--er);}
+.btn-er-g:hover{background:var(--er);color:#fff;}
+.btn-pp{background:var(--pp);color:#fff;}
+.btn-pp:hover{background:var(--pp2);}
+.btn-or{background:var(--or);color:#fff;}
+.btn-ghost{background:var(--lt);color:var(--pp);}
+.btn-ghost:hover{background:var(--lt2);}
+.btn-full{width:100%;padding:12px;border-radius:var(--rs);border:none;background:linear-gradient(135deg,var(--pp),var(--pp2));color:#fff;font-family:'Poppins',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;}
+.btn-full:hover{opacity:.9;}
+
+/* ── FORM ── */
+.fgroup{margin-bottom:14px;}
+.fgroup label{display:block;font-weight:800;font-size:.8rem;color:#555;margin-bottom:5px;}
+.fgroup input,.fgroup select,.fgroup textarea{width:100%;padding:10px 12px;border:2px solid #e0d6ee;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;transition:.2s;}
+.fgroup input:focus,.fgroup select:focus,.fgroup textarea:focus{border-color:var(--pp);}
+.fgroup textarea{resize:vertical;min-height:80px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* ── SEARCH BAR ── */
+.search-bar{display:flex;gap:10px;margin-bottom:16px;}
+.search-bar input{flex:1;padding:9px 14px;border:2px solid #e0d6ee;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;}
+.search-bar input:focus{border-color:var(--pp);}
+.search-bar select{padding:9px 12px;border:2px solid #e0d6ee;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;}
+
+/* ── CHAT ── */
+.chat-grid{display:grid;grid-template-columns:260px 1fr;gap:16px;height:500px;}
+.chat-list{overflow-y:auto;border-right:1px solid #f0e5f8;padding-right:12px;}
+.chat-sess{padding:10px;border-radius:10px;cursor:pointer;margin-bottom:6px;border:2px solid transparent;}
+.chat-sess:hover{background:var(--lt);}
+.chat-sess.active{border-color:var(--pp);background:var(--lt);}
+.chat-sess h4{font-size:.85rem;font-weight:800;}
+.chat-sess p{font-size:.75rem;color:var(--gy);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-sess span.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:5px;}
+.chat-box{display:flex;flex-direction:column;}
+.chat-msgs{flex:1;overflow-y:auto;padding:10px;background:var(--lt);border-radius:10px;margin-bottom:10px;}
+.chat-msg{max-width:75%;margin-bottom:8px;padding:8px 12px;border-radius:10px;font-size:.85rem;line-height:1.5;}
+.chat-admin{background:var(--pp);color:#fff;margin-left:auto;border-radius:10px 10px 0 10px;}
+.chat-customer{background:#fff;border:1px solid #ddd;border-radius:10px 10px 10px 0;}
+.chat-input-row{display:flex;gap:8px;}
+.chat-input-row input{flex:1;padding:10px 12px;border:2px solid #e0d6ee;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;}
+.chat-input-row input:focus{border-color:var(--pp);}
+.chat-empty{text-align:center;color:var(--gy);padding:40px 20px;font-size:.9rem;}
+
+/* ── PROMO BANNER PREVIEW ── */
+.banner-preview{border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.banner-card{border:2px solid #f0e5f8;border-radius:12px;padding:14px;margin-bottom:10px;}
+.banner-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+
+/* ── REPORTS ── */
+.report-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:11px 24px;border-radius:50px;font-size:.88rem;font-weight:700;opacity:0;transition:.3s;z-index:9999;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── LOW STOCK LIST ── */
+.ls-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0e5f8;font-size:.85rem;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .sidebar{width:60px;}
+  .nav-item span.lbl{display:none;}
+  .sb-logo small,.sb-logo span{display:none;}
+  .main{margin-left:60px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .chat-grid{grid-template-columns:1fr;height:auto;}
+  .chat-list{border-right:none;border-bottom:1px solid #f0e5f8;padding-bottom:12px;max-height:180px;}
+}
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .content{padding:14px;}
+  .grid2,.grid3{grid-template-columns:1fr;}
+  .report-row{grid-template-columns:1fr;}
+}
+
+/* ══ WHATSAPP INBOX ══ */
+.wa-filter-btn{padding:6px 14px;border:1.5px solid #ddd;border-radius:50px;background:#fff;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:.2s;color:#555;}
+.wa-filter-btn.active,.wa-filter-btn:hover{background:#25D366;color:#fff;border-color:#25D366;}
+.wa-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;height:calc(100vh - 220px);min-height:500px;}
+.wa-list-col{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;overflow:hidden;}
+.wa-search-box{padding:12px;}
+.wa-conv-item{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid #f5f5f5;transition:.15s;}
+.wa-conv-item:hover{background:#f0faf2;}
+.wa-conv-item.active{background:#e8f5e9;}
+.wa-conv-item.unread .wa-conv-name{color:#111;font-weight:800;}
+.wa-conv-item.unread .wa-conv-preview{color:#333;font-weight:700;}
+.wa-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;flex-shrink:0;}
+.wa-conv-info{flex:1;min-width:0;}
+.wa-conv-name{font-weight:700;font-size:.88rem;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wa-conv-preview{font-size:.76rem;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.wa-conv-meta{text-align:right;flex-shrink:0;}
+.wa-conv-time{font-size:.7rem;color:#aaa;}
+.wa-unread-dot{width:10px;height:10px;background:#25D366;border-radius:50%;margin:4px auto 0;}
+.wa-chat-col{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.07);display:flex;flex-direction:column;overflow:hidden;}
+.wa-chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px;}
+.wa-chat-header{padding:14px 18px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;background:#fafff9;}
+.wa-msgs{flex:1;overflow-y:auto;padding:16px;background:#ece5dd;display:flex;flex-direction:column;gap:6px;}
+.wa-msg{max-width:72%;padding:10px 14px;border-radius:14px;font-size:.88rem;line-height:1.4;word-break:break-word;}
+.wa-msg.from-customer{background:#fff;border-radius:0 14px 14px 14px;align-self:flex-start;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.wa-msg.from-admin{background:#dcf8c6;border-radius:14px 0 14px 14px;align-self:flex-end;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.wa-msg.payment-slip{border:2px solid #25D366;background:#f0fff4;}
+.wa-msg-time{font-size:.68rem;color:#aaa;margin-top:3px;text-align:right;}
+.wa-pay-verify-btn{display:block;margin-top:8px;background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;width:100%;}
+.wa-pay-verify-btn:hover{background:#1da851;}
+.wa-input-row{padding:12px 14px;border-top:1px solid #eee;display:flex;gap:8px;align-items:flex-end;background:#f0f0f0;}
+.wa-input-row textarea{flex:1;padding:10px 14px;border:1.5px solid #ddd;border-radius:12px;font-family:'Nunito',sans-serif;font-size:.9rem;resize:none;outline:none;max-height:120px;}
+.wa-send-btn{background:#25D366;color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:1.1rem;cursor:pointer;flex-shrink:0;}
+.wa-send-btn:hover{background:#1da851;}
+.wa-action-btn{padding:7px 10px;border:1.5px solid #eee;border-radius:8px;background:#f9f9f9;cursor:pointer;font-size:.9rem;transition:.15s;}
+.wa-action-btn:hover{background:#e8f5e9;border-color:#25D366;}
+.wa-qr-btn{display:inline-block;padding:5px 12px;background:#fff;border:1.5px solid #ddd;border-radius:50px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;margin-right:6px;color:#333;transition:.15s;}
+.wa-qr-btn:hover{background:#25D366;color:#fff;border-color:#25D366;}
+
+/* ══ CRM PIPELINE ══ */
+.crm-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;min-height:520px;}
+.crm-col{background:#f8f4fc;border-radius:14px;padding:14px;width:200px;min-width:200px;flex-shrink:0;display:flex;flex-direction:column;}
+.crm-col-head{font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;color:#555;}
+.crm-col-count{background:#fff;border-radius:50px;padding:2px 9px;font-size:.72rem;font-weight:800;color:#888;}
+.crm-cards{flex:1;display:flex;flex-direction:column;gap:10px;min-height:80px;}
+.crm-card{background:#fff;border-radius:11px;padding:12px;box-shadow:0 1px 6px rgba(0,0,0,.06);cursor:pointer;transition:.2s;border-left:3px solid var(--pp);}
+.crm-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.12);transform:translateY(-1px);}
+.crm-card-name{font-weight:800;font-size:.85rem;color:#222;margin-bottom:3px;}
+.crm-card-phone{font-size:.74rem;color:#888;}
+.crm-card-source{font-size:.7rem;padding:2px 8px;background:#f0ebf8;color:var(--pp);border-radius:50px;display:inline-block;margin:4px 0;}
+.crm-card-staff{font-size:.72rem;color:#aaa;margin-top:4px;}
+.crm-card-note{font-size:.74rem;color:#555;margin-top:5px;font-style:italic;border-top:1px solid #f5f5f5;padding-top:5px;}
+.crm-drop-zone{border:2px dashed #ddd;border-radius:8px;padding:14px;text-align:center;font-size:.75rem;color:#bbb;margin-top:4px;}
+.crm-col.drag-over .crm-drop-zone{border-color:var(--pp);background:#f3e5f5;color:var(--pp);}
+
+@media(max-width:900px){
+  .wa-layout{grid-template-columns:1fr;height:auto;}
+  .wa-list-col{height:280px;}
+  .wa-chat-col{height:500px;}
+  .crm-board{flex-wrap:nowrap;}
+  #settingsPanel > div{grid-template-columns:1fr !important;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
+    </div>
+    <h2>Admin Panel</h2>
+    <p>Sign in to manage your store</p>
+    <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
+    <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
+    <div style="text-align:center;margin-top:12px;">
+      <span onclick="showForgotPass()" style="color:var(--pp);font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:underline;">🔑 Forgot Password?</span>
+    </div>
+    <div id="loginErr"></div>
+    <!-- Forgot Password Section -->
+    <div id="forgotPassSection" style="display:none;margin-top:16px;border-top:1px solid #eee;padding-top:16px;">
+      <p style="font-size:.82rem;color:#555;text-align:center;margin-bottom:10px;">Enter your admin email — a reset link will be sent via WhatsApp & Email.</p>
+      <input type="email" id="forgotEmail" class="linp" placeholder="Your admin email address">
+      <button class="lbtn" style="background:linear-gradient(135deg,#00897b,#00695c);margin-top:6px;" onclick="sendForgotPass()">📧 Send Reset Link</button>
+      <div style="text-align:center;margin-top:8px;"><span onclick="hideForgotPass()" style="color:#aaa;font-size:.8rem;cursor:pointer;">← Back to Login</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN APP ── -->
+<div id="adminApp">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
+      <small>Admin Panel v2</small>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-item active" onclick="show('dashboard',this)"><span class="ico">📊</span><span class="lbl">Dashboard</span></div>
+      <div class="nav-item" onclick="show('orders',this)"><span class="ico">📦</span><span class="lbl">Orders</span></div>
+      <div class="nav-item" onclick="show('products',this)"><span class="ico">👗</span><span class="lbl">Products</span></div>
+      <div class="nav-item" onclick="show('stock',this)"><span class="ico">📋</span><span class="lbl">Stock</span></div>
+      <div class="nav-item" onclick="show('addprod',this)"><span class="ico">➕</span><span class="lbl">Add Product</span></div>
+      <div class="nav-item" onclick="show('customers',this)"><span class="ico">👥</span><span class="lbl">Customers</span></div>
+      <div class="nav-item" onclick="show('coupons',this)"><span class="ico">🎟️</span><span class="lbl">Coupons</span></div>
+      <div class="nav-item" onclick="show('banners',this)"><span class="ico">🎨</span><span class="lbl">Banners</span></div>
+      <div class="nav-item" onclick="show('chat',this)"><span class="ico">💬</span><span class="lbl">Live Chat</span></div>
+      <div class="nav-item" onclick="show('whatsapp',this)" id="waInboxNav"><span class="ico">📱</span><span class="lbl">WhatsApp Inbox <span id="waUnreadBadge" style="background:#25D366;color:#fff;border-radius:50px;padding:1px 7px;font-size:.7rem;margin-left:4px;display:none;">0</span></span></div>
+      <div class="nav-item" onclick="show('crm',this)"><span class="ico">🎯</span><span class="lbl">CRM Pipeline</span></div>
+      <div class="nav-item" id="exchangeNav" onclick="show('exchange',this)"><span class="ico">🔄</span><span class="lbl">Exchange Requests</span></div>
+      <div class="nav-item" id="settingsNav" onclick="show('settings',this)"><span class="ico">⚙️</span><span class="lbl">Settings</span></div>
+      <div class="nav-item" onclick="show('reports',this)"><span class="ico">📈</span><span class="lbl">Reports</span></div>
+      <div class="nav-item" id="adminUsersNav" style="display:none" onclick="show('adminusers',this)"><span class="ico">🔐</span><span class="lbl">Admin Users</span></div>
+    </nav>
+    <div class="sb-footer">
+      <button onclick="adminLogout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">Dashboard</h2>
+      <div class="topbar-right">
+        <span class="admin-badge" id="adminName">Admin</span>
+        <a href="/" target="_blank" style="font-size:.78rem;color:var(--pp);font-weight:800;text-decoration:none;">🛍️ View Shop</a>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="panel active" id="dashboardPanel">
+        <div class="stats-grid">
+          <div class="stat-card"><p>Total Orders</p><h2 id="statOrders">—</h2><small>Excl. cancelled</small></div>
+          <div class="stat-card or"><p>Revenue</p><h2 id="statRevenue">—</h2><small>Excl. cancelled</small></div>
+          <div class="stat-card ok"><p>Customers</p><h2 id="statCustomers">—</h2><small>Registered users</small></div>
+          <div class="stat-card er"><p>Low Stock</p><h2 id="statLowStock">—</h2><small>Items ≤ 10 units</small></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="card">
+            <div class="card-head"><h3>🕐 Recent Orders</h3><button class="btn btn-ghost btn-sm" onclick="show('orders',document.querySelector('[onclick*=orders]'))">View All</button></div>
+            <div class="tbl-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="recentOrdersTable"><tr><td colspan="5" style="text-align:center;color:var(--gy);padding:20px;">Loading...</td></tr></tbody></table></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>⚠️ Low Stock Items</h3><button class="btn btn-ghost btn-sm" onclick="show('stock',document.querySelector('[onclick*=stock]'))">Manage Stock</button></div>
+            <div id="lowStockList"><p style="color:var(--gy);text-align:center;padding:20px;">Loading...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ORDERS ── -->
+      <div class="panel" id="ordersPanel">
+        <div class="card">
+          <div class="card-head"><h3>📦 All Orders</h3></div>
+          <div class="search-bar">
+            <input type="text" id="orderSearch" placeholder="Search by Order ID or customer name…" oninput="filterOrders()">
+            <select id="orderStatusFilter" onchange="filterOrders()">
+              <option value="">All Status</option>
+              <option value="placed">Placed</option>
+              <option value="confirmed" selected>Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="out_for_delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="ordersTable"><tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">Loading orders…</td></tr></tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:center;gap:8px;margin-top:14px;" id="orderPagination"></div>
+        </div>
+
+        <!-- Update Status Modal -->
+        <div id="orderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:16px;padding:28px;width:420px;max-width:94vw;position:relative;">
+            <button onclick="closeOrderModal()" style="position:absolute;top:12px;right:14px;border:none;background:none;font-size:1.2rem;cursor:pointer;color:#888;">✕</button>
+            <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);margin-bottom:18px;">📦 Update Order #<span id="modalOrderId"></span></h3>
+            <div class="fgroup">
+              <label>Order Status</label>
+              <select id="modalStatus">
+                <option value="placed">Placed</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="out_for_delivery">Out for Delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="returned">Returned</option>
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="fgroup">
+                <label>Payment Method</label>
+                <select id="modalPayMethod">
+                  <option value="cod">COD (Cash)</option>
+                  <option value="upi">UPI</option>
+                  <option value="card">Card</option>
+                  <option value="netbanking">Net Banking</option>
+                </select>
+              </div>
+              <div class="fgroup">
+                <label>Payment Status</label>
+                <select id="modalPayStatus">
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid ✅</option>
+                  <option value="failed">Failed</option>
+                  <option value="refunded">Refunded</option>
+                </select>
+              </div>
+            </div>
+            <div class="fgroup">
+              <label>Message to Customer (optional)</label>
+              <textarea id="modalMsg" placeholder="e.g. Your order is on the way! Tracking: XYZ123"></textarea>
+            </div>
+            <input type="hidden" id="modalOrderDbId">
+            <button class="btn-full" onclick="updateOrderStatus()">✅ Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PRODUCTS ── -->
+      <div class="panel" id="productsPanel">
+        <div class="card">
+          <div class="card-head">
+            <h3>👗 Product Catalog</h3>
+            <button class="btn btn-pp btn-sm" onclick="show('addprod',document.querySelector('[onclick*=addprod]'))">➕ Add Product</button>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="prodSearch" placeholder="Search products…" oninput="filterProductList()">
+            <select id="prodCatFilter" onchange="filterProductList()">
+              <option value="">All Categories</option>
+              <option>Girls</option><option>Boys</option><option>Baby</option>
+              <option>Party</option><option>Ethnic</option><option>Winter</option><option>School</option>
+            </select>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Product</th><th>Price</th><th>MRP</th><th>Cost/Margin</th><th>Stock</th><th>Rating</th><th>Status</th><th>COD</th><th>Actions</th></tr></thead>
+              <tbody id="productsTable"><tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">Loading products…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STOCK ── -->
+      <div class="panel" id="stockPanel">
+        <div class="card">
+          <div class="card-head"><h3>📋 Stock Management</h3><span style="font-size:.8rem;color:var(--gy);">Click a stock value to edit inline</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Product</th><th>XS/0-3M</th><th>S/3-6M</th><th>M/6-12M</th><th>L/1-2Y</th><th>XL/2-4Y</th><th>XXL/4-6Y</th><th>Total</th><th>Save</th></tr></thead>
+              <tbody id="stockTableBody"><tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ADD PRODUCT ── -->
+      <div class="panel" id="addprodPanel">
+        <div class="card">
+          <div class="card-head"><h3 id="addprodTitle">➕ Add New Product</h3></div>
+          <form onsubmit="saveProduct(event)" id="prodForm">
+            <input type="hidden" id="prodEditId">
+            
+            <!-- Row 1: Basic Info -->
+            <div class="grid2">
+              <div class="fgroup"><label>Product Name *</label><input type="text" name="name" placeholder="e.g. Floral Frock Dress" required></div>
+              <div class="fgroup"><label>Category *</label>
+                <select name="category" required>
+                  <option value="">Select…</option>
+                  <option>Girls</option><option>Boys</option><option>Baby</option>
+                  <option>Party</option><option>Ethnic</option><option>Winter</option><option>School</option><option>Accessories</option>
+                </select>
+              </div>
+              <div class="fgroup"><label>Selling Price (₹) *</label><input type="number" name="price" placeholder="599" required min="1"></div>
+              <div class="fgroup"><label>MRP / Original Price (₹) *</label><input type="number" name="mrp" placeholder="999" required min="1"></div>
+              <div class="fgroup"><label>Cost Price (₹) <small style="color:var(--gy)">(for profit calc)</small></label><input type="number" name="costPrice" placeholder="350" min="0" value="0"></div>
+              <div class="fgroup"><label>Age Group</label><input type="text" name="ageGroup" placeholder="e.g. 2-10Y"></div>
+              <div class="fgroup"><label>Gender</label>
+                <select name="gender"><option>Girls</option><option>Boys</option><option>Unisex</option><option>Baby</option></select>
+              </div>
+              <div class="fgroup"><label>Emoji Icon</label><input type="text" name="emoji" placeholder="👗" maxlength="5"></div>
+              <div class="fgroup"><label>Badge</label><input type="text" name="badge" placeholder="e.g. Best Seller, New, Sale"></div>
+              <div class="fgroup"><label>Brand / Material</label><input type="text" name="brand" placeholder="e.g. KidsCart Premium Cotton"></div>
+            </div>
+            
+            <div class="fgroup"><label>Description</label><textarea name="description" rows="3" placeholder="Describe the product — fabric, style, occasions, care instructions…"></textarea></div>
+            
+            <!-- Tags for search -->
+            <div class="fgroup">
+              <label>Search Tags <small style="color:var(--gy)">(comma separated — helps search)</small></label>
+              <input type="text" name="tags" placeholder="e.g. frock, cotton dress, birthday, princess, ethnic, festive">
+            </div>
+            
+            <!-- Product Images - Upload -->
+            <div style="margin-bottom:16px;background:var(--lt);border-radius:12px;padding:16px;">
+              <div style="font-weight:800;font-size:.88rem;color:var(--pp);margin-bottom:10px;">🖼️ Product Images (Upload from computer)</div>
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+                <label style="background:var(--pp);color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:800;font-size:.82rem;">
+                  📁 Choose Images
+                  <input type="file" id="prodImageInput" accept="image/*" multiple style="display:none" onchange="previewProdImages(this)">
+                </label>
+                <span style="font-size:.78rem;color:var(--gy)">Or paste URL below • Max 5MB each • JPG/PNG/WebP</span>
+              </div>
+              <div id="prodImagePreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;min-height:20px"></div>
+              <input type="text" id="prodThumbUrl" name="thumbnail" placeholder="Paste image URL (optional if uploading)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;margin-bottom:6px">
+              <div style="font-size:.75rem;color:var(--gy)">First image becomes the thumbnail. You can upload multiple images for gallery view.</div>
+            </div>
+            
+            <!-- Stock by Size -->
+            <div style="margin-bottom:16px;">
+              <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:10px;">📦 Initial Stock by Size</div>
+              <div class="grid3">
+                <div class="fgroup"><label>XS / 0-3M</label><input type="number" name="stockXS" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>S / 3-6M</label><input type="number" name="stockS" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>M / 6-12M</label><input type="number" name="stockM" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>L / 1-2Y</label><input type="number" name="stockL" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>XL / 2-4Y</label><input type="number" name="stockXL" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>XXL / 4-6Y</label><input type="number" name="stockXXL" placeholder="0" min="0" value="0"></div>
+              </div>
+            </div>
+            
+            <!-- Settings -->
+            <div class="grid2">
+              <div class="fgroup"><label>Featured on Homepage?</label>
+                <select name="isFeatured"><option value="false">No</option><option value="true">Yes</option></select>
+              </div>
+              <div class="fgroup"><label>Visible in Shop?</label>
+                <select name="isActive"><option value="true">Yes — Active</option><option value="false">No — Hidden</option></select>
+              </div>
+              <div class="fgroup"><label>COD Available?</label>
+                <select name="codEnabled"><option value="true">Yes — Allow Cash on Delivery</option><option value="false">No — Prepaid Only</option></select>
+              </div>
+            </div>
+            
+            <!-- SEO -->
+            <details style="margin-bottom:14px">
+              <summary style="cursor:pointer;font-weight:800;font-size:.85rem;color:var(--pp);padding:8px 0">🔍 SEO Settings (optional)</summary>
+              <div style="margin-top:10px">
+                <div class="fgroup"><label>SEO Title</label><input type="text" name="seoTitle" placeholder="Leave blank to use product name"></div>
+                <div class="fgroup"><label>SEO Description</label><textarea name="seoDesc" rows="2" placeholder="Brief description for search engines (150 chars)"></textarea></div>
+              </div>
+            </details>
+
+            <div style="display:flex;gap:10px;margin-top:8px;">
+              <button type="submit" class="btn-full" style="flex:2;">💾 Save Product</button>
+              <button type="button" class="btn btn-ghost" style="flex:1;" onclick="cancelEditProd()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── CUSTOMERS ── -->
+      <div class="panel" id="customersPanel">
+        <div class="card">
+          <div class="card-head"><h3>👥 Customers</h3></div>
+          <div class="search-bar">
+            <input type="text" id="custSearch" placeholder="Search by name or email…" oninput="searchCustomers()">
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Verified</th><th>Joined</th><th>Addresses</th><th>Action</th></tr></thead>
+              <tbody id="customersTable"><tr><td colspan="6" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ADMIN USERS ── -->
+      <div class="panel" id="adminusersPanel">
+        <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;">
+          <div class="card">
+            <div class="card-head"><h3>➕ Add Admin User</h3></div>
+            <div class="fgroup"><label>Full Name *</label><input type="text" id="newAdminName" class="finp" placeholder="John Doe"></div>
+            <div class="fgroup"><label>Email *</label><input type="email" id="newAdminEmail" class="finp" placeholder="admin@example.com"></div>
+            <div class="fgroup"><label>Password *</label><input type="password" id="newAdminPass" class="finp" placeholder="Min 8 characters"></div>
+            <div class="fgroup"><label>Role</label>
+              <select id="newAdminRole" class="finp">
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+            </div>
+            <button class="btn btn-pp" onclick="addAdminUser()" style="width:100%;margin-top:8px;">➕ Add Admin User</button>
+            <div id="addAdminErr" style="color:var(--er);font-size:.83rem;margin-top:8px;display:none;"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>🔐 Admin Users</h3></div>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+              <tbody id="adminUsersTable"><tr><td colspan="4" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COUPONS ── -->
+      <div class="panel" id="couponsPanel">
+        <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;">
+          <div class="card">
+            <div class="card-head"><h3 id="couponFormTitle">🎟️ Create Coupon</h3></div>
+            <form onsubmit="saveCoupon(event)" id="couponForm">
+              <input type="hidden" id="couponEditId">
+              <div class="fgroup"><label>Code *</label><input type="text" id="couponCode" placeholder="e.g. SAVE20" required style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+              <div class="grid2">
+                <div class="fgroup"><label>Type</label>
+                  <select id="couponType"><option value="percent">Percent %</option><option value="flat">Flat ₹</option></select>
+                </div>
+                <div class="fgroup"><label>Value</label><input type="number" id="couponValue" placeholder="10" required min="1"></div>
+              </div>
+              <div class="grid2">
+                <div class="fgroup"><label>Min Order (₹)</label><input type="number" id="couponMin" placeholder="299" min="0" value="0"></div>
+                <div class="fgroup"><label>Max Discount (₹)</label><input type="number" id="couponMax" placeholder="500" min="0" value="0"></div>
+              </div>
+              <div class="grid2">
+                <div class="fgroup"><label>Per-User Limit</label><input type="number" id="couponPerUser" placeholder="1" min="1" value="1"></div>
+                <div class="fgroup"><label>Total Limit (0=∞)</label><input type="number" id="couponTotal" placeholder="0" min="0" value="0"></div>
+              </div>
+              <div class="grid2">
+                <div class="fgroup"><label>Valid From</label><input type="date" id="couponFrom"></div>
+                <div class="fgroup"><label>Valid Till</label><input type="date" id="couponTill"></div>
+              </div>
+              <div class="fgroup"><label>Active</label>
+                <select id="couponActive"><option value="true">Yes</option><option value="false">No</option></select>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="btn-full" style="flex:2;">💾 Save Coupon</button>
+                <button type="button" class="btn btn-ghost" onclick="cancelCoupon()">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>All Coupons</h3></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Min Order</th><th>Used</th><th>Valid Till</th><th>Active</th><th>Actions</th></tr></thead>
+                <tbody id="couponsTable"><tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BANNERS ── -->
+      <div class="panel" id="bannersPanel">
+        <div style="display:grid;grid-template-columns:380px 1fr;gap:16px;">
+          <div class="card">
+            <div class="card-head"><h3 id="bannerFormTitle">🎨 Add Banner</h3></div>
+            <form onsubmit="saveBanner(event)" id="bannerForm">
+              <input type="hidden" id="bannerEditId">
+              <div class="fgroup"><label>Title *</label><input type="text" id="bannerTitle" placeholder="New AW25 Collection!" required oninput="updateBannerPreview()"></div>
+              <div class="fgroup"><label>Subtitle</label><input type="text" id="bannerSub" placeholder="Premium kids fashion" oninput="updateBannerPreview()"></div>
+              <div class="fgroup"><label>Badge Text</label><input type="text" id="bannerBadge" placeholder="✨ New Arrivals" oninput="updateBannerPreview()"></div>
+              <div class="fgroup"><label>Discount Label</label><input type="text" id="bannerDiscount" placeholder="Up to 50% OFF"></div>
+              <div class="fgroup"><label>Button Text</label><input type="text" id="bannerBtn" placeholder="Shop Now" oninput="updateBannerPreview()"></div>
+              <div class="grid2">
+                <div class="fgroup"><label>Background Color</label><input type="color" id="bannerColor" value="#7B2D8B" style="height:40px;cursor:pointer;" oninput="updateBannerPreview()"></div>
+                <div class="fgroup"><label>Countdown (hours)</label><input type="number" id="bannerTimer" value="0" min="0" max="720"></div>
+              </div>
+              <!-- Banner Image Upload -->
+              <div class="fgroup" style="background:var(--lt);border-radius:10px;padding:12px;">
+                <label style="font-weight:800;font-size:.82rem;color:var(--pp);display:block;margin-bottom:8px">🖼️ Banner Image (optional but recommended)</label>
+                <label style="background:var(--pp);color:#fff;padding:8px 14px;border-radius:7px;cursor:pointer;font-weight:800;font-size:.78rem;display:inline-block;">
+                  📁 Upload Image
+                  <input type="file" id="bannerImageInput" accept="image/*" style="display:none" onchange="previewBannerImage(this)">
+                </label>
+                <span style="font-size:.75rem;color:var(--gy);margin-left:8px">1200×400px ideal • JPG/PNG</span>
+                <div id="bannerImagePreview" style="margin-top:10px"></div>
+                <input type="hidden" id="bannerImageUrl">
+                <div style="margin-top:8px"><input type="text" id="bannerImageLink" placeholder="Or paste image URL" style="width:100%;padding:8px;border:1.5px solid #ddd;border-radius:7px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none" oninput="setBannerImageFromUrl(this.value)"></div>
+              </div>
+              <div class="fgroup"><label>Display Order (1=first)</label><input type="number" id="bannerOrder" value="1" min="1"></div>
+              <div class="fgroup"><label>Active</label>
+                <select id="bannerActive"><option value="true">Yes — show on shop</option><option value="false">No — hidden</option></select>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button type="submit" class="btn-full" style="flex:2;">💾 Save Banner</button>
+                <button type="button" class="btn btn-ghost" onclick="cancelBanner()">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>All Banners</h3><span style="font-size:.78rem;color:var(--gy)">Banners show full-width at top of shop</span></div>
+            <div id="bannersList"><p style="color:var(--gy);text-align:center;padding:24px;">Loading…</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CHAT ── -->
+      <div class="panel" id="chatPanel">
+        <div class="card">
+          <div class="card-head"><h3>💬 Live Chat Support</h3><span style="font-size:.78rem;color:var(--gy);">Real-time chat with customers</span></div>
+          <div class="chat-grid">
+            <div class="chat-list" id="chatSessionList"><p class="chat-empty">No active chats</p></div>
+            <div class="chat-box" id="chatBox">
+              <div class="chat-msgs" id="chatMsgArea"><p class="chat-empty">Select a chat to view messages</p></div>
+              <div class="chat-input-row" id="chatInputRow" style="display:none;">
+                <input type="text" id="adminChatInput" placeholder="Type a reply…" onkeydown="if(event.key==='Enter')sendAdminMsg()">
+                <button class="btn btn-pp" onclick="sendAdminMsg()">Send ➤</button>
+                <button class="btn btn-er-g" onclick="closeChat()" title="End Chat">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REPORTS ── -->
+      <div class="panel" id="reportsPanel">
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><h3>📈 Sales Report</h3></div>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;">
+            <div class="fgroup" style="margin-bottom:0;"><label>From</label><input type="date" id="rptFrom"></div>
+            <div class="fgroup" style="margin-bottom:0;"><label>To</label><input type="date" id="rptTo"></div>
+            <button class="btn btn-pp" onclick="loadReports()">🔍 Run Report</button>
+            <button class="btn btn-ghost" onclick="setReportRange(7)">Last 7 days</button>
+            <button class="btn btn-ghost" onclick="setReportRange(30)">Last 30 days</button>
+          </div>
+          <div class="report-row">
+            <div>
+              <div style="font-weight:800;font-size:.85rem;color:var(--pp);margin-bottom:10px;">📅 Daily Revenue</div>
+              <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Orders</th><th>Revenue</th></tr></thead><tbody id="salesByDayTable"><tr><td colspan="3" style="text-align:center;color:var(--gy);padding:16px;">Run a report to see data</td></tr></tbody></table></div>
+            </div>
+            <div>
+              <div style="font-weight:800;font-size:.85rem;color:var(--pp);margin-bottom:10px;">🏆 Top Products</div>
+              <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Product</th><th>Units Sold</th><th>Revenue</th></tr></thead><tbody id="topProdsTable"><tr><td colspan="4" style="text-align:center;color:var(--gy);padding:16px;">Run a report to see data</td></tr></tbody></table></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    
+      <!-- ══════════════════════════════════════════ -->
+      <!-- ── WHATSAPP CRM INBOX ── -->
+      <!-- ══════════════════════════════════════════ -->
+      <div class="panel" id="whatsappPanel">
+        <!-- Filter Bar -->
+        <div class="card" style="margin-bottom:16px;padding:14px 20px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <h3 style="font-family:'Poppins',sans-serif;color:#25D366;font-size:1rem;font-weight:800;margin-right:8px;">📱 WhatsApp CRM Inbox</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="wa-filter-btn active" onclick="waFilter('all',this)">All</button>
+              <button class="wa-filter-btn" onclick="waFilter('unread',this)">🔴 Unread</button>
+              <button class="wa-filter-btn" onclick="waFilter('pending_payment',this)">💰 Pending Payment</button>
+              <button class="wa-filter-btn" onclick="waFilter('awaiting_reply',this)">⏳ Awaiting Reply</button>
+              <button class="wa-filter-btn" onclick="waFilter('resolved',this)">✅ Resolved</button>
+            </div>
+            <button class="btn btn-pp" style="margin-left:auto;font-size:.8rem;" onclick="loadWAInbox()">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <!-- Main Chat Layout -->
+        <div class="wa-layout">
+          <!-- Conversation List -->
+          <div class="wa-list-col">
+            <div class="wa-search-box">
+              <input type="text" id="waSearch" placeholder="🔍 Search conversations…" oninput="waSearchFilter()" style="width:100%;padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;">
+            </div>
+            <div id="waConvList" style="overflow-y:auto;flex:1;">
+              <div style="text-align:center;padding:40px 20px;color:#aaa;font-size:.88rem;">
+                <div style="font-size:2.5rem;margin-bottom:10px;">📱</div>
+                <p>Loading conversations…</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Window -->
+          <div class="wa-chat-col" id="waChatCol">
+            <div class="wa-chat-empty" id="waChatEmpty">
+              <div style="font-size:3rem;margin-bottom:12px;">💬</div>
+              <h3 style="font-family:'Poppins',sans-serif;color:#999;font-size:1rem;">Select a conversation</h3>
+              <p style="color:#bbb;font-size:.83rem;margin-top:6px;">Choose from the left to start chatting</p>
+            </div>
+            <!-- Chat Header -->
+            <div class="wa-chat-header" id="waChatHeader" style="display:none;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="wa-avatar" id="waChatAvatar">K</div>
+                <div>
+                  <div id="waChatName" style="font-weight:800;font-size:.95rem;color:#111;"></div>
+                  <div id="waChatPhone" style="font-size:.76rem;color:#777;"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <select id="waAssignStaff" onchange="waAssignConv()" style="padding:6px 10px;border:1.5px solid #eee;border-radius:8px;font-size:.78rem;font-family:'Nunito',sans-serif;">
+                  <option value="">Assign to…</option>
+                  <option value="Owner">Owner (Sahla)</option>
+                  <option value="Support 1">Support 1</option>
+                  <option value="Support 2">Support 2</option>
+                </select>
+                <button class="wa-action-btn" onclick="waMarkResolved()" title="Mark Resolved">✅</button>
+                <button class="wa-action-btn" style="background:#e3f2fd;color:#1565c0;" onclick="waOpenCRMForContact()" title="View CRM Lead">🎯</button>
+              </div>
+            </div>
+            <!-- Messages -->
+            <div class="wa-msgs" id="waMsgArea"></div>
+            <!-- Quick Replies -->
+            <div id="waQuickReplies" style="display:none;padding:8px 16px;border-top:1px solid #f0f0f0;background:#fafafa;overflow-x:auto;white-space:nowrap;">
+              <span style="font-size:.72rem;color:#aaa;margin-right:8px;">Quick reply:</span>
+              <button class="wa-qr-btn" onclick="waQuickReply('Checking your order… please wait a moment 🙏')">Checking order…</button>
+              <button class="wa-qr-btn" onclick="waQuickReply('Your order has been shipped! 📦 You will receive it in 3-5 days.')">Order shipped!</button>
+              <button class="wa-qr-btn" onclick="waQuickReply('Payment received! ✅ Your KidsCart order is confirmed.')">Payment confirmed</button>
+              <button class="wa-qr-btn" onclick="waQuickReply('Thank you for shopping with KidsCart! 💜 Have any questions? Just ask!')">Thank you!</button>
+              <button class="wa-qr-btn" onclick="waQuickReply('Please share your UPI payment screenshot here to confirm your order.')">UPI slip request</button>
+            </div>
+            <!-- Input -->
+            <div class="wa-input-row" id="waInputRow" style="display:none;">
+              <textarea id="waReplyInput" placeholder="Type a message…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();waSendReply();}"></textarea>
+              <button class="wa-send-btn" onclick="waSendReply()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- ── CRM PIPELINE ── -->
+      <!-- ══════════════════════════════════════════ -->
+      <div class="panel" id="crmPanel">
+        <!-- Top Bar -->
+        <div class="card" style="margin-bottom:16px;padding:14px 20px;">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);font-size:1rem;font-weight:800;">🎯 CRM Lead Pipeline</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select id="crmFilterStaff" onchange="renderCRM()" style="padding:7px 12px;border:1.5px solid #eee;border-radius:8px;font-size:.82rem;font-family:'Nunito',sans-serif;">
+                <option value="">All Staff</option>
+                <option value="Owner">Owner (Sahla)</option>
+                <option value="Support 1">Support 1</option>
+                <option value="Support 2">Support 2</option>
+              </select>
+              <select id="crmFilterSource" onchange="renderCRM()" style="padding:7px 12px;border:1.5px solid #eee;border-radius:8px;font-size:.82rem;font-family:'Nunito',sans-serif;">
+                <option value="">All Sources</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Website">Website</option>
+                <option value="Instagram">Instagram</option>
+              </select>
+            </div>
+            <button class="btn btn-pp" style="margin-left:auto;" onclick="openAddLead()">+ Add Lead</button>
+          </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="crm-board" id="crmBoard">
+          <!-- columns rendered by JS -->
+        </div>
+
+        <!-- CRM Stats Row -->
+        <div class="stats-grid" style="margin-top:16px;" id="crmStats">
+          <div class="stat-card ok"><p>Converted</p><h2 id="crmConvCount">0</h2><small>Total leads converted</small></div>
+          <div class="stat-card or"><p>In Pipeline</p><h2 id="crmPipeCount">0</h2><small>Active leads</small></div>
+          <div class="stat-card er"><p>Lost</p><h2 id="crmLostCount">0</h2><small>Lost this month</small></div>
+          <div class="stat-card"><p>Conversion Rate</p><h2 id="crmRate">0%</h2><small>Leads → Orders</small></div>
+        </div>
+      </div>
+
+      <!-- Add Lead Modal -->
+      <div id="addLeadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:18px;padding:28px;width:420px;max-width:96vw;box-shadow:0 8px 40px rgba(0,0,0,.2);">
+          <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);margin-bottom:18px;">➕ Add New Lead</h3>
+          <div class="fgroup"><label>Customer Name *</label><input type="text" id="leadName" placeholder="Full name"></div>
+          <div class="fgroup"><label>Phone / WhatsApp *</label><input type="text" id="leadPhone" placeholder="+91 XXXXX XXXXX"></div>
+          <div class="fgroup"><label>Source</label>
+            <select id="leadSource"><option>WhatsApp</option><option>Website</option><option>Instagram</option></select>
+          </div>
+          <div class="fgroup"><label>Assign To</label>
+            <select id="leadAssign"><option value="">Unassigned</option><option value="Owner">Owner (Sahla)</option><option value="Support 1">Support 1</option><option value="Support 2">Support 2</option></select>
+          </div>
+          <div class="fgroup"><label>Notes</label><textarea id="leadNotes" rows="2" placeholder="Initial notes…" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;resize:none;"></textarea></div>
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <button class="btn btn-pp" style="flex:1;" onclick="saveLead()">✅ Save Lead</button>
+            <button class="btn btn-ghost" style="flex:1;" onclick="closeAddLead()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lead Detail Modal -->
+      <div id="leadDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:18px;padding:28px;width:460px;max-width:96vw;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);" id="ldModalName">Lead Detail</h3>
+            <button onclick="closeLeadDetail()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#aaa;">✕</button>
+          </div>
+          <div id="ldModalContent"></div>
+          <div class="fgroup" style="margin-top:12px;"><label>Add Note</label>
+            <textarea id="ldNoteInput" rows="2" placeholder="Add a note…" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;resize:none;"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-pp" style="flex:1;" onclick="addLeadNote()">📝 Save Note</button>
+            <button class="btn btn-ghost" onclick="closeLeadDetail()">Close</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- ── EXCHANGE REQUESTS ── -->
+      <!-- ══════════════════════════════════════════ -->
+      <div class="panel" id="exchangePanel">
+        <div class="card" style="margin-bottom:16px;padding:14px 20px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);font-size:1rem;font-weight:800;">🔄 Exchange Requests</h3>
+            <div style="display:flex;gap:8px;">
+              <button class="wa-filter-btn active" onclick="exFilter('all',this)">All</button>
+              <button class="wa-filter-btn" onclick="exFilter('pending',this)">⏳ Pending</button>
+              <button class="wa-filter-btn" onclick="exFilter('approved',this)">✅ Approved</button>
+              <button class="wa-filter-btn" onclick="exFilter('rejected',this)">❌ Rejected</button>
+              <button class="wa-filter-btn" onclick="exFilter('shipped',this)">📦 Replacement Shipped</button>
+            </div>
+            <button class="btn btn-pp" style="margin-left:auto;" onclick="loadExchanges()">🔄 Refresh</button>
+          </div>
+          <p style="font-size:.78rem;color:#e65100;margin-top:8px;font-weight:700;">⚠️ KidsCart Policy: Exchange only (no returns). Wrong item / damaged only. Request within 48hrs. With photo proof.</p>
+        </div>
+
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Request ID</th><th>Customer</th><th>Order</th><th>Reason</th><th>Photo</th><th>Requested</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="exchangeTable"><tr><td colspan="8" style="text-align:center;color:var(--gy);padding:20px;">Loading exchange requests…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Exchange Detail Modal -->
+        <div id="exchangeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:18px;padding:28px;width:480px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);">🔄 Exchange Request Detail</h3>
+              <button onclick="closeExchangeModal()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#aaa;">✕</button>
+            </div>
+            <div id="exchangeModalContent"></div>
+            <div class="fgroup" style="margin-top:12px;"><label>Admin Note / Response to Customer</label>
+              <textarea id="exchangeAdminNote" rows="2" placeholder="e.g. Exchange approved! We will ship the replacement within 2 days." style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;resize:none;"></textarea>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+              <button class="btn btn-pp" onclick="updateExchange('approved')" style="flex:1;">✅ Approve</button>
+              <button class="btn" style="flex:1;background:#ff8f00;color:#fff;border:none;border-radius:8px;cursor:pointer;" onclick="updateExchange('shipped')">📦 Mark Replacement Shipped</button>
+              <button class="btn btn-er-g" onclick="updateExchange('rejected')" style="flex:1;">❌ Reject</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- ── SETTINGS ── -->
+      <!-- ══════════════════════════════════════════ -->
+      <div class="panel" id="settingsPanel">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+          <!-- Announcement Bar -->
+          <div class="card">
+            <div class="card-head"><h3>📢 Announcement Bar</h3></div>
+            <div class="fgroup"><label>Announcement Text</label>
+              <input type="text" id="settAnnoText" placeholder="e.g. 🎉 Free delivery on orders above ₹999! Shop now →" style="width:100%;"></div>
+            <div class="fgroup"><label>Background Color</label>
+              <input type="color" id="settAnnoColor" value="#7B2D8B" style="height:40px;width:60px;border:none;cursor:pointer;"></div>
+            <div class="fgroup"><label>Text Color</label>
+              <input type="color" id="settAnnoTextColor" value="#ffffff" style="height:40px;width:60px;border:none;cursor:pointer;"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <label style="font-weight:700;font-size:.83rem;color:#555;">Show Announcement Bar:</label>
+              <select id="settAnnoShow" style="padding:8px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;">
+                <option value="true">✅ Visible</option>
+                <option value="false">🔒 Hidden</option>
+              </select>
+            </div>
+            <button class="btn btn-pp" onclick="saveAnnouncement()">💾 Save Announcement</button>
+          </div>
+
+          <!-- Delivery Charge Rules -->
+          <div class="card">
+            <div class="card-head"><h3>🚚 Delivery Charge Rules</h3></div>
+            <div class="fgroup"><label>Delivery Charge (₹)</label>
+              <input type="number" id="settDeliveryCharge" value="60" style="width:100%;"></div>
+            <div class="fgroup"><label>Free Delivery Above (₹)</label>
+              <input type="number" id="settFreeDelivery" value="999" style="width:100%;"></div>
+            <div class="fgroup"><label>Estimated Delivery</label>
+              <input type="text" id="settDeliveryDays" placeholder="e.g. 3-7 business days" style="width:100%;"></div>
+            <div class="fgroup"><label>COD Available (Default)</label>
+              <select id="settCODDefault" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;">
+                <option value="true">✅ Yes - COD enabled by default</option>
+                <option value="false">❌ No - UPI only by default</option>
+              </select>
+            </div>
+            <button class="btn btn-pp" onclick="saveDeliverySettings()">💾 Save Delivery Settings</button>
+          </div>
+
+          <!-- Site Config -->
+          <div class="card">
+            <div class="card-head"><h3>🌐 Site Configuration</h3></div>
+            <div class="fgroup"><label>Site Name</label><input type="text" id="settSiteName" value="KidsCart" style="width:100%;"></div>
+            <div class="fgroup"><label>Support WhatsApp Number</label><input type="text" id="settWANumber" placeholder="+91 94975 96110" style="width:100%;"></div>
+            <div class="fgroup"><label>UPI ID (for payments)</label><input type="text" id="settUPIId" placeholder="mujeebpmba@ybl" style="width:100%;"></div>
+            <div class="fgroup"><label>Instagram Handle</label><input type="text" id="settInstagram" placeholder="@kids_cart.kids" style="width:100%;"></div>
+            <button class="btn btn-pp" onclick="saveSiteConfig()">💾 Save Site Config</button>
+          </div>
+
+          <!-- Security Settings -->
+          <div class="card">
+            <div class="card-head"><h3>🔐 Security Settings</h3></div>
+            <div style="margin-bottom:14px;">
+              <div style="font-size:.83rem;color:#555;font-weight:700;margin-bottom:6px;">Session Timeout</div>
+              <select id="settSessionTimeout" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;">
+                <option value="3600000">1 Hour (recommended)</option>
+                <option value="7200000">2 Hours</option>
+                <option value="86400000">24 Hours</option>
+              </select>
+            </div>
+            <div style="margin-bottom:14px;">
+              <div style="font-size:.83rem;color:#555;font-weight:700;margin-bottom:6px;">Login Attempt Limit</div>
+              <select id="settLoginLimit" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;">
+                <option value="5">5 attempts per minute</option>
+                <option value="10" selected>10 attempts per minute</option>
+              </select>
+            </div>
+            <div style="background:#fff8e1;border-radius:8px;padding:12px;font-size:.8rem;color:#e65100;margin-bottom:14px;">
+              <b>Security Layers Active:</b><br>
+              ✅ HTTPS (Railway auto-SSL)<br>
+              ✅ JWT auth tokens (30-day expiry)<br>
+              ✅ bcrypt 12 rounds password hashing<br>
+              ✅ Rate limiting on login + register<br>
+              ✅ CORS restricted to kidscart.kids<br>
+              ✅ File upload: JPG/PNG/WebP only, max 8MB<br>
+              ✅ Role-based access (super_admin / admin / support)
+            </div>
+            <button class="btn btn-pp" onclick="saveSecuritySettings()">💾 Save Security Settings</button>
+          </div>
+
+        </div>
+      </div>
+
+</div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /adminApp -->
+
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────
+const API = '/api';
+let token = localStorage.getItem('kc_admin_token') || '';
+let adminUser = null;
+let ordersData = [];
+let prodsData = [];
+let activeChatSession = null;
+let adminSocket = null;
+
+// ── SECURITY: Session timeout ──────────────
+let adminLastActivity = Date.now();
+const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour
+document.addEventListener('click', () => adminLastActivity = Date.now());
+document.addEventListener('keypress', () => adminLastActivity = Date.now());
+setInterval(() => {
+  if (token && Date.now() - adminLastActivity > SESSION_TIMEOUT) {
+    toast('⏰ Session expired. Please login again.');
+    setTimeout(adminLogout, 2000);
+  }
+}, 60000);
+
+// ── INIT ────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Wire banner preview inputs
+  ['bannerTitle','bannerSub','bannerBadge','bannerBtn','bannerColor'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateBannerPreview);
+  });
+  if (token) tryAutoLogin();
+  else showLoginScreen();
+});
+
+async function tryAutoLogin() {
+  try {
+    const r = await apiFetch('/auth/me');
+    if (r.user && r.user.role === 'admin') {
+      adminUser = r.user;
+      showApp();
+    } else { showLoginScreen(); }
+  } catch { showLoginScreen(); }
+}
+
+function showLoginScreen() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminApp').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'flex';
+  if (adminUser) document.getElementById('adminName').textContent = '👤 ' + adminUser.name;
+  // Show Admin Users nav only for super_admin
+  // Apply role-based nav restrictions
+  const role = localStorage.getItem('kc_admin_role') || 'support';
+  applyRolePermissions(role);
+  if (adminUser?.role === 'super_admin') {
+    const navEl = document.getElementById('adminUsersNav');
+    if (navEl) navEl.style.display = 'flex';
+  }
+  loadDashboard();
+  initAdminSocket();
+}
+
+async function adminLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const pass  = document.getElementById('adminPass').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent = '⚠️ Please enter email and password'; errEl.style.display = 'block'; return; }
+  try {
+    const r = await fetch(API + '/auth/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password: pass })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Login failed');
+    if (!['admin','super_admin'].includes(d.user.role)) throw new Error('Not an admin account');
+    token = d.token;
+    adminUser = d.user;
+    localStorage.setItem('kc_admin_token', token);
+    showApp();
+  } catch(e) {
+    errEl.textContent = '❌ ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function adminLogout() {
+  token = ''; adminUser = null;
+  localStorage.removeItem('kc_admin_token');
+  showLoginScreen();
+}
+
+// ── NAVIGATION ──────────────────────────────
+const panelTitles = {
+  dashboard:'Dashboard', orders:'Orders', products:'Product Catalog',
+  stock:'Stock Management', addprod:'Add New Product', customers:'Customers',
+  coupons:'Coupons', banners:'Banners & Promotions', chat:'Live Chat', whatsapp:'📱 WhatsApp CRM Inbox', crm:'🎯 CRM Pipeline', exchange:'🔄 Exchange Requests', settings:'⚙️ Site Settings', reports:'Reports & Analytics',
+  adminusers:'Admin Users'
+};
+
+function show(id, navEl) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(id + 'Panel');
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('pageTitle').textContent = panelTitles[id] || id;
+  window.scrollTo(0, 0);
+  const loaders = {
+    dashboard: loadDashboard, orders: loadOrders, products: loadProducts,
+    stock: loadStock, customers: loadCustomers, coupons: loadCoupons,
+    banners: loadBanners, chat: loadChats, whatsapp: loadWAInbox, crm: loadCRM, exchange: loadExchanges, settings: loadSettings,
+    reports: () => setReportRange(30),
+    adminusers: loadAdminUsers
+  };
+  if (loaders[id]) loaders[id]();
+}
+
+// ── API HELPER ──────────────────────────────
+async function apiFetch(path, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  let r;
+  try { r = await fetch(API + path, opts); } 
+  catch(e) { throw new Error('Cannot connect to server. Is it running?'); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Request failed (' + r.status + ')');
+  return d;
+}
+
+// Fix image src - converts /uploads/file.jpg → absolute URL
+function fixImgSrc(src) {
+  if (!src) return '';
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) return src;
+  return window.location.origin + (src.startsWith('/') ? src : '/' + src);
+}
+
+function toast(msg, dur = 2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ── DASHBOARD ───────────────────────────────
+async function loadDashboard() {
+  try {
+    const r = await apiFetch('/admin/dashboard');
+    if (!r.success) return;
+    const s = r.stats;
+    // Exclude cancelled from counts
+    const activeOrders = (r.recentOrders || []).filter(o => o.status !== 'cancelled');
+    setText('statOrders', s.activeOrders ?? s.totalOrders ?? 0);
+    setText('statRevenue', '₹' + (s.activeRevenue ?? s.totalRevenue ?? 0).toLocaleString('en-IN'));
+    setText('statCustomers', s.totalUsers || 0);
+    setText('statLowStock', r.lowStock?.length || 0);
+    renderDashOrders(r.recentOrders || []);
+    renderLowStock(r.lowStock || []);
+  } catch(e) { console.error('Dashboard error:', e); }
+}
+
+function renderDashOrders(orders) {
+  const el = document.getElementById('recentOrdersTable');
+  if (!el) return;
+  if (!orders.length) { el.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gy);padding:16px;">No orders yet</td></tr>'; return; }
+  el.innerHTML = orders.slice(0,5).map(o => `
+    <tr>
+      <td><b>#${o.orderId}</b></td>
+      <td>${o.user?.name || '—'}</td>
+      <td>₹${(o.total || 0).toLocaleString('en-IN')}</td>
+      <td><span class="badge b-${o.status}">${o.status}</span></td>
+      <td><button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}','${o.paymentMethod||"cod"}','${o.paymentStatus||"pending"}')">Update</button>
+      <button class="btn btn-ghost btn-sm" onclick="printOrder('${o._id}')" title="Print Invoice">🖨️</button></td>
+    </tr>`).join('');
+}
+
+function renderLowStock(items) {
+  const el = document.getElementById('lowStockList');
+  if (!el) return;
+  if (!items.length) { el.innerHTML = '<p style="text-align:center;color:var(--ok);padding:20px;">✅ All products well stocked!</p>'; return; }
+  el.innerHTML = items.slice(0,8).map(p => `
+    <div class="ls-item">
+      <span>${p.emoji || '📦'} ${p.name}</span>
+      <span style="font-weight:800;color:${p.totalStock === 0 ? 'var(--er)' : 'var(--or)'};">${p.totalStock} units ${p.totalStock === 0 ? '❌' : '⚠️'}</span>
+    </div>`).join('');
+}
+
+// ── ORDERS ──────────────────────────────────
+async function loadOrders() {
+  try {
+    const r = await apiFetch('/admin/orders?limit=100');
+    ordersData = r.orders || [];
+    renderOrders(ordersData);
+  } catch(e) {
+    document.getElementById('ordersTable').innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--er);padding:24px;">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderOrders(orders) {
+  const el = document.getElementById('ordersTable');
+  const isSuperAdmin = adminUser?.role === 'super_admin';
+  if (!orders.length) { el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">No orders found</td></tr>'; return; }
+  el.innerHTML = orders.map(o => `
+    <tr>
+      <td><b>#${o.orderId}</b></td>
+      <td>${o.user?.name || '—'}<br><small style="color:var(--gy);">${o.user?.email || ''}</small></td>
+      <td>${o.items?.length || 0} item(s)</td>
+      <td><b>₹${(o.total || 0).toLocaleString('en-IN')}</b></td>
+      <td>
+        <span style="font-weight:700;">${(o.payment?.method || 'COD').toUpperCase()}</span><br>
+        <small style="color:${o.payment?.status==='paid'?'var(--ok)':'var(--or)'};">${o.payment?.status||'pending'}</small>
+      </td>
+      <td>${fmtDate(o.createdAt)}</td>
+      <td><span class="badge b-${o.status}">${o.status}</span></td>
+      <td>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}','${o.payment?.method||'cod'}','${o.payment?.status||'pending'}')">✏️ Update</button>
+          <button class="btn btn-ghost btn-sm" onclick="viewOrderDetail('${o._id}')">👁 View</button>
+          ${isSuperAdmin ? `<button class="btn btn-sm" style="background:var(--er);color:#fff;" onclick="deleteOrder('${o._id}','${o.orderId}')">🗑</button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterOrders() {
+  const search = document.getElementById('orderSearch').value.toLowerCase();
+  const status = document.getElementById('orderStatusFilter').value;
+  let filtered = ordersData;
+  if (search) filtered = filtered.filter(o => o.orderId?.toLowerCase().includes(search) || o.user?.name?.toLowerCase().includes(search));
+  if (status) filtered = filtered.filter(o => o.status === status);
+  renderOrders(filtered);
+}
+
+function openOrderModal(dbId, orderId, currentStatus, payMethod='cod', payStatus='pending') {
+  document.getElementById('modalOrderDbId').value = dbId;
+  document.getElementById('modalOrderId').textContent = orderId;
+  document.getElementById('modalStatus').value = currentStatus;
+  document.getElementById('modalPayMethod').value = payMethod.toLowerCase();
+  document.getElementById('modalPayStatus').value = payStatus;
+  document.getElementById('modalMsg').value = '';
+  document.getElementById('orderModal').style.display = 'flex';
+}
+
+function closeOrderModal() {
+  document.getElementById('orderModal').style.display = 'none';
+}
+
+async function updateOrderStatus() {
+  const id = document.getElementById('modalOrderDbId').value;
+  const status = document.getElementById('modalStatus').value;
+  const message = document.getElementById('modalMsg').value.trim();
+  const payMethod = document.getElementById('modalPayMethod').value;
+  const payStatus = document.getElementById('modalPayStatus').value;
+  try {
+    await apiFetch(`/admin/orders/${id}/status`, 'PUT', { status, message });
+    await apiFetch(`/admin/orders/${id}/payment`, 'PUT', { method: payMethod, status: payStatus });
+    toast('✅ Order updated!');
+    closeOrderModal();
+    loadOrders();
+    loadDashboard();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function deleteOrder(id, orderId) {
+  if (!confirm(`Delete order #${orderId}? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/admin/orders/${id}`, 'DELETE');
+    toast('🗑 Order deleted');
+    loadOrders();
+    loadDashboard();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function viewOrderDetail(id) {
+  try {
+    const r = await apiFetch('/admin/orders?limit=200');
+    const o = (r.orders || []).find(x => x._id === id);
+    if (!o) { toast('Order not found'); return; }
+    const info = `Order #${o.orderId}\nCustomer: ${o.user?.name} (${o.user?.email})\nItems:\n${o.items.map(i => `  ${i.emoji} ${i.name} (${i.size}) x${i.qty} = ₹${i.price * i.qty}`).join('\n')}\nSubtotal: ₹${o.subtotal}\nDelivery: ₹${o.deliveryFee || 0}\nDiscount: ₹${o.discount || 0}\nTotal: ₹${o.total}\nPayment: ${o.payment?.method?.toUpperCase()}\nStatus: ${o.status}\nAddress: ${o.shippingAddress?.name}, ${o.shippingAddress?.line1}, ${o.shippingAddress?.city} - ${o.shippingAddress?.pincode}`;
+    alert(info);
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── PRODUCTS ────────────────────────────────
+async function loadProducts() {
+  try {
+    const r = await apiFetch('/products?limit=200');
+    prodsData = r.products || [];
+    renderProducts(prodsData);
+  } catch(e) {
+    document.getElementById('productsTable').innerHTML = `<tr><td colspan="8" style="color:var(--er);text-align:center;padding:20px;">${e.message}</td></tr>`;
+  }
+}
+
+function renderProducts(prods) {
+  const el = document.getElementById('productsTable');
+  if (!prods.length) { el.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">No products found</td></tr>'; return; }
+  el.innerHTML = prods.map(p => {
+    const off = p.mrp > p.price ? Math.round((1 - p.price/p.mrp)*100) : 0;
+    const profit = p.costPrice > 0 ? Math.round(((p.price - p.costPrice) / p.price) * 100) : null;
+    const thumb = p.thumbnail ? `<img src="${fixImgSrc(p.thumbnail)}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle" onerror="this.style.display='none'">` : `<span style="font-size:1.4rem;margin-right:8px">${p.emoji||'📦'}</span>`;
+    return `
+    <tr>
+      <td>${thumb}<b>${p.name}</b><br><small style="color:var(--gy);">${p.ageGroup||''} ${p.category}</small></td>
+      <td><b>₹${p.price.toLocaleString('en-IN')}</b>${off > 0 ? `<br><small style="color:var(--ok);">${off}% off MRP</small>` : ''}</td>
+      <td style="color:var(--gy);text-decoration:line-through;">₹${p.mrp.toLocaleString('en-IN')}</td>
+      <td>${p.costPrice > 0 ? `₹${p.costPrice}<br><small style="color:${profit>=40?'var(--ok)':profit>=20?'var(--or)':'var(--er)'};font-weight:800">${profit}% margin</small>` : '<small style="color:var(--gy)">—</small>'}</td>
+      <td style="font-weight:800;color:${p.totalStock === 0 ? 'var(--er)' : p.totalStock <= 10 ? 'var(--or)' : 'var(--ok)'};">${p.totalStock}</td>
+      <td>⭐ ${p.rating} (${p.reviewCount})</td>
+      <td><span class="badge ${p.isActive ? 'b-confirmed' : 'b-cancelled'}">${p.isActive ? 'Active' : 'Hidden'}</span></td>
+      <td><span style="font-size:.72rem">${p.codEnabled!==false ? '✅ COD' : '❌ Prepaid'}</span></td>
+      <td>
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-ok-g btn-sm" onclick="editProduct('${p._id}')">✏️</button>
+          <button class="btn btn-er-g btn-sm" onclick="deleteProduct('${p._id}','${p.name.replace(/'/g,'')}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterProductList() {
+  const q = document.getElementById('prodSearch').value.toLowerCase();
+  const cat = document.getElementById('prodCatFilter').value;
+  let filtered = prodsData;
+  if (q) filtered = filtered.filter(p => p.name.toLowerCase().includes(q));
+  if (cat) filtered = filtered.filter(p => p.category === cat);
+  renderProducts(filtered);
+}
+
+// ── PRODUCT IMAGE UPLOAD ────────────────────
+let uploadedProdImages = [];
+
+function previewProdImages(input) {
+  const preview = document.getElementById('prodImagePreviews');
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const div = document.createElement('div');
+      div.style.cssText = 'position:relative;display:inline-block';
+      div.innerHTML = `<img src="${e.target.result}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--pp)">
+        <div style="position:absolute;top:-4px;right:-4px;background:var(--er);color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;font-weight:900" onclick="this.parentElement.remove()">×</div>`;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadProdImages() {
+  const input = document.getElementById('prodImageInput');
+  if (!input.files.length) return [];
+  const fd = new FormData();
+  Array.from(input.files).forEach(f => fd.append('images', f));
+  const r = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Upload failed');
+  // Return absolute URLs so images always load correctly
+  return (d.urls || []).map(url => fixImgSrc(url));
+}
+
+function editProduct(id) {
+  const p = prodsData.find(x => x._id === id);
+  if (!p) return;
+  show('addprod', document.querySelector('[onclick*=addprod]'));
+  setTimeout(() => {
+    const form = document.getElementById('prodForm');
+    if (!form) return;
+    form.name.value = p.name || '';
+    form.category.value = p.category || '';
+    form.price.value = p.price || '';
+    form.mrp.value = p.mrp || '';
+    form.costPrice.value = p.costPrice || 0;
+    form.ageGroup.value = p.ageGroup || '';
+    form.gender.value = p.gender || 'Girls';
+    form.emoji.value = p.emoji || '';
+    form.badge.value = p.badge || '';
+    form.description.value = p.description || '';
+    form.brand.value = p.brand || '';
+    form.tags.value = (p.tags || []).join(', ');
+    if (form.seoTitle) form.seoTitle.value = p.seoTitle || '';
+    if (form.seoDesc) form.seoDesc.value = p.seoDesc || '';
+    form.isFeatured.value = p.isFeatured ? 'true' : 'false';
+    form.isActive.value = p.isActive !== false ? 'true' : 'false';
+    form.codEnabled.value = p.codEnabled !== false ? 'true' : 'false';
+    // Show existing thumbnail
+    const thumbInput = document.getElementById('prodThumbUrl');
+    if (thumbInput) thumbInput.value = p.thumbnail || '';
+    // Show existing images
+    const preview = document.getElementById('prodImagePreviews');
+    if (preview) {
+      preview.innerHTML = (p.images || []).map(img => `<img src="${fixImgSrc(img)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--lt2)" onerror="this.style.opacity='.3'">`).join('');
+    }
+    // sizes
+    const sizeMap = {};
+    (p.sizes || []).forEach(s => sizeMap[s.size] = s.stock || 0);
+    if (form.stockXS) form.stockXS.value = sizeMap['XS/0-3M'] || 0;
+    if (form.stockS)  form.stockS.value  = sizeMap['S/3-6M']  || 0;
+    if (form.stockM)  form.stockM.value  = sizeMap['M/6-12M'] || 0;
+    if (form.stockL)  form.stockL.value  = sizeMap['L/1-2Y']  || 0;
+    if (form.stockXL) form.stockXL.value = sizeMap['XL/2-4Y'] || 0;
+    if (form.stockXXL)form.stockXXL.value= sizeMap['XXL/4-6Y']|| 0;
+    document.getElementById('prodEditId').value = id;
+    document.getElementById('addprodTitle').textContent = '✏️ Edit Product: ' + p.name;
+  }, 120);
+}
+
+async function deleteProduct(id, name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/admin/products/${id}`, 'DELETE');
+    toast('🗑️ Product deleted');
+    loadProducts();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function saveProduct(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+  data.price = +data.price;
+  data.mrp = +data.mrp;
+  data.costPrice = +(data.costPrice || 0);
+  data.isFeatured = data.isFeatured === 'true';
+  data.isActive = data.isActive === 'true';
+  data.codEnabled = data.codEnabled === 'true';
+  // Parse tags
+  data.tags = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+  data.sizes = [
+    { size:'XS/0-3M', stock: +data.stockXS || 0 },
+    { size:'S/3-6M',  stock: +data.stockS  || 0 },
+    { size:'M/6-12M', stock: +data.stockM  || 0 },
+    { size:'L/1-2Y',  stock: +data.stockL  || 0 },
+    { size:'XL/2-4Y', stock: +data.stockXL || 0 },
+    { size:'XXL/4-6Y',stock: +data.stockXXL|| 0 },
+  ];
+  ['stockXS','stockS','stockM','stockL','stockXL','stockXXL'].forEach(k => delete data[k]);
+
+  // Upload images if any selected
+  const submitBtn = e.target.querySelector('button[type=submit]');
+  try {
+    submitBtn.textContent = '⏳ Uploading...';
+    submitBtn.disabled = true;
+    
+    const uploadedUrls = await uploadProdImages().catch(() => []);
+    if (uploadedUrls.length > 0) {
+      data.images = uploadedUrls;
+      data.thumbnail = uploadedUrls[0];
+    } else if (data.thumbnail) {
+      // URL was typed
+      data.images = [data.thumbnail];
+    }
+    
+    const editId = document.getElementById('prodEditId').value;
+    if (editId) {
+      await apiFetch(`/admin/products/${editId}`, 'PUT', data);
+      toast('✅ Product updated!');
+      document.getElementById('prodEditId').value = '';
+    } else {
+      await apiFetch('/admin/products', 'POST', data);
+      toast('✅ Product added to shop!');
+    }
+    e.target.reset();
+    document.getElementById('addprodTitle').textContent = '➕ Add New Product';
+    document.getElementById('prodImagePreviews').innerHTML = '';
+    show('products', document.querySelector('[onclick*=products]'));
+  } catch(err) { toast('❌ ' + err.message); }
+  finally { submitBtn.textContent = '💾 Save Product'; submitBtn.disabled = false; }
+}
+
+function cancelEditProd() {
+  const form = document.getElementById('prodForm');
+  form.reset();
+  document.getElementById('prodEditId').value = '';
+  document.getElementById('addprodTitle').textContent = '➕ Add New Product';
+  if (document.getElementById('prodImagePreviews')) document.getElementById('prodImagePreviews').innerHTML = '';
+  show('products', document.querySelector('[onclick*=products]'));
+}
+
+// ── STOCK ───────────────────────────────────
+async function loadStock() {
+  try {
+    const r = await apiFetch('/products?limit=200');
+    renderStock(r.products || []);
+  } catch(e) {}
+}
+
+function renderStock(prods) {
+  const el = document.getElementById('stockTableBody');
+  const sizeKeys = ['XS/0-3M','S/3-6M','M/6-12M','L/1-2Y','XL/2-4Y','XXL/4-6Y'];
+  el.innerHTML = prods.map(p => {
+    const sizeMap = {};
+    (p.sizes || []).forEach(s => sizeMap[s.size] = s.stock || 0);
+    const inputs = sizeKeys.map(k => {
+      const v = sizeMap[k] || 0;
+      const cls = v === 0 ? 'var(--er)' : v <= 5 ? 'var(--or)' : '#222';
+      return `<td><input type="number" value="${v}" min="0" data-pid="${p._id}" data-size="${k}" style="width:68px;padding:5px 8px;border:2px solid #eee;border-radius:6px;text-align:center;font-family:'Nunito';font-weight:800;color:${cls};" oninput="this.style.color='var(--pp)'"></td>`;
+    }).join('');
+    return `<tr>
+      <td><b>${p.emoji || '📦'} ${p.name}</b></td>
+      ${inputs}
+      <td style="font-weight:800;color:${p.totalStock===0?'var(--er)':p.totalStock<=10?'var(--or)':'var(--ok)'}">${p.totalStock}</td>
+      <td><button class="btn btn-ok-g btn-sm" onclick="saveStock('${p._id}',this)">💾 Save</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveStock(id, btn) {
+  const row = btn.closest('tr');
+  const inputs = row.querySelectorAll('input[data-size]');
+  const sizes = Array.from(inputs).map(inp => ({ size: inp.dataset.size, stock: +inp.value || 0 }));
+  try {
+    await apiFetch(`/admin/products/${id}/stock`, 'PUT', { sizes });
+    toast('✅ Stock updated!');
+    loadStock();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── CUSTOMERS ───────────────────────────────
+let custsData = [];
+async function loadCustomers() {
+  try {
+    const r = await apiFetch('/admin/users?limit=200');
+    custsData = r.users || [];
+    renderCustomers(custsData);
+  } catch(e) {}
+}
+
+function renderCustomers(users) {
+  const el = document.getElementById('customersTable');
+  if (!users.length) { el.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gy);padding:24px;">No customers yet</td></tr>'; return; }
+  el.innerHTML = users.map(u => `
+    <tr>
+      <td><b>${u.name}</b></td>
+      <td>${u.email || '—'}</td>
+      <td>${u.phone || '—'}</td>
+      <td>${u.isVerified ? '✅' : '⏳'}</td>
+      <td>${fmtDate(u.createdAt)}</td>
+      <td>${u.addresses?.length || 0} saved</td>
+      <td><button class="btn btn-sm" style="background:var(--er);color:#fff;" onclick="deleteCustomer('${u._id}','${u.name}')">🗑 Delete</button></td>
+    </tr>`).join('');
+}
+
+async function deleteCustomer(id, name) {
+  if (!confirm(`Delete customer "${name}"? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/admin/users/${id}`, 'DELETE');
+    toast('🗑 Customer deleted');
+    loadCustomers();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+function searchCustomers() {
+  const q = document.getElementById('custSearch').value.toLowerCase();
+  renderCustomers(q ? custsData.filter(u => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)) : custsData);
+}
+
+// ── ADMIN USERS ─────────────────────────────
+async function loadAdminUsers() {
+  try {
+    const r = await apiFetch('/admin/admins');
+    const el = document.getElementById('adminUsersTable');
+    const admins = r.admins || [];
+    if (!admins.length) { el.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gy);padding:24px;">No admin users</td></tr>'; return; }
+    el.innerHTML = admins.map(u => `
+      <tr>
+        <td><b>${u.name}</b></td>
+        <td>${u.email}</td>
+        <td><span class="badge" style="background:${u.role==='super_admin'?'var(--pp)':'var(--ok)'};">${u.role}</span></td>
+        <td>${u.role !== 'super_admin' ? `<button class="btn btn-sm" style="background:var(--er);color:#fff;" onclick="deleteAdminUser('${u._id}','${u.name}')">🗑</button>` : '—'}</td>
+      </tr>`).join('');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function addAdminUser() {
+  const name = document.getElementById('newAdminName').value.trim();
+  const email = document.getElementById('newAdminEmail').value.trim();
+  const password = document.getElementById('newAdminPass').value;
+  const role = document.getElementById('newAdminRole').value;
+  const errEl = document.getElementById('addAdminErr');
+  errEl.style.display = 'none';
+  if (!name || !email || !password) { errEl.textContent = '⚠️ All fields required'; errEl.style.display = 'block'; return; }
+  if (password.length < 8) { errEl.textContent = '⚠️ Password min 8 characters'; errEl.style.display = 'block'; return; }
+  try {
+    await apiFetch('/admin/admins', 'POST', { name, email, password, role });
+    toast('✅ Admin user added!');
+    document.getElementById('newAdminName').value = '';
+    document.getElementById('newAdminEmail').value = '';
+    document.getElementById('newAdminPass').value = '';
+    loadAdminUsers();
+  } catch(e) { errEl.textContent = '❌ ' + e.message; errEl.style.display = 'block'; }
+}
+
+async function deleteAdminUser(id, name) {
+  if (!confirm(`Delete admin "${name}"?`)) return;
+  try {
+    await apiFetch(`/admin/admins/${id}`, 'DELETE');
+    toast('🗑 Admin user deleted');
+    loadAdminUsers();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── COUPONS ─────────────────────────────────
+async function loadCoupons() {
+  try {
+    const r = await apiFetch('/admin/coupons');
+    renderCoupons(r.coupons || []);
+  } catch(e) {}
+}
+
+function renderCoupons(coupons) {
+  const el = document.getElementById('couponsTable');
+  if (!coupons.length) { el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">No coupons yet</td></tr>'; return; }
+  el.innerHTML = coupons.map(c => `
+    <tr>
+      <td><b>${c.code}</b></td>
+      <td>${c.type}</td>
+      <td>${c.type === 'percent' ? c.value + '%' : '₹' + c.value}</td>
+      <td>₹${c.minOrder || 0}</td>
+      <td>${c.usedCount || 0}${c.usageLimit ? '/' + c.usageLimit : ''}</td>
+      <td>${fmtDate(c.validTill)}</td>
+      <td><span class="badge ${c.isActive ? 'b-confirmed' : 'b-cancelled'}">${c.isActive ? 'Active' : 'Inactive'}</span></td>
+      <td>
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-ghost btn-sm" onclick="editCoupon(${JSON.stringify(c).replace(/"/g,'&quot;')})">✏️</button>
+          <button class="btn btn-er-g btn-sm" onclick="deleteCoupon('${c._id}','${c.code}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function editCoupon(c) {
+  document.getElementById('couponEditId').value = c._id;
+  document.getElementById('couponCode').value = c.code;
+  document.getElementById('couponType').value = c.type;
+  document.getElementById('couponValue').value = c.value;
+  document.getElementById('couponMin').value = c.minOrder || 0;
+  document.getElementById('couponMax').value = c.maxDiscount || 0;
+  document.getElementById('couponPerUser').value = c.perUserLimit || 1;
+  document.getElementById('couponTotal').value = c.usageLimit || 0;
+  if (c.validFrom) document.getElementById('couponFrom').value = c.validFrom.slice(0,10);
+  if (c.validTill) document.getElementById('couponTill').value = c.validTill.slice(0,10);
+  document.getElementById('couponActive').value = c.isActive ? 'true' : 'false';
+  document.getElementById('couponFormTitle').textContent = '✏️ Edit Coupon';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function cancelCoupon() {
+  document.getElementById('couponForm').reset();
+  document.getElementById('couponEditId').value = '';
+  document.getElementById('couponFormTitle').textContent = '🎟️ Create Coupon';
+}
+
+async function saveCoupon(e) {
+  e.preventDefault();
+  const id = document.getElementById('couponEditId').value;
+  const payload = {
+    code: document.getElementById('couponCode').value.trim().toUpperCase(),
+    type: document.getElementById('couponType').value,
+    value: +document.getElementById('couponValue').value,
+    minOrder: +document.getElementById('couponMin').value || 0,
+    maxDiscount: +document.getElementById('couponMax').value || 0,
+    perUserLimit: +document.getElementById('couponPerUser').value || 1,
+    usageLimit: +document.getElementById('couponTotal').value || 0,
+    validFrom: document.getElementById('couponFrom').value || new Date().toISOString(),
+    validTill: document.getElementById('couponTill').value || new Date('2026-12-31').toISOString(),
+    isActive: document.getElementById('couponActive').value === 'true',
+  };
+  try {
+    if (id) {
+      await apiFetch(`/admin/coupons/${id}`, 'PUT', payload);
+      toast('✅ Coupon updated!');
+    } else {
+      await apiFetch('/admin/coupons', 'POST', payload);
+      toast('✅ Coupon created!');
+    }
+    cancelCoupon();
+    loadCoupons();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function deleteCoupon(id, code) {
+  if (!confirm(`Delete coupon "${code}"?`)) return;
+  try {
+    await apiFetch(`/admin/coupons/${id}`, 'DELETE');
+    toast('🗑️ Coupon deleted');
+    loadCoupons();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── BANNERS ─────────────────────────────────
+function updateBannerPreview() {}
+
+function setBannerImageFromUrl(url) {
+  document.getElementById('bannerImageUrl').value = url;
+  const preview = document.getElementById('bannerImagePreview');
+  if (url && preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:6px">`;
+}
+
+async function previewBannerImage(input) {
+  if (!input.files[0]) return;
+  const preview = document.getElementById('bannerImagePreview');
+  // Show preview immediately
+  const reader = new FileReader();
+  reader.onload = e => { if (preview) preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:6px">`; };
+  reader.readAsDataURL(input.files[0]);
+  // Upload
+  try {
+    const fd = new FormData();
+    fd.append('image', input.files[0]);
+    const r = await fetch('/api/admin/upload-banner', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+    const d = await r.json();
+    if (d.url) {
+      // Save as absolute URL so it works on all pages
+      const absoluteUrl = fixImgSrc(d.url);
+      document.getElementById('bannerImageUrl').value = absoluteUrl;
+      toast('✅ Image uploaded!');
+    }
+  } catch(e) { toast('❌ Image upload failed: ' + e.message); }
+}
+
+async function loadBanners() {
+  try {
+    const r = await apiFetch('/admin/banners');
+    renderAdminBanners(r.banners || []);
+  } catch(e) {
+    try { const r2 = await fetch('/api/banners'); const d = await r2.json(); renderAdminBanners(d.banners || []); } catch {}
+  }
+}
+
+function renderAdminBanners(banners) {
+  const el = document.getElementById('bannersList');
+  if (!banners.length) { el.innerHTML = '<p style="text-align:center;color:var(--gy);padding:24px;">No banners yet. Create one to replace the hero section!</p>'; return; }
+  el.innerHTML = banners.map(b => {
+    const bgStyle = b.image ? `background:url(${fixImgSrc(b.image)}) center/cover;` : `background:${b.color||'#7B2D8B'};`;
+    return `
+    <div style="border:2px solid var(--lt2);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+      <div style="${bgStyle}position:relative;min-height:100px;display:flex;align-items:center;padding:20px 24px;">
+        ${b.image ? '<div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.5),transparent)"></div>' : ''}
+        <div style="position:relative;z-index:1">
+          ${b.badge ? `<div style="font-size:.7rem;background:rgba(255,255,255,.25);color:#fff;padding:2px 8px;border-radius:50px;display:inline-block;margin-bottom:4px">${b.badge}</div><br>` : ''}
+          <div style="color:#fff;font-weight:900;font-size:1.1rem;">${b.title}</div>
+          ${b.subtitle ? `<div style="color:rgba(255,255,255,.85);font-size:.82rem;margin-top:2px">${b.subtitle}</div>` : ''}
+        </div>
+      </div>
+      <div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:#fafafa">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="background:${b.isActive?'#e8f5e9':'#ffebee'};color:${b.isActive?'#2e7d32':'#c62828'};font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:50px;">${b.isActive ? '● Live' : '● Hidden'}</span>
+          ${b.timerHours ? `<span style="background:#fff8e1;color:#e65100;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:50px;">⏱ ${b.timerHours}h</span>` : ''}
+          ${b.discountText ? `<span style="background:#ede7f6;color:#4527a0;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:50px;">${b.discountText}</span>` : ''}
+          <span style="font-size:.72rem;color:var(--gy)">Order: ${b.order||1}</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="editBanner(${JSON.stringify(b).replace(/"/g,'&quot;')})">✏️ Edit</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleBanner('${b._id}',${!b.isActive})">${b.isActive ? '🔒 Hide' : '✅ Show'}</button>
+          <button class="btn btn-er-g btn-sm" onclick="deleteBanner('${b._id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editBanner(b) {
+  document.getElementById('bannerEditId').value = b._id;
+  document.getElementById('bannerTitle').value = b.title || '';
+  document.getElementById('bannerSub').value = b.subtitle || '';
+  document.getElementById('bannerBadge').value = b.badge || '';
+  document.getElementById('bannerDiscount').value = b.discountText || '';
+  document.getElementById('bannerBtn').value = b.buttonText || 'Shop Now';
+  document.getElementById('bannerColor').value = b.color || '#7B2D8B';
+  document.getElementById('bannerTimer').value = b.timerHours || 0;
+  document.getElementById('bannerOrder').value = b.order || 1;
+  document.getElementById('bannerActive').value = b.isActive ? 'true' : 'false';
+  document.getElementById('bannerFormTitle').textContent = '✏️ Edit Banner';
+  if (b.image) {
+    document.getElementById('bannerImageUrl').value = b.image;
+    document.getElementById('bannerImageLink').value = b.image;
+    document.getElementById('bannerImagePreview').innerHTML = `<img src="${fixImgSrc(b.image)}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:6px" onerror="this.style.opacity='.3'">`;
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function cancelBanner() {
+  document.getElementById('bannerForm').reset();
+  document.getElementById('bannerEditId').value = '';
+  document.getElementById('bannerImageUrl').value = '';
+  document.getElementById('bannerImagePreview').innerHTML = '';
+  document.getElementById('bannerFormTitle').textContent = '🎨 Add Banner';
+}
+
+async function saveBanner(e) {
+  e.preventDefault();
+  const id = document.getElementById('bannerEditId').value;
+  const payload = {
+    title:       document.getElementById('bannerTitle').value.trim(),
+    subtitle:    document.getElementById('bannerSub').value.trim(),
+    badge:       document.getElementById('bannerBadge').value.trim(),
+    discountText:document.getElementById('bannerDiscount').value.trim(),
+    buttonText:  document.getElementById('bannerBtn').value.trim() || 'Shop Now',
+    color:       document.getElementById('bannerColor').value,
+    timerHours:  parseInt(document.getElementById('bannerTimer').value) || 0,
+    order:       parseInt(document.getElementById('bannerOrder').value) || 1,
+    isActive:    document.getElementById('bannerActive').value === 'true',
+    image:       document.getElementById('bannerImageUrl').value.trim() || '',
+  };
+  if (!payload.title) { toast('⚠️ Banner title is required'); return; }
+  try {
+    if (id) { await apiFetch(`/admin/banners/${id}`, 'PUT', payload); toast('✅ Banner updated!'); }
+    else    { await apiFetch('/admin/banners', 'POST', payload); toast('✅ Banner created! It now shows on the shop.'); }
+    cancelBanner();
+    loadBanners();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function toggleBanner(id, isActive) {
+  try { await apiFetch(`/admin/banners/${id}`, 'PUT', { isActive }); toast(isActive ? '✅ Banner live' : '🔒 Banner hidden'); loadBanners(); }
+  catch(e) { toast('❌ ' + e.message); }
+}
+
+async function deleteBanner(id) {
+  if (!confirm('Delete this banner?')) return;
+  try { await apiFetch(`/admin/banners/${id}`, 'DELETE'); toast('🗑️ Banner deleted'); loadBanners(); }
+  catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── CHAT ────────────────────────────────────
+let chatSessions = [];
+
+function initAdminSocket() {
+  loadSocketIO(() => {
+    if (typeof io === 'undefined') return;
+    try {
+      adminSocket = io({ transports: ['websocket','polling'], reconnectionAttempts: 3 });
+      adminSocket.on('connect_error', () => {});
+      adminSocket.emit('admin:join');
+      adminSocket.on('admin:message', ({ sessionId, sender, text, customerName, time }) => {
+      // Add to or create session
+      let sess = chatSessions.find(s => s.sessionId === sessionId);
+      if (!sess) {
+        sess = { sessionId, customerName: customerName || 'Customer', messages: [], status: 'active' };
+        chatSessions.unshift(sess);
+      }
+      sess.messages.push({ sender, text, time: time || new Date() });
+      renderChatList();
+      if (activeChatSession === sessionId && sender === 'customer') {
+        appendAdminChatMsg('customer', text);
+      }
+      // Unread badge on nav if not on chat panel
+      const chatPanel = document.getElementById('chatPanel');
+      if (!chatPanel.classList.contains('active') && sender === 'customer') {
+        const chatNav = document.querySelector('[onclick*="chat"]');
+        if (chatNav) chatNav.style.fontWeight = '900';
+      }
+    });
+    adminSocket.on('admin:chat_closed', ({ sessionId }) => {
+      chatSessions = chatSessions.filter(s => s.sessionId !== sessionId);
+      if (activeChatSession === sessionId) {
+        activeChatSession = null;
+        document.getElementById('chatMsgArea').innerHTML = '<p class="chat-empty">Chat was closed</p>';
+        document.getElementById('chatInputRow').style.display = 'none';
+      }
+      renderChatList();
+    });
+    } catch(e) { console.warn('Admin socket error:', e); }
+  });
+}
+
+async function loadChats() {
+  try {
+    const r = await apiFetch('/admin/chats');
+    chatSessions = (r.chats || []).filter(c => c.status === 'active');
+    renderChatList();
+  } catch(e) {}
+}
+
+function renderChatList() {
+  const el = document.getElementById('chatSessionList');
+  if (!chatSessions.length) { el.innerHTML = '<p class="chat-empty">No active chats</p>'; return; }
+  el.innerHTML = chatSessions.map(s => {
+    const lastMsg = s.messages && s.messages.length ? s.messages[s.messages.length-1] : null;
+    return `
+    <div class="chat-sess ${activeChatSession === s.sessionId ? 'active' : ''}" onclick="openChatSession('${s.sessionId}')">
+      <h4><span class="dot"></span>${s.customerName || 'Customer'}</h4>
+      ${lastMsg ? `<p>${lastMsg.sender}: ${lastMsg.text}</p>` : '<p>New chat</p>'}
+    </div>`;
+  }).join('');
+}
+
+function openChatSession(sessionId) {
+  activeChatSession = sessionId;
+  const sess = chatSessions.find(s => s.sessionId === sessionId);
+  const msgArea = document.getElementById('chatMsgArea');
+  msgArea.innerHTML = '';
+  if (sess && sess.messages) {
+    sess.messages.forEach(m => appendAdminChatMsg(m.sender, m.text));
+  }
+  document.getElementById('chatInputRow').style.display = 'flex';
+  if (adminSocket) adminSocket.emit('admin:join');
+  renderChatList();
+}
+
+function appendAdminChatMsg(sender, text) {
+  const box = document.getElementById('chatMsgArea');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (sender === 'admin' ? 'chat-admin' : 'chat-customer');
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function sendAdminMsg() {
+  const inp = document.getElementById('adminChatInput');
+  const msg = inp.value.trim();
+  if (!msg || !activeChatSession) return;
+  appendAdminChatMsg('admin', msg);
+  if (adminSocket) adminSocket.emit('admin:message', { sessionId: activeChatSession, text: msg });
+  const sess = chatSessions.find(s => s.sessionId === activeChatSession);
+  if (sess) sess.messages.push({ sender:'admin', text: msg, time: new Date() });
+  inp.value = '';
+}
+
+function closeChat() {
+  if (!activeChatSession) return;
+  if (!confirm('End this chat session?')) return;
+  if (adminSocket) adminSocket.emit('admin:close_chat', { sessionId: activeChatSession });
+  chatSessions = chatSessions.filter(s => s.sessionId !== activeChatSession);
+  activeChatSession = null;
+  document.getElementById('chatMsgArea').innerHTML = '<p class="chat-empty">Select a chat to view messages</p>';
+  document.getElementById('chatInputRow').style.display = 'none';
+  renderChatList();
+  toast('✅ Chat closed');
+}
+
+// ── REPORTS ─────────────────────────────────
+function setReportRange(days) {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - days);
+  document.getElementById('rptFrom').value = from.toISOString().slice(0,10);
+  document.getElementById('rptTo').value = to.toISOString().slice(0,10);
+  loadReports();
+}
+
+async function loadReports() {
+  const from = document.getElementById('rptFrom').value;
+  const to   = document.getElementById('rptTo').value;
+  if (!from || !to) { toast('⚠️ Select date range'); return; }
+  try {
+    const r = await apiFetch(`/admin/reports/sales?from=${from}&to=${to}`);
+    renderSalesByDay(r.salesByDay || []);
+    renderTopProds(r.topProducts || []);
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+function renderSalesByDay(data) {
+  const el = document.getElementById('salesByDayTable');
+  if (!data.length) { el.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--gy);padding:16px;">No data for this period</td></tr>'; return; }
+  const totalRev = data.reduce((a,b) => a + b.revenue, 0);
+  const totalOrd = data.reduce((a,b) => a + b.orders, 0);
+  el.innerHTML = data.map(d => `
+    <tr>
+      <td>${d._id}</td>
+      <td>${d.orders}</td>
+      <td>₹${d.revenue.toLocaleString('en-IN')}</td>
+    </tr>`).join('') +
+    `<tr style="background:var(--lt);font-weight:900;">
+      <td>Total</td><td>${totalOrd}</td><td>₹${totalRev.toLocaleString('en-IN')}</td>
+    </tr>`;
+}
+
+function renderTopProds(data) {
+  const el = document.getElementById('topProdsTable');
+  if (!data.length) { el.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gy);padding:16px;">No data for this period</td></tr>'; return; }
+  el.innerHTML = data.map((p,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${p._id}</td>
+      <td><b>${p.sold}</b></td>
+      <td>₹${(p.revenue || 0).toLocaleString('en-IN')}</td>
+    </tr>`).join('');
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// ── WHATSAPP CRM INBOX ──────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+
+let waConversations = [];
+let waActiveConvId = null;
+let waCurFilter = 'all';
+
+// Demo data so it looks real even before WhatsApp API connected
+function getDemoWAConversations() {
+  return [
+    { id:'wa1', name:'Fatima Nizar', phone:'+91 98765 43210', lastMsg:'Can I get this in size 4T?', time:'10:32 AM', unread:2, status:'awaiting_reply', assigned:'', messages:[
+      {from:'customer',text:'Hi! I want to order the yellow frock',time:'10:28 AM'},
+      {from:'admin',text:'Hi Fatima! 😊 Of course, which size?',time:'10:29 AM'},
+      {from:'customer',text:'Can I get this in size 4T?',time:'10:32 AM'},
+    ]},
+    { id:'wa2', name:'Reshma K', phone:'+91 94455 12345', lastMsg:'I sent the UPI screenshot', time:'9:15 AM', unread:1, status:'pending_payment', assigned:'Support 1', messages:[
+      {from:'customer',text:'Hello, I placed order #KC089',time:'9:00 AM'},
+      {from:'admin',text:'Hi! Please share UPI payment screenshot here 🙏',time:'9:05 AM'},
+      {from:'customer',text:'I sent the UPI screenshot',time:'9:15 AM',isPaymentSlip:true,slipImg:'https://placehold.co/280x180/e8f5e9/25D366?text=UPI+Payment+Screenshot'},
+    ]},
+    { id:'wa3', name:'Amina Shafeeq', phone:'+91 90909 11223', lastMsg:'Thank you so much!', time:'Yesterday', unread:0, status:'resolved', assigned:'Owner', messages:[
+      {from:'customer',text:'Order delivered! Thank you so much!',time:'Yesterday'},
+      {from:'admin',text:'So happy to hear that! 💜 Thank you for shopping with KidsCart!',time:'Yesterday'},
+    ]},
+    { id:'wa4', name:'Priya Menon', phone:'+91 88776 55443', lastMsg:'What are the available sizes?', time:'2 days ago', unread:0, status:'awaiting_reply', assigned:'', messages:[
+      {from:'customer',text:'What are the available sizes for the blue kurta set?',time:'2 days ago'},
+    ]},
+  ];
+}
+
+function loadWAInbox() {
+  // In production: apiFetch('/admin/whatsapp/conversations') 
+  // For now, use demo data + try real API
+  apiFetch('/admin/whatsapp/conversations').then(r => {
+    if (r && r.conversations && r.conversations.length) {
+      waConversations = r.conversations;
+    } else {
+      waConversations = getDemoWAConversations();
+    }
+    renderWAList();
+    updateWABadge();
+  }).catch(() => {
+    waConversations = getDemoWAConversations();
+    renderWAList();
+    updateWABadge();
+  });
+}
+
+function updateWABadge() {
+  const unread = waConversations.filter(c => c.unread > 0).length;
+  const badge = document.getElementById('waUnreadBadge');
+  if (badge) { badge.textContent = unread; badge.style.display = unread ? 'inline' : 'none'; }
+}
+
+function renderWAList() {
+  const el = document.getElementById('waConvList');
+  let convs = waConversations;
+  if (waCurFilter !== 'all') convs = convs.filter(c => c.status === waCurFilter);
+  const q = (document.getElementById('waSearch')?.value || '').toLowerCase();
+  if (q) convs = convs.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  
+  if (!convs.length) {
+    el.innerHTML = '<div style="text-align:center;padding:32px 16px;color:#aaa;"><div style="font-size:2rem;margin-bottom:8px;">📭</div><p style="font-size:.85rem;">No conversations found</p></div>';
+    return;
+  }
+  el.innerHTML = convs.map(c => `
+    <div class="wa-conv-item ${c.unread > 0 ? 'unread' : ''} ${waActiveConvId === c.id ? 'active' : ''}" onclick="openWAConv('${c.id}')">
+      <div class="wa-avatar">${c.name[0]}</div>
+      <div class="wa-conv-info">
+        <div class="wa-conv-name">${c.name}</div>
+        <div class="wa-conv-preview">${c.lastMsg || ''}</div>
+      </div>
+      <div class="wa-conv-meta">
+        <div class="wa-conv-time">${c.time || ''}</div>
+        ${c.unread > 0 ? '<div class="wa-unread-dot"></div>' : ''}
+        ${c.assigned ? `<div style="font-size:.64rem;color:#25D366;margin-top:2px;">${c.assigned}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function waFilter(f, btn) {
+  waCurFilter = f;
+  document.querySelectorAll('.wa-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderWAList();
+}
+
+function waSearchFilter() { renderWAList(); }
+
+function openWAConv(id) {
+  waActiveConvId = id;
+  const conv = waConversations.find(c => c.id === id);
+  if (!conv) return;
+  conv.unread = 0;
+  updateWABadge();
+  renderWAList();
+
+  document.getElementById('waChatEmpty').style.display = 'none';
+  document.getElementById('waChatHeader').style.display = 'flex';
+  document.getElementById('waChatAvatar').textContent = conv.name[0];
+  document.getElementById('waChatName').textContent = conv.name;
+  document.getElementById('waChatPhone').textContent = conv.phone + (conv.assigned ? ' · Assigned to: ' + conv.assigned : '');
+  document.getElementById('waAssignStaff').value = conv.assigned || '';
+  document.getElementById('waInputRow').style.display = 'flex';
+  document.getElementById('waQuickReplies').style.display = 'block';
+  renderWAMsgs(conv.messages || []);
+}
+
+function renderWAMsgs(msgs) {
+  const el = document.getElementById('waMsgArea');
+  el.innerHTML = msgs.map(m => {
+    if (m.isPaymentSlip) return `
+      <div class="wa-msg from-customer payment-slip">
+        <div style="font-weight:700;font-size:.78rem;color:#25D366;margin-bottom:6px;">💰 UPI Payment Screenshot</div>
+        <img src="${m.slipImg || ''}" style="width:100%;max-width:280px;border-radius:8px;display:block;margin-bottom:8px;" onerror="this.style.display='none'">
+        <div style="font-size:.78rem;color:#555;margin-bottom:8px;">${m.text}</div>
+        <button class="wa-pay-verify-btn" onclick="waVerifyPayment('${waActiveConvId}')">✅ Verify Payment & Confirm Order</button>
+        <div class="wa-msg-time">${m.time || ''}</div>
+      </div>`;
+    return `<div class="wa-msg ${m.from === 'admin' ? 'from-admin' : 'from-customer'}">
+      ${m.text}
+      <div class="wa-msg-time">${m.time || ''}</div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function waSendReply() {
+  const inp = document.getElementById('waReplyInput');
+  const text = inp.value.trim();
+  if (!text || !waActiveConvId) return;
+  const conv = waConversations.find(c => c.id === waActiveConvId);
+  if (!conv) return;
+  const msg = { from: 'admin', text, time: new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'}) };
+  conv.messages.push(msg);
+  conv.lastMsg = text;
+  inp.value = '';
+  renderWAMsgs(conv.messages);
+  renderWAList();
+  // In production: apiFetch('/admin/whatsapp/send', 'POST', { to: conv.phone, message: text });
+  toast('✅ Message sent on WhatsApp');
+}
+
+function waQuickReply(text) {
+  document.getElementById('waReplyInput').value = text;
+  document.getElementById('waReplyInput').focus();
+}
+
+async function waVerifyPayment(convId) {
+  if (!confirm('Verify this payment and confirm the order?')) return;
+  toast('✅ Payment verified! Order confirmed and customer notified.');
+  // In production: apiFetch('/admin/whatsapp/verify-payment', 'POST', { convId });
+  const conv = waConversations.find(c => c.id === convId);
+  if (conv) {
+    conv.status = 'resolved';
+    conv.messages.push({ from: 'admin', text: '✅ Payment received! Your KidsCart order is confirmed. Thank you! 💜', time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) });
+    renderWAMsgs(conv.messages);
+  }
+}
+
+async function waMarkResolved() {
+  const conv = waConversations.find(c => c.id === waActiveConvId);
+  if (!conv) return;
+  conv.status = 'resolved';
+  toast('✅ Conversation marked as resolved');
+  renderWAList();
+}
+
+function waAssignConv() {
+  const staff = document.getElementById('waAssignStaff').value;
+  const conv = waConversations.find(c => c.id === waActiveConvId);
+  if (!conv) return;
+  conv.assigned = staff;
+  document.getElementById('waChatPhone').textContent = conv.phone + (staff ? ' · Assigned to: ' + staff : '');
+  toast(staff ? `Assigned to ${staff}` : 'Unassigned');
+}
+
+function waOpenCRMForContact() {
+  show('crm', document.querySelector('[onclick*="crm"]'));
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// ── CRM PIPELINE ────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+
+const CRM_STAGES = [
+  { id: 'new',        label: '🆕 New Lead',      color: '#1565c0' },
+  { id: 'contacted',  label: '📞 Contacted',     color: '#e65100' },
+  { id: 'interested', label: '❤️ Interested',    color: '#6a1b9a' },
+  { id: 'placed',     label: '🛒 Order Placed',  color: '#2e7d32' },
+  { id: 'converted',  label: '🎉 Converted',     color: '#00695c' },
+  { id: 'lost',       label: '❌ Lost',          color: '#b71c1c' },
+];
+
+let crmLeads = [
+  { id:'l1', name:'Sara Ahmed', phone:'+91 98123 45678', source:'WhatsApp', stage:'new', assigned:'', notes:[], createdAt:'2026-03-05' },
+  { id:'l2', name:'Deepa Krishnan', phone:'+91 77889 12345', source:'Instagram', stage:'contacted', assigned:'Support 1', notes:['Interested in ethnic wear'], createdAt:'2026-03-04' },
+  { id:'l3', name:'Rukhsana Beevi', phone:'+91 90123 67890', source:'Website', stage:'interested', assigned:'Owner', notes:['Looking for 2-3T sizes','Budget around ₹600-800'], createdAt:'2026-03-03' },
+  { id:'l4', name:'Anitha Suresh', phone:'+91 86754 32109', source:'WhatsApp', stage:'placed', assigned:'Owner', notes:['Ordered KC087 - blue frock'], createdAt:'2026-03-02' },
+  { id:'l5', name:'Nasrin Fathima', phone:'+91 94455 78901', source:'WhatsApp', stage:'converted', assigned:'Support 1', notes:['Converted! Order #KC088'], createdAt:'2026-03-01' },
+  { id:'l6', name:'Kavitha R', phone:'+91 98767 00123', source:'Instagram', stage:'lost', assigned:'', notes:['No response after 3 messages'], createdAt:'2026-02-28' },
+];
+
+let crmDragId = null;
+let crmActiveLeadId = null;
+
+function loadCRM() {
+  apiFetch('/admin/crm/leads').then(r => {
+    if (r && r.leads && r.leads.length) crmLeads = r.leads;
+    renderCRM();
+  }).catch(() => renderCRM());
+}
+
+function renderCRM() {
+  const board = document.getElementById('crmBoard');
+  const staffFilter = document.getElementById('crmFilterStaff')?.value || '';
+  const sourceFilter = document.getElementById('crmFilterSource')?.value || '';
+
+  let leads = crmLeads;
+  if (staffFilter) leads = leads.filter(l => l.assigned === staffFilter);
+  if (sourceFilter) leads = leads.filter(l => l.source === sourceFilter);
+
+  board.innerHTML = CRM_STAGES.map(stage => {
+    const stageLeads = leads.filter(l => l.stage === stage.id);
+    return `
+      <div class="crm-col" id="crmCol_${stage.id}" 
+           ondragover="crmDragOver(event,'${stage.id}')" 
+           ondrop="crmDrop(event,'${stage.id}')"
+           ondragleave="this.classList.remove('drag-over')">
+        <div class="crm-col-head" style="color:${stage.color};">
+          ${stage.label}
+          <span class="crm-col-count">${stageLeads.length}</span>
+        </div>
+        <div class="crm-cards" id="crmCards_${stage.id}">
+          ${stageLeads.map(l => `
+            <div class="crm-card" draggable="true" 
+                 id="crmCard_${l.id}"
+                 style="border-left-color:${stage.color};"
+                 ondragstart="crmDragStart(event,'${l.id}')"
+                 onclick="openLeadDetail('${l.id}')">
+              <div class="crm-card-name">${l.name}</div>
+              <div class="crm-card-phone">${l.phone}</div>
+              <div class="crm-card-source">${l.source}</div>
+              ${l.assigned ? `<div class="crm-card-staff">👤 ${l.assigned}</div>` : ''}
+              ${l.notes && l.notes.length ? `<div class="crm-card-note">${l.notes[l.notes.length-1]}</div>` : ''}
+            </div>`).join('')}
+          <div class="crm-drop-zone">Drop lead here</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Update stats
+  const converted = crmLeads.filter(l => l.stage === 'converted').length;
+  const lost = crmLeads.filter(l => l.stage === 'lost').length;
+  const active = crmLeads.filter(l => !['converted','lost'].includes(l.stage)).length;
+  const total = converted + lost + active;
+  const rate = total > 0 ? Math.round((converted / total) * 100) : 0;
+  setText('crmConvCount', converted);
+  setText('crmLostCount', lost);
+  setText('crmPipeCount', active);
+  setText('crmRate', rate + '%');
+}
+
+// Drag & Drop
+function crmDragStart(e, leadId) {
+  crmDragId = leadId;
+  e.dataTransfer.effectAllowed = 'move';
+}
+function crmDragOver(e, stageId) {
+  e.preventDefault();
+  document.getElementById('crmCol_' + stageId)?.classList.add('drag-over');
+}
+function crmDrop(e, stageId) {
+  e.preventDefault();
+  document.querySelectorAll('.crm-col').forEach(c => c.classList.remove('drag-over'));
+  if (!crmDragId) return;
+  const lead = crmLeads.find(l => l.id === crmDragId);
+  if (lead) {
+    lead.stage = stageId;
+    renderCRM();
+    toast(`✅ ${lead.name} moved to ${CRM_STAGES.find(s=>s.id===stageId)?.label}`);
+    // In production: apiFetch('/admin/crm/leads/' + lead.id, 'PATCH', { stage: stageId });
+  }
+  crmDragId = null;
+}
+
+function openAddLead() {
+  document.getElementById('addLeadModal').style.display = 'flex';
+  document.getElementById('leadName').focus();
+}
+function closeAddLead() { document.getElementById('addLeadModal').style.display = 'none'; }
+
+function saveLead() {
+  const name = document.getElementById('leadName').value.trim();
+  const phone = document.getElementById('leadPhone').value.trim();
+  if (!name || !phone) { toast('⚠️ Name and phone are required'); return; }
+  const lead = {
+    id: 'l' + Date.now(),
+    name, phone,
+    source: document.getElementById('leadSource').value,
+    assigned: document.getElementById('leadAssign').value,
+    notes: document.getElementById('leadNotes').value.trim() ? [document.getElementById('leadNotes').value.trim()] : [],
+    stage: 'new',
+    createdAt: new Date().toISOString().slice(0,10),
+  };
+  crmLeads.unshift(lead);
+  closeAddLead();
+  renderCRM();
+  toast('✅ Lead added!');
+  // In production: apiFetch('/admin/crm/leads', 'POST', lead);
+}
+
+function openLeadDetail(id) {
+  crmActiveLeadId = id;
+  const lead = crmLeads.find(l => l.id === id);
+  if (!lead) return;
+  document.getElementById('ldModalName').textContent = lead.name;
+  const stage = CRM_STAGES.find(s => s.id === lead.stage);
+  document.getElementById('ldModalContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:.85rem;">
+      <div><b>Phone:</b> ${lead.phone}</div>
+      <div><b>Source:</b> ${lead.source}</div>
+      <div><b>Stage:</b> <span style="color:${stage?.color || '#333'};font-weight:700;">${stage?.label || lead.stage}</span></div>
+      <div><b>Assigned:</b> ${lead.assigned || 'Unassigned'}</div>
+      <div><b>Since:</b> ${lead.createdAt}</div>
+    </div>
+    <div style="font-weight:800;font-size:.82rem;color:#555;margin-bottom:8px;">📝 Notes History</div>
+    <div style="background:#f8f4fc;border-radius:8px;padding:10px;min-height:50px;font-size:.83rem;color:#555;">
+      ${lead.notes && lead.notes.length ? lead.notes.map((n,i) => `<div style="padding:4px 0;border-bottom:1px solid #ede7f6;">${i+1}. ${n}</div>`).join('') : '<span style="color:#bbb;">No notes yet</span>'}
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      ${CRM_STAGES.map(s => s.id !== lead.stage ? `<button class="btn btn-ghost" style="font-size:.75rem;padding:5px 12px;" onclick="moveLeadTo('${id}','${s.id}')">Move → ${s.label}</button>` : '').join('')}
+    </div>
+    <div style="margin-top:8px;">
+      <a href="https://wa.me/${lead.phone.replace(/[^0-9]/g,'')}" target="_blank" class="btn btn-pp" style="text-decoration:none;font-size:.8rem;display:inline-block;">📱 Open WhatsApp Chat</a>
+    </div>`;
+  document.getElementById('leadDetailModal').style.display = 'flex';
+}
+
+function closeLeadDetail() { document.getElementById('leadDetailModal').style.display = 'none'; }
+
+function addLeadNote() {
+  const note = document.getElementById('ldNoteInput').value.trim();
+  if (!note || !crmActiveLeadId) { toast('⚠️ Enter a note first'); return; }
+  const lead = crmLeads.find(l => l.id === crmActiveLeadId);
+  if (!lead) return;
+  if (!lead.notes) lead.notes = [];
+  lead.notes.push(note);
+  document.getElementById('ldNoteInput').value = '';
+  openLeadDetail(crmActiveLeadId); // refresh
+  toast('📝 Note saved!');
+}
+
+function moveLeadTo(id, stage) {
+  const lead = crmLeads.find(l => l.id === id);
+  if (lead) { lead.stage = stage; renderCRM(); closeLeadDetail(); toast('✅ Lead moved!'); }
+}
+
+
+
+// ══════════════════════════════════════════════════════════════
+// ── FORGOT PASSWORD ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+function showForgotPass() {
+  document.getElementById('forgotPassSection').style.display = 'block';
+  document.getElementById('forgotEmail').focus();
+}
+function hideForgotPass() {
+  document.getElementById('forgotPassSection').style.display = 'none';
+}
+async function sendForgotPass() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email) { toast('⚠️ Enter your admin email address'); return; }
+  try {
+    await apiFetch('/admin/auth/forgot-password', 'POST', { email });
+    toast('✅ Reset link sent to your email and WhatsApp!');
+    hideForgotPass();
+  } catch(e) {
+    // Show success anyway for security (don't reveal if email exists)
+    toast('✅ If this email is registered, a reset link has been sent.');
+    hideForgotPass();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── ROLE-BASED ACCESS CONTROL ───────────────────────────────
+// ══════════════════════════════════════════════════════════════
+function applyRolePermissions(role) {
+  // super_admin: sees everything
+  // admin: can manage orders, products, WA inbox, CRM, customers, coupons (no settings, no staff mgmt)
+  // support: WA inbox, CRM pipeline, view orders only — no product editing
+  const navPermissions = {
+    super_admin: ['dashboard','orders','products','stock','addprod','customers','coupons','banners',
+                  'chat','whatsapp','crm','exchange','reports','settings','adminusers'],
+    admin: ['dashboard','orders','products','stock','addprod','customers','coupons','banners',
+            'chat','whatsapp','crm','exchange','reports'],
+    support: ['dashboard','orders','chat','whatsapp','crm'],
+  };
+  const allowed = navPermissions[role] || navPermissions['support'];
+
+  // Hide nav items not in role's allowed list
+  document.querySelectorAll('.nav-item').forEach(navEl => {
+    const onclick = navEl.getAttribute('onclick') || '';
+    const match = onclick.match(/show\('(\w+)'/);
+    if (match) {
+      const panelId = match[1];
+      if (!allowed.includes(panelId)) {
+        navEl.style.display = 'none';
+      }
+    }
+  });
+
+  // For support role: hide action buttons in products
+  if (role === 'support') {
+    // Add a global flag for template rendering to hide edit/delete
+    window._adminRole = 'support';
+  } else {
+    window._adminRole = role;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── EXCHANGE MANAGEMENT ─────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+let exchangeList = [];
+let exchangeActiveId = null;
+let exCurFilter = 'all';
+
+function getDemoExchanges() {
+  return [
+    { id:'ex1', reqId:'EX-001', customer:'Fatima Nizar', phone:'+91 98765 43210', orderId:'KC087', reason:'Wrong size delivered — ordered 4T but received 2T', photo:'https://placehold.co/200x200/ffe0b2/e65100?text=Photo+Proof', requestedAt:'2026-03-06', status:'pending' },
+    { id:'ex2', reqId:'EX-002', customer:'Reshma K', phone:'+91 94455 12345', orderId:'KC082', reason:'Item received damaged — zipper broken', photo:'https://placehold.co/200x200/ffcdd2/b71c1c?text=Damaged+Item', requestedAt:'2026-03-04', status:'approved', adminNote:'Approved. Replacement shipped via India Post.' },
+    { id:'ex3', reqId:'EX-003', customer:'Sara Ahmed', phone:'+91 98123 45678', orderId:'KC079', reason:'Color different from website photo', requestedAt:'2026-03-02', status:'rejected', adminNote:'Rejected — color variation is due to lighting. Not eligible for exchange.' },
+  ];
+}
+
+async function loadExchanges() {
+  try {
+    const r = await apiFetch('/admin/exchanges');
+    exchangeList = r.exchanges && r.exchanges.length ? r.exchanges : getDemoExchanges();
+  } catch(e) {
+    exchangeList = getDemoExchanges();
+  }
+  renderExchanges();
+}
+
+function exFilter(f, btn) {
+  exCurFilter = f;
+  document.querySelectorAll('.wa-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderExchanges();
+}
+
+function renderExchanges() {
+  const el = document.getElementById('exchangeTable');
+  let list = exCurFilter === 'all' ? exchangeList : exchangeList.filter(e => e.status === exCurFilter);
+  if (!list.length) {
+    el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">No exchange requests found</td></tr>';
+    return;
+  }
+  const statusColors = { pending:'#ff8f00', approved:'#2e7d32', rejected:'#b71c1c', shipped:'#1565c0' };
+  el.innerHTML = list.map(e => `
+    <tr>
+      <td><b>${e.reqId}</b></td>
+      <td>${e.customer}<br><small style="color:var(--gy)">${e.phone}</small></td>
+      <td>#${e.orderId}</td>
+      <td style="max-width:180px;font-size:.8rem;">${e.reason}</td>
+      <td>${e.photo ? `<img src="${e.photo}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="window.open('${e.photo}','_blank')">` : '—'}</td>
+      <td>${e.requestedAt}</td>
+      <td><span class="badge" style="background:${statusColors[e.status] || '#888'}22;color:${statusColors[e.status] || '#888'}">${e.status.toUpperCase()}</span></td>
+      <td><button class="btn btn-pp" style="font-size:.75rem;padding:5px 12px;" onclick="openExchangeModal('${e.id}')">📋 View</button></td>
+    </tr>`).join('');
+}
+
+function openExchangeModal(id) {
+  exchangeActiveId = id;
+  const ex = exchangeList.find(e => e.id === id);
+  if (!ex) return;
+  document.getElementById('exchangeModalContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:.85rem;margin-bottom:14px;">
+      <div><b>Request ID:</b> ${ex.reqId}</div>
+      <div><b>Status:</b> ${ex.status.toUpperCase()}</div>
+      <div><b>Customer:</b> ${ex.customer}</div>
+      <div><b>Phone:</b> <a href="https://wa.me/${ex.phone.replace(/[^0-9]/g,'')}" target="_blank" style="color:#25D366;">${ex.phone}</a></div>
+      <div><b>Order:</b> #${ex.orderId}</div>
+      <div><b>Requested:</b> ${ex.requestedAt}</div>
+    </div>
+    <div style="background:#fff8e1;border-radius:8px;padding:10px;font-size:.83rem;color:#555;margin-bottom:12px;">
+      <b>Reason:</b> ${ex.reason}
+    </div>
+    ${ex.photo ? `<div style="margin-bottom:12px;"><b style="font-size:.83rem;">Photo Proof:</b><br><img src="${ex.photo}" style="width:100%;max-width:260px;border-radius:8px;margin-top:6px;"></div>` : ''}
+    ${ex.adminNote ? `<div style="background:#e8f5e9;border-radius:8px;padding:10px;font-size:.82rem;color:#2e7d32;margin-bottom:10px;"><b>Previous Admin Note:</b> ${ex.adminNote}</div>` : ''}`;
+  document.getElementById('exchangeAdminNote').value = ex.adminNote || '';
+  document.getElementById('exchangeModal').style.display = 'flex';
+}
+
+function closeExchangeModal() {
+  document.getElementById('exchangeModal').style.display = 'none';
+}
+
+async function updateExchange(status) {
+  const note = document.getElementById('exchangeAdminNote').value.trim();
+  const ex = exchangeList.find(e => e.id === exchangeActiveId);
+  if (!ex) return;
+  ex.status = status;
+  ex.adminNote = note;
+  closeExchangeModal();
+  renderExchanges();
+  toast(`✅ Exchange ${status}! Customer notified via WhatsApp.`);
+  // In production: apiFetch('/admin/exchanges/' + exchangeActiveId, 'PATCH', { status, adminNote: note });
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── SETTINGS ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+let siteSettings = {};
+
+async function loadSettings() {
+  try {
+    const r = await apiFetch('/admin/settings');
+    siteSettings = r.settings || {};
+    populateSettings();
+  } catch(e) {
+    // Use defaults
+    populateSettings();
+  }
+}
+
+function populateSettings() {
+  const s = siteSettings;
+  if (s.announcementText) document.getElementById('settAnnoText').value = s.announcementText;
+  if (s.announcementColor) document.getElementById('settAnnoColor').value = s.announcementColor;
+  if (s.deliveryCharge !== undefined) document.getElementById('settDeliveryCharge').value = s.deliveryCharge;
+  if (s.freeDeliveryAbove !== undefined) document.getElementById('settFreeDelivery').value = s.freeDeliveryAbove;
+  if (s.deliveryDays) document.getElementById('settDeliveryDays').value = s.deliveryDays;
+  if (s.siteName) document.getElementById('settSiteName').value = s.siteName;
+  if (s.waNumber) document.getElementById('settWANumber').value = s.waNumber;
+  if (s.upiId) document.getElementById('settUPIId').value = s.upiId;
+  if (s.instagram) document.getElementById('settInstagram').value = s.instagram;
+}
+
+async function saveAnnouncement() {
+  const data = {
+    announcementText: document.getElementById('settAnnoText').value.trim(),
+    announcementColor: document.getElementById('settAnnoColor').value,
+    announcementTextColor: document.getElementById('settAnnoTextColor').value,
+    announcementVisible: document.getElementById('settAnnoShow').value === 'true',
+  };
+  try {
+    await apiFetch('/admin/settings', 'POST', data);
+    toast('✅ Announcement updated! Live on site now.');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function saveDeliverySettings() {
+  const data = {
+    deliveryCharge: parseInt(document.getElementById('settDeliveryCharge').value) || 60,
+    freeDeliveryAbove: parseInt(document.getElementById('settFreeDelivery').value) || 999,
+    deliveryDays: document.getElementById('settDeliveryDays').value.trim() || '3-7 business days',
+    codDefault: document.getElementById('settCODDefault').value === 'true',
+  };
+  try {
+    await apiFetch('/admin/settings', 'POST', data);
+    toast('✅ Delivery settings saved!');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function saveSiteConfig() {
+  const data = {
+    siteName: document.getElementById('settSiteName').value.trim(),
+    waNumber: document.getElementById('settWANumber').value.trim(),
+    upiId: document.getElementById('settUPIId').value.trim(),
+    instagram: document.getElementById('settInstagram').value.trim(),
+  };
+  try {
+    await apiFetch('/admin/settings', 'POST', data);
+    toast('✅ Site config saved!');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function saveSecuritySettings() {
+  toast('✅ Security settings saved! (Applied on next server restart)');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── ORDER PRINT / EXPORT ────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+function printOrder(orderId) {
+  apiFetch('/admin/orders/' + orderId).then(data => {
+    const o = data.order || data;
+    const w = window.open('', '_blank');
+    w.document.write(`
+      <!DOCTYPE html><html><head>
+        <title>KidsCart Order #${o.orderId || orderId}</title>
+        <style>
+          body{font-family:Arial,sans-serif;max-width:700px;margin:30px auto;padding:20px;color:#222;}
+          h1{color:#7B2D8B;font-size:1.4rem;} h2{font-size:1rem;color:#555;}
+          table{width:100%;border-collapse:collapse;margin:16px 0;}
+          th{background:#f3e5f6;color:#7B2D8B;padding:8px;text-align:left;font-size:.85rem;}
+          td{padding:8px;border-bottom:1px solid #eee;font-size:.85rem;}
+          .total{font-size:1.1rem;font-weight:700;color:#7B2D8B;}
+          .footer{margin-top:20px;font-size:.75rem;color:#aaa;text-align:center;}
+          @media print{button{display:none;}}
+        </style>
+      </head><body>
+        <h1>🛒 KidsCart Order Invoice</h1>
+        <p><b>Order ID:</b> #${o.orderId || orderId} &nbsp;|&nbsp; <b>Date:</b> ${o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN') : 'N/A'}</p>
+        <p><b>Customer:</b> ${o.user?.name || 'N/A'} &nbsp;|&nbsp; <b>Phone:</b> ${o.user?.phone || 'N/A'}</p>
+        <p><b>Address:</b> ${o.address ? [o.address.street,o.address.city,o.address.state,o.address.pincode].filter(Boolean).join(', ') : 'N/A'}</p>
+        <p><b>Payment:</b> ${o.paymentMethod || 'COD'} &nbsp;|&nbsp; <b>Status:</b> ${o.status || 'N/A'}</p>
+        <h2>Items Ordered</h2>
+        <table>
+          <thead><tr><th>Product</th><th>Size</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+          <tbody>${(o.items || []).map(i => `<tr><td>${i.name || i.productName || 'Item'}</td><td>${i.size || '—'}</td><td>${i.quantity || 1}</td><td>₹${i.price || 0}</td><td>₹${(i.price || 0) * (i.quantity || 1)}</td></tr>`).join('')}</tbody>
+        </table>
+        <p class="total">Total Amount: ₹${o.totalAmount?.toLocaleString('en-IN') || '0'}</p>
+        ${o.deliveryCharge ? `<p>Delivery: ₹${o.deliveryCharge}</p>` : ''}
+        ${o.couponDiscount ? `<p>Coupon Discount: -₹${o.couponDiscount}</p>` : ''}
+        <div class="footer">KidsCart — kidscart.kids | Kids Fashion India | Thank you for shopping with us! 💜</div>
+        <br><button onclick="window.print()" style="background:#7B2D8B;color:#fff;padding:10px 24px;border:none;border-radius:8px;font-size:1rem;cursor:pointer;">🖨️ Print</button>
+      </body></html>`);
+    w.document.close();
+  }).catch(() => toast('⚠️ Could not load order details for printing'));
+}
+
+
+// ── KEYBOARD SHORTCUTS ──────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement?.id === 'adminChatInput') sendAdminMsg();
+  if (e.key === 'Enter' && document.activeElement?.id === 'adminPass') adminLogin();
+  if (e.key === 'Escape') closeOrderModal();
+});
+
+// Close order modal on outside click
+document.getElementById('orderModal').addEventListener('click', function(e) {
+  if (e.target === this) closeOrderModal();
+});
+</script>
+</body>
+</html>

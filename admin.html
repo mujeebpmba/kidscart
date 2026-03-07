@@ -95,73 +95,6 @@ document.addEventListener('input', function(e) {
   if (e.target && e.target.id === 'colorsInput') renderColorTags();
 });
 
-
-// ── BANNER IMAGE DRAG TO REPOSITION ────────────────────────
-function initBannerDrag() {
-  const box = document.getElementById('bannerDragBox');
-  if (!box || box._dragInit) return;
-  box._dragInit = true;
-  let dragging = false, startX, startY, px = 50, py = 50;
-
-  function updatePos(x, y) {
-    px = Math.max(0, Math.min(100, x));
-    py = Math.max(0, Math.min(100, y));
-    const img = document.getElementById('bannerDragImg');
-    if (img) img.style.objectPosition = px + '% ' + py + '%';
-    document.getElementById('bannerImgPosX').value = px;
-    document.getElementById('bannerImgPosY').value = py;
-    const labels = ['left','center','right'];
-    const labely = ['top','center','bottom'];
-    const lx = px < 33 ? labels[0] : px < 67 ? labels[1] : labels[2];
-    const ly = py < 33 ? labely[0] : py < 67 ? labely[1] : labely[2];
-    document.getElementById('bannerPosLabel').textContent = 'Position: ' + ly + ' ' + lx;
-  }
-
-  box.addEventListener('mousedown', e => {
-    dragging = true;
-    startX = e.clientX; startY = e.clientY;
-    box.style.cursor = 'grabbing';
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const rect = box.getBoundingClientRect();
-    const dx = ((e.clientX - startX) / rect.width) * -100;
-    const dy = ((e.clientY - startY) / rect.height) * -100;
-    updatePos(px + dx, py + dy);
-    startX = e.clientX; startY = e.clientY;
-  });
-  document.addEventListener('mouseup', () => { dragging = false; box.style.cursor = 'grab'; });
-
-  // Touch support
-  box.addEventListener('touchstart', e => {
-    dragging = true;
-    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-    e.preventDefault();
-  }, {passive:false});
-  document.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const rect = box.getBoundingClientRect();
-    const dx = ((e.touches[0].clientX - startX) / rect.width) * -100;
-    const dy = ((e.touches[0].clientY - startY) / rect.height) * -100;
-    updatePos(px + dx, py + dy);
-    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-  }, {passive:false});
-  document.addEventListener('touchend', () => { dragging = false; });
-}
-
-function showBannerDragger(src) {
-  const dragger = document.getElementById('bannerPosDragger');
-  const img = document.getElementById('bannerDragImg');
-  if (!dragger || !img) return;
-  img.src = src;
-  dragger.style.display = 'block';
-  document.getElementById('bannerImgPosX').value = 50;
-  document.getElementById('bannerImgPosY').value = 50;
-  img.style.objectPosition = '50% 50%';
-  setTimeout(initBannerDrag, 100);
-}
-
 </script>
 <style>
 :root{
@@ -926,7 +859,7 @@ window.addEventListener('DOMContentLoaded', () => {
 async function tryAutoLogin() {
   try {
     const r = await apiFetch('/auth/me');
-    if (r.user && r.user.role === 'admin') {
+    if (r.user && ['admin','super_admin'].includes(r.user.role)) {
       adminUser = r.user;
       showApp();
     } else { showLoginScreen(); }
@@ -2059,6 +1992,8 @@ function showBannerDragger(src) {
   setTimeout(initBannerDrag, 100);
 }
 
+
+}
 </script>
 </body>
 </html>

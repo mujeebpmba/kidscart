@@ -1108,7 +1108,7 @@ app.put('/api/admin/announcement', adminAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/admin/test-email', async (req, res) => {
+app.get('/api/admin/test-email', adminAuth, async (req, res) => {
   const fromEmail = process.env.ZEPTO_FROM_EMAIL || 'admin@kidscart.kids';
   const apiKeySet = !!process.env.ZEPTO_API_KEY;
   const apiKeyLen = process.env.ZEPTO_API_KEY ? process.env.ZEPTO_API_KEY.length : 0;

@@ -148,7 +148,7 @@ function emailWrap(title, body, ctaUrl, ctaText) {
 }
 
 async function sendEmail(to, subject, html) {
-  const from = `"${BRAND}" <${process.env.ZEPTO_FROM_EMAIL || 'noreply@kidscart.kids'}>`;
+  const from = `"${BRAND}" <${process.env.ZEPTO_FROM_EMAIL || 'admin@kidscart.kids'}>`;
   try {
     const info = await mailer.sendMail({ from, to, subject, html });
     console.log('✉️  Sent to:', to, '| msgId:', info.messageId);
@@ -1105,10 +1105,20 @@ app.put('/api/admin/announcement', adminAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/admin/test-email', adminAuth, async (req, res) => {
-  const ok = await sendEmail('admin@kidscart.kids', 'KidsCart Email Test ✅',
+app.get('/api/admin/test-email', async (req, res) => {
+  const fromEmail = process.env.ZEPTO_FROM_EMAIL || 'admin@kidscart.kids';
+  const apiKeySet = !!process.env.ZEPTO_API_KEY;
+  const apiKeyLen = process.env.ZEPTO_API_KEY ? process.env.ZEPTO_API_KEY.length : 0;
+  // Try verify first
+  let verifyErr = null;
+  try { await new Promise((resolve, reject) => mailer.verify((e, s) => e ? reject(e) : resolve(s))); }
+  catch(e) { verifyErr = e.message; }
+  if (verifyErr) {
+    return res.json({ success: false, message: 'SMTP verify failed', error: verifyErr, fromEmail, apiKeySet, apiKeyLen });
+  }
+  const ok = await sendEmail(fromEmail, 'KidsCart Email Test ✅',
     emailWrap('Email Working!', '<p style="color:#444;font-size:15px;">ZeptoMail is configured correctly. ✅</p>'));
-  res.json({ success: ok, message: ok ? 'Test email sent!' : 'Email failed — check server logs' });
+  res.json({ success: ok, message: ok ? 'Test email sent to ' + fromEmail : 'Send failed — check Railway logs', fromEmail, apiKeySet, apiKeyLen });
 });
 
 // ADDED: Fix current admin account role if needed

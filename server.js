@@ -103,27 +103,9 @@ const uploadBanner = multer({
   }
 });
 
-// ── ZEPTOMAIL ─────────────────────────────────────────────
-// ZeptoMail SMTP - primary on 587, fallback config
-const mailer = nodemailer.createTransport({
-  host: 'smtp.zeptomail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: 'emailapikey',
-    pass: process.env.ZEPTO_API_KEY
-  },
-  tls: { rejectUnauthorized: false },
-  pool: false,
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-});
-
-// Verify mailer on startup
-mailer.verify((err) => {
-  if (err) console.error('❌ ZeptoMail SMTP error:', err.message);
-  else console.log('✅ ZeptoMail SMTP ready');
-});
+// ── ZEPTOMAIL REST API ────────────────────────────────────
+// Uses HTTP REST (port 443) - works on Railway (SMTP ports blocked)
+console.log('✅ ZeptoMail REST API ready');
 
 // ── EMAIL HELPERS ─────────────────────────────────────────
 function emailWrap(title, body, ctaUrl, ctaText) {
@@ -148,13 +130,34 @@ function emailWrap(title, body, ctaUrl, ctaText) {
 }
 
 async function sendEmail(to, subject, html) {
-  const from = `"${BRAND}" <${process.env.ZEPTO_FROM_EMAIL || 'admin@kidscart.kids'}>`;
+  const fromEmail = process.env.ZEPTO_FROM_EMAIL || 'admin@kidscart.kids';
+  const token = process.env.ZEPTO_API_KEY;
+  if (!token) { console.error('✉️  FAIL: ZEPTO_API_KEY not set'); return false; }
   try {
-    const info = await mailer.sendMail({ from, to, subject, html });
-    console.log('✉️  Sent to:', to, '| msgId:', info.messageId);
-    return true;
+    const res = await fetch('https://api.zeptomail.com/v1.1/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Zoho-enczapikey ${token}`,
+      },
+      body: JSON.stringify({
+        from: { address: fromEmail, name: BRAND },
+        to: [{ email_address: { address: to } }],
+        subject,
+        htmlbody: html,
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      console.log('✉️  Sent to:', to, '| status:', res.status);
+      return true;
+    } else {
+      console.error('✉️  FAIL to:', to, '| status:', res.status, '| error:', JSON.stringify(data));
+      return false;
+    }
   } catch (e) {
-    console.error('✉️  FAIL sending to:', to, '| from:', from, '| error:', e.message, '| code:', e.code);
+    console.error('✉️  FAIL to:', to, '| error:', e.message);
     return false;
   }
 }
@@ -1109,15 +1112,8 @@ app.get('/api/admin/test-email', async (req, res) => {
   const fromEmail = process.env.ZEPTO_FROM_EMAIL || 'admin@kidscart.kids';
   const apiKeySet = !!process.env.ZEPTO_API_KEY;
   const apiKeyLen = process.env.ZEPTO_API_KEY ? process.env.ZEPTO_API_KEY.length : 0;
-  // Try verify first
-  let verifyErr = null;
-  try { await new Promise((resolve, reject) => mailer.verify((e, s) => e ? reject(e) : resolve(s))); }
-  catch(e) { verifyErr = e.message; }
-  if (verifyErr) {
-    return res.json({ success: false, message: 'SMTP verify failed', error: verifyErr, fromEmail, apiKeySet, apiKeyLen });
-  }
   const ok = await sendEmail(fromEmail, 'KidsCart Email Test ✅',
-    emailWrap('Email Working!', '<p style="color:#444;font-size:15px;">ZeptoMail is configured correctly. ✅</p>'));
+    emailWrap('Email Working!', '<p style="color:#444;font-size:15px;">ZeptoMail REST API is working correctly. ✅</p>'));
   res.json({ success: ok, message: ok ? 'Test email sent to ' + fromEmail : 'Send failed — check Railway logs', fromEmail, apiKeySet, apiKeyLen });
 });
 

@@ -19,6 +19,7 @@ const crypto     = require('crypto');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 require('dotenv').config();
+const Razorpay = require('razorpay');
 
 const app    = express();
 const server = http.createServer(app);
@@ -102,6 +103,13 @@ const uploadBanner = multer({
     else cb(new Error('Only JPG, PNG, WEBP images are allowed'));
   }
 });
+
+// ── RAZORPAY ──────────────────────────────────────────────
+const razorpay = new Razorpay({
+  key_id:     process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+console.log('✅ Razorpay init — key:', process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.slice(0,12)+'...' : 'NOT SET');
 
 // ── ZEPTOMAIL REST API ────────────────────────────────────
 // Uses HTTP REST (port 443) - works on Railway (SMTP ports blocked)
@@ -643,6 +651,147 @@ app.put('/api/admin/settings', adminAuth, async (req, res) => {
       await Settings.findOneAndUpdate({ key }, { key, value, updatedAt: new Date() }, { upsert: true, new: true });
     res.json({ success: true, message: 'Settings saved!' });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
+// ══════════════════════════════════════════════
+// RAZORPAY PAYMENT ROUTES
+// ══════════════════════════════════════════════
+
+// Step 1: Create Razorpay order (called before showing payment popup)
+app.post('/api/payment/create-order', auth, async (req, res) => {
+  try {
+    const { amount, currency = 'INR', receipt } = req.body;
+    if (!amount || amount < 1) return res.status(400).json({ error: 'Invalid amount' });
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount * 100), // paise
+      currency,
+      receipt: receipt || `rcpt_${Date.now()}`,
+      notes: { userId: req.user._id.toString() }
+    });
+    res.json({ success: true, order });
+  } catch (e) {
+    console.error('Razorpay create order error:', e);
+    res.status(500).json({ error: 'Payment initiation failed. Please try again.' });
+  }
+});
+
+// Step 2: Verify payment + create our order in DB
+app.post('/api/payment/verify', auth, async (req, res) => {
+  try {
+    const {
+      razorpay_order_id, razorpay_payment_id, razorpay_signature,
+      items, shippingAddress, couponCode, notes
+    } = req.body;
+
+    // ── Verify HMAC signature ──
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const body   = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSig = crypto.createHmac('sha256', secret).update(body).digest('hex');
+    if (expectedSig !== razorpay_signature) {
+      return res.status(400).json({ error: 'Payment verification failed. Please contact support.' });
+    }
+
+    // ── Signature valid — create order in DB ──
+    if (!items?.length)   return res.status(400).json({ error: 'Cart is empty' });
+    if (!shippingAddress) return res.status(400).json({ error: 'Shipping address required' });
+
+    const oi = []; let subtotal = 0;
+    for (const it of items) {
+      const p = await Product.findById(it.productId);
+      if (!p || !p.isActive) return res.status(400).json({ error: `Product not available: ${it.name}` });
+      const sz = p.sizes.find(s => s.size === it.size);
+      if (sz && sz.stock < it.qty) return res.status(400).json({ error: `Insufficient stock for ${p.name} (${it.size})` });
+      if (sz) sz.stock -= it.qty;
+      p.sold = (p.sold || 0) + it.qty;
+      p.totalStock = p.sizes.reduce((a, b) => a + (b.stock || 0), 0);
+      await p.save();
+      oi.push({ product: p._id, name: p.name, emoji: p.emoji, price: p.price, qty: it.qty, size: it.size, thumbnail: p.thumbnail });
+      subtotal += p.price * it.qty;
+    }
+
+    let discount = 0;
+    if (couponCode) {
+      const cp = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+      if (cp && cp.validTill >= new Date() && subtotal >= cp.minOrder) {
+        const uu = cp.usedBy.find(u => u.user?.toString() === req.user._id.toString());
+        if (!cp.perUserLimit || !uu || uu.count < cp.perUserLimit) {
+          discount = cp.type === 'percent'
+            ? Math.min(subtotal * cp.value / 100, cp.maxDiscount || Infinity)
+            : cp.value;
+          discount = Math.floor(discount);
+          cp.usedCount += 1;
+          if (uu) uu.count += 1; else cp.usedBy.push({ user: req.user._id, count: 1 });
+          await cp.save();
+        }
+      }
+    }
+
+    const fee   = subtotal - discount >= 999 ? 0 : 60;
+    const total = subtotal - discount + fee;
+    const orderId = genOrderId();
+    const ord = await Order.create({
+      orderId, user: req.user._id, items: oi, shippingAddress,
+      payment: { method: 'online', status: 'paid', transactionId: razorpay_payment_id },
+      status: 'confirmed', // auto-confirmed on payment ✅
+      subtotal, discount, deliveryFee: fee, total, couponCode, notes,
+      tracking: [
+        { status: 'placed',    message: 'Order placed successfully!' },
+        { status: 'confirmed', message: 'Payment received & order confirmed ✅' }
+      ],
+      estimatedDelivery: new Date(Date.now() + 5 * 24 * 3600000)
+    });
+
+    // Send emails
+    const u = await User.findById(req.user._id);
+    if (u?.email) emailOrderConfirm(u.email, u.name, { ...ord.toObject(), items: oi }).catch(() => {});
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@kidscart.kids';
+    sendEmail(adminEmail, `💳 Paid Order #${ord.orderId} — ₹${ord.total}`,
+      emailWrap('New PAID Order! 💳',
+        `<p style="color:#444;font-size:15px;">A new online payment order has been confirmed.</p>
+         <table style="width:100%;border-collapse:collapse;font-size:14px;">
+           <tr><td style="padding:8px;color:#888">Order ID</td><td style="padding:8px;font-weight:800">#${ord.orderId}</td></tr>
+           <tr style="background:#faf6ff"><td style="padding:8px;color:#888">Customer</td><td style="padding:8px">${u?.name} (${u?.email})</td></tr>
+           <tr><td style="padding:8px;color:#888">Items</td><td style="padding:8px">${oi.map(i=>i.name+' ×'+i.qty).join(', ')}</td></tr>
+           <tr style="background:#faf6ff"><td style="padding:8px;color:#888">Total</td><td style="padding:8px;font-weight:800;color:#7B2D8B">₹${ord.total}</td></tr>
+           <tr><td style="padding:8px;color:#888">Payment ID</td><td style="padding:8px;color:#2e7d32;font-weight:800">${razorpay_payment_id} ✅</td></tr>
+         </table>
+         <p style="margin-top:16px"><a href="https://kidscart.kids/admin.html" style="background:#7B2D8B;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:800">Open Admin Panel →</a></p>`
+      )
+    ).catch(() => {});
+
+    res.status(201).json({ success: true, order: ord });
+  } catch (e) {
+    console.error('Payment verify error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Step 3: Webhook — backup confirmation (handles network drops/browser close)
+app.post('/api/webhook/razorpay', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (secret) {
+      const sig  = req.headers['x-razorpay-signature'];
+      const hash = crypto.createHmac('sha256', secret).update(req.body).digest('hex');
+      if (hash !== sig) return res.status(400).json({ error: 'Invalid signature' });
+    }
+    const event = JSON.parse(req.body.toString());
+    if (event.event === 'payment.captured') {
+      const payId = event.payload.payment.entity.id;
+      // Find order by transactionId and confirm if not already
+      await Order.findOneAndUpdate(
+        { 'payment.transactionId': payId, 'payment.status': { $ne: 'paid' } },
+        { 'payment.status': 'paid', status: 'confirmed',
+          $push: { tracking: { status: 'confirmed', message: 'Payment confirmed via webhook ✅' } }
+        }
+      );
+    }
+    res.json({ received: true });
+  } catch (e) {
+    console.error('Webhook error:', e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── ORDERS ────────────────────────────────────────────────

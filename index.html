@@ -453,6 +453,8 @@ body.cart-open .chat-bubble,body.checkout-open .chat-bubble{opacity:0!important;
   .chat-window{width:calc(100vw - 28px);right:14px;bottom:130px}
 }
 </style>
+  <!-- Razorpay -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <!-- Performance hints --><!-- v20260308013817 -->
   <link rel="dns-prefetch" href="https://res.cloudinary.com">
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
@@ -1892,29 +1894,36 @@ function goPayStep() {
 }
 
 function renderPayStep() {
-  // Check if any cart item has COD disabled
   const cartProds = cart.map(ci => allProducts.find(p => p._id === ci.productId)).filter(Boolean);
   const anyCodDisabled = cartProds.some(p => p.codEnabled === false);
   const codAllowed = !anyCodDisabled;
-  
-  // Auto-switch if currently on COD but not allowed
-  if (selPay === 'cod' && !codAllowed) selPay = 'upi';
-  
+  if (selPay === 'cod' && !codAllowed) selPay = 'online';
+  const subtot = cart.reduce((s,i)=>s+(i.price||0)*i.qty,0);
   return `
     <div>
-      <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:12px">💳 Choose Payment</div>
+      <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:12px">💳 Choose Payment Method</div>
       ${codAllowed ? `
       <div class="pay-opt ${selPay==='cod'?'sel':''}" onclick="selPayFn('cod')">
         <input type="radio" name="pay" ${selPay==='cod'?'checked':''}><div class="pay-opt-icon">💵</div>
-        <div class="pay-opt-info"><h4>Cash on Delivery</h4><p>Pay ₹${(cart.reduce((s,i)=>s+(i.price||0)*i.qty,0)).toLocaleString('en-IN')} when delivered</p></div>
+        <div class="pay-opt-info"><h4>Cash on Delivery</h4><p>Pay ₹${subtot.toLocaleString('en-IN')} when your order arrives</p></div>
       </div>` : `
       <div class="pay-opt" style="opacity:.5;cursor:not-allowed;border-style:dashed">
         <div class="pay-opt-icon">🚫</div>
-        <div class="pay-opt-info"><h4>Cash on Delivery</h4><p style="color:var(--er)">Not available for item(s) in your cart — prepaid only</p></div>
+        <div class="pay-opt-info"><h4>Cash on Delivery</h4><p style="color:var(--er)">Not available for some items — please pay online</p></div>
       </div>`}
-      <div class="pay-opt ${selPay==='upi'?'sel':''}" onclick="selPayFn('upi')">
-        <input type="radio" name="pay" ${selPay==='upi'?'checked':''}><div class="pay-opt-icon">📱</div>
-        <div class="pay-opt-info"><h4>📱 UPI / Online Pay</h4><p>Select this & we'll WhatsApp you a QR code to pay</p></div>
+      <div class="pay-opt ${selPay==='online'?'sel':''}" onclick="selPayFn('online')">
+        <input type="radio" name="pay" ${selPay==='online'?'checked':''}><div class="pay-opt-icon">📱</div>
+        <div class="pay-opt-info">
+          <h4>Pay Online</h4>
+          <p>UPI · Credit/Debit Card · NetBanking · Wallet</p>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <span style="background:#f0f0f0;border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700">GPay</span>
+            <span style="background:#f0f0f0;border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700">PhonePe</span>
+            <span style="background:#f0f0f0;border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700">Paytm</span>
+            <span style="background:#f0f0f0;border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700">Visa/MC</span>
+            <span style="background:#f0f0f0;border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700">NetBanking</span>
+          </div>
+        </div>
       </div>
       <div style="display:flex;gap:10px;margin-top:16px">
         <button onclick="checkoutStep=1;renderCheckout()" style="flex:1;padding:12px;border:2px solid var(--lt2);border-radius:var(--rs);font-weight:800;cursor:pointer;background:#fff">← Back</button>
@@ -1944,7 +1953,7 @@ function renderConfirmStep(sub, disc, fee, tot) {
         <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:4px 0;color:var(--gy)"><span>Delivery</span><span>${fee===0?'🎉 FREE':'₹60'}</span></div>
         <div style="display:flex;justify-content:space-between;font-weight:900;font-size:1rem;padding:8px 0;border-top:1.5px solid var(--lt2);margin-top:4px"><span>Total</span><span style="color:var(--pp)">₹${tot.toLocaleString('en-IN')}</span></div>
       </div>
-      <p style="font-size:.78rem;color:var(--gy);margin-bottom:12px">Payment: <strong style="color:var(--pp);text-transform:uppercase">${selPay}</strong></p>
+      <p style="font-size:.78rem;color:var(--gy);margin-bottom:12px">Payment: <strong style="color:var(--pp)">${selPay==='cod'?'💵 Cash on Delivery':'💳 Online Payment'}</strong></p>
       <div style="display:flex;gap:10px">
         <button onclick="checkoutStep=2;renderCheckout()" style="flex:1;padding:12px;border:2px solid var(--lt2);border-radius:var(--rs);font-weight:800;cursor:pointer;background:#fff">← Back</button>
         <button class="btn-full" style="flex:2" onclick="placeOrder()">Place Order 🎉</button>
@@ -1956,24 +1965,107 @@ async function placeOrder() {
   const addrs = user?.addresses || [];
   const addr  = window._newAddr || (selAddr !== null ? addrs[selAddr] : addrs.find(a => a.isDefault) || addrs[0]);
   if (!addr) { toast('⚠️ Delivery address required'); return; }
+
+  if (selPay === 'online') {
+    // ── ONLINE PAYMENT via Razorpay ──
+    await startRazorpayPayment(addr);
+  } else {
+    // ── COD ──
+    await placeCodOrder(addr);
+  }
+}
+
+async function placeCodOrder(addr) {
   const items = cart.map(it => ({ productId: it.productId, name: it.name, size: it.size, qty: it.qty }));
   const btn = document.querySelector('#checkoutOverlay .btn-full');
   if (btn) { btn.textContent = '⏳ Placing order...'; btn.disabled = true; }
   try {
     const d = await api('/orders', 'POST', {
       items, shippingAddress: addr,
-      payment: { method: selPay },
+      payment: { method: 'cod' },
       couponCode: couponData?.coupon?.code || null
     });
-    const orderId = d.order.orderId;
-    const total = d.order.total;
-    const payMethod = selPay;
     cart = []; couponData = null; window._newAddr = null;
-    saveCart(); updateCartUI(); closeCheckout();
-    loadOrders();
-    showOrderSuccess(orderId, total, payMethod);
+    saveCart(); updateCartUI(); closeCheckout(); loadOrders();
+    showOrderSuccess(d.order.orderId, d.order.total, 'cod');
   } catch (e) {
-    // Show centered error inside checkout body
+    showCheckoutError(e.message);
+    if (btn) { btn.textContent = 'Place Order 🎉'; btn.disabled = false; }
+  }
+}
+
+async function startRazorpayPayment(addr) {
+  const btn = document.querySelector('#checkoutOverlay .btn-full');
+  if (btn) { btn.textContent = '⏳ Initiating payment...'; btn.disabled = true; }
+
+  // Calculate total
+  const sub  = cart.reduce((s,i) => s + (i.price||0)*i.qty, 0);
+  const disc = couponData?.discount || 0;
+  const fee  = (sub - disc) >= 999 ? 0 : 60;
+  const tot  = sub - disc + fee;
+
+  try {
+    // Step 1: Create Razorpay order on server
+    const rzpOrder = await api('/payment/create-order', 'POST', {
+      amount: tot,
+      receipt: `rcpt_${Date.now()}`
+    });
+
+    if (!rzpOrder.order?.id) throw new Error('Could not initiate payment. Please try again.');
+
+    // Step 2: Open Razorpay popup
+    const options = {
+      key: 'rzp_live_SOeZJrVDbbXG1y',
+      amount: rzpOrder.order.amount,
+      currency: 'INR',
+      name: 'KidsCart',
+      description: 'Kids Fashion Order',
+      image: 'https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png',
+      order_id: rzpOrder.order.id,
+      prefill: {
+        name: user?.name || addr.name,
+        email: user?.email || '',
+        contact: addr.phone || user?.phone || ''
+      },
+      theme: { color: '#7B2D8B' },
+      modal: {
+        ondismiss: function() {
+          if (btn) { btn.textContent = 'Place Order 🎉'; btn.disabled = false; }
+          toast('⚠️ Payment cancelled. Your cart is safe.');
+        }
+      },
+      handler: async function(response) {
+        // Step 3: Verify payment on server + create order
+        if (btn) { btn.textContent = '⏳ Confirming order...'; btn.disabled = true; }
+        try {
+          const items = cart.map(it => ({ productId: it.productId, name: it.name, size: it.size, qty: it.qty }));
+          const d = await api('/payment/verify', 'POST', {
+            razorpay_order_id:   response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature:  response.razorpay_signature,
+            items,
+            shippingAddress: addr,
+            couponCode: couponData?.coupon?.code || null
+          });
+          cart = []; couponData = null; window._newAddr = null;
+          saveCart(); updateCartUI(); closeCheckout(); loadOrders();
+          showOrderSuccess(d.order.orderId, d.order.total, 'online', response.razorpay_payment_id);
+        } catch(e) {
+          showCheckoutError('Payment received but order failed: ' + e.message + '. Please contact support with Payment ID: ' + response.razorpay_payment_id);
+          if (btn) { btn.textContent = 'Place Order 🎉'; btn.disabled = false; }
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(response) {
+      if (btn) { btn.textContent = 'Place Order 🎉'; btn.disabled = false; }
+      showCheckoutError('Payment failed: ' + (response.error?.description || 'Unknown error') + '. Please try again.');
+    });
+    rzp.open();
+    if (btn) { btn.textContent = 'Place Order 🎉'; btn.disabled = false; }
+
+  } catch(e) {
     showCheckoutError(e.message);
     if (btn) { btn.textContent = 'Place Order 🎉'; btn.disabled = false; }
   }
@@ -1994,8 +2086,8 @@ function showCheckoutError(msg) {
   setTimeout(() => { if(banner.parentNode) banner.remove(); }, 7000);
 }
 
-function showOrderSuccess(orderId, total, payMethod) {
-  const isUpi = payMethod === 'upi';
+function showOrderSuccess(orderId, total, payMethod, paymentId) {
+  const isOnline = payMethod === 'online';
   const ov = document.createElement('div');
   ov.id = 'orderSuccessOverlay';
   ov.style.cssText = 'position:fixed;inset:0;background:linear-gradient(135deg,#f5f0ff,#fff);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .4s ease';

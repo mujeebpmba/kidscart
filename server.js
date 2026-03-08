@@ -1211,55 +1211,6 @@ async function seed() {
 }
 
 
-// ══════════════════════════════════════════════
-// SEO - robots.txt + sitemap.xml
-// ══════════════════════════════════════════════
-
-app.get('/robots.txt', (req, res) => {
-  res.type('text/plain');
-  res.send(`User-agent: *
-Allow: /
-
-Sitemap: https://kidscart.kids/sitemap.xml`);
-});
-
-app.get('/sitemap.xml', async (req, res) => {
-  try {
-    const products = await Product.find({ isActive: true }, '_id updatedAt').lean();
-    const base = 'https://kidscart.kids';
-    const now = new Date().toISOString().split('T')[0];
-
-    const staticUrls = [
-      { loc: base, priority: '1.0', changefreq: 'daily' },
-      { loc: `${base}/#products`, priority: '0.9', changefreq: 'daily' },
-    ];
-
-    const productUrls = products.map(p => ({
-      loc: `${base}/?product=${p._id}`,
-      priority: '0.8',
-      changefreq: 'weekly',
-      lastmod: p.updatedAt ? p.updatedAt.toISOString().split('T')[0] : now,
-    }));
-
-    const allUrls = [...staticUrls, ...productUrls];
-
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${allUrls.map(u => `  <url>
-    <loc>${u.loc}</loc>
-    <lastmod>${u.lastmod || now}</lastmod>
-    <changefreq>${u.changefreq}</changefreq>
-    <priority>${u.priority}</priority>
-  </url>`).join('
-')}
-</urlset>`;
-
-    res.type('application/xml');
-    res.send(xml);
-  } catch (e) {
-    res.status(500).send('Error generating sitemap');
-  }
-});
 
 // ── START ─────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/kidscart')

@@ -107,16 +107,16 @@ const uploadBanner = multer({
 // ZeptoMail SMTP - primary on 587, fallback config
 const mailer = nodemailer.createTransport({
   host: 'smtp.zeptomail.com',
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true,
   auth: {
     user: 'emailapikey',
     pass: process.env.ZEPTO_API_KEY
   },
-  tls: { rejectUnauthorized: false, ciphers: 'SSLv3' },
+  tls: { rejectUnauthorized: false },
   pool: false,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
 });
 
 // Verify mailer on startup

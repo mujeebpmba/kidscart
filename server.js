@@ -117,23 +117,56 @@ console.log('✅ ZeptoMail REST API ready');
 
 // ── EMAIL HELPERS ─────────────────────────────────────────
 function emailWrap(title, body, ctaUrl, ctaText) {
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#F5F0F8;font-family:Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:30px 0;">
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F0F8;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:28px 0;">
 <tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;max-width:96%;">
-<tr><td style="background:linear-gradient(135deg,${PP},#5C1F7A);padding:22px 32px;text-align:center;">
-  <img src="${LOGO}" alt="KidsCart" height="48" style="display:inline-block;">
+<table width="580" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:18px;overflow:hidden;max-width:96%;box-shadow:0 4px 24px rgba(123,45,139,.10);">
+
+<!-- HEADER: white background so logo is always visible -->
+<tr><td style="background:#fff;padding:20px 32px;text-align:center;border-bottom:3px solid ${PP};">
+  <img src="${LOGO}" alt="KidsCart" height="52" style="display:inline-block;max-width:160px;">
 </td></tr>
+
+<!-- PURPLE BAND -->
+<tr><td style="background:linear-gradient(135deg,${PP},#5C1F7A);padding:16px 32px;text-align:center;">
+  <span style="color:#fff;font-size:15px;font-weight:700;letter-spacing:.5px;">${title}</span>
+</td></tr>
+
+<!-- BODY -->
 <tr><td style="padding:30px 36px;">
-  <h2 style="color:${PP};font-size:20px;margin:0 0 14px;">${title}</h2>
   ${body}
   ${ctaUrl ? `<div style="text-align:center;margin:24px 0;">
-    <a href="${ctaUrl}" style="background:${PP};color:#fff;padding:13px 30px;border-radius:50px;text-decoration:none;font-weight:bold;font-size:14px;">${ctaText}</a>
+    <a href="${ctaUrl}" style="background:${PP};color:#fff;padding:13px 32px;border-radius:50px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">${ctaText}</a>
   </div>` : ''}
-  <hr style="border:none;border-top:1px solid #f0e5f8;margin:22px 0;">
-  <p style="color:#aaa;font-size:11px;text-align:center;margin:0;">© 2025 ${BRAND} | kidscart.kids | info@kidscart.kids</p>
 </td></tr>
+
+<!-- FOOTER -->
+<tr><td style="background:#F5F0F8;padding:20px 32px;border-top:1px solid #e8d8f5;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="text-align:center;padding-bottom:10px;">
+        <a href="https://kidscart.kids" style="color:${PP};font-weight:800;font-size:14px;text-decoration:none;">🛍️ kidscart.kids</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align:center;padding-bottom:8px;">
+        <a href="mailto:admin@kidscart.kids" style="color:#666;font-size:12px;text-decoration:none;">📧 admin@kidscart.kids</a>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="https://instagram.com/kidscart.kids" style="color:#666;font-size:12px;text-decoration:none;">📸 @kidscart.kids</a>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="tel:+919497596110" style="color:#666;font-size:12px;text-decoration:none;">📞 +91 94975 96110</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align:center;">
+        <p style="color:#bbb;font-size:11px;margin:6px 0 0;">© 2026 ${BRAND} — Premium Kids Fashion | All rights reserved</p>
+        <p style="color:#ccc;font-size:10px;margin:4px 0 0;">This email was sent to you because you have an account on kidscart.kids</p>
+      </td>
+    </tr>
+  </table>
+</td></tr>
+
 </table></td></tr></table></body></html>`;
 }
 
@@ -170,50 +203,157 @@ async function sendEmail(to, subject, html) {
   }
 }
 
-const emailOTP = (to, otp, name) => sendEmail(to, `${BRAND} – Your OTP`,
+const emailOTP = (to, otp, name) => sendEmail(to, `${BRAND} – Your OTP: ${otp}`,
   emailWrap('Your Login OTP 🔐',
-    `<p style="color:#444;font-size:15px;">Hi ${name || 'there'},</p>
-     <div style="background:#F5F0F8;border:2px dashed ${PP};border-radius:12px;padding:22px;text-align:center;margin:18px 0;">
-       <span style="font-size:40px;font-weight:900;color:${PP};letter-spacing:10px;">${otp}</span>
+    `<p style="color:#444;font-size:15px;">Hi <strong>${name || 'there'}</strong>,</p>
+     <p style="color:#666;font-size:14px;">Use the OTP below to log in to your KidsCart account.</p>
+     <div style="background:#F5F0F8;border:2px dashed ${PP};border-radius:14px;padding:26px;text-align:center;margin:20px 0;">
+       <p style="margin:0 0 6px;color:#888;font-size:12px;font-weight:700;letter-spacing:1px;">YOUR ONE-TIME PASSWORD</p>
+       <span style="font-size:46px;font-weight:900;color:${PP};letter-spacing:12px;">${otp}</span>
      </div>
-     <p style="color:#888;font-size:13px;text-align:center;">Valid for 10 minutes. Never share this OTP with anyone.</p>`));
+     <div style="background:#fff8e1;border-radius:10px;padding:12px 16px;text-align:center;">
+       <p style="margin:0;color:#e65100;font-size:13px;">⏱️ Valid for <strong>10 minutes</strong> &nbsp;|&nbsp; 🔒 Never share this OTP with anyone</p>
+     </div>
+     <p style="color:#bbb;font-size:12px;text-align:center;margin-top:16px;">If you didn't request this, please ignore this email. Your account is safe.</p>`));
 
-const emailForgot = (to, name, token, uid) => sendEmail(to, `${BRAND} – Reset Password`,
+const emailForgot = (to, name, token, uid) => sendEmail(to, `${BRAND} – Reset Your Password 🔒`,
   emailWrap('Reset Your Password 🔒',
-    `<p style="color:#444;font-size:15px;">Hi ${name}, click below to set a new password. This link expires in 1 hour.</p>
-     <p style="color:#888;font-size:13px;">Didn't request this? You can safely ignore this email.</p>`,
-    `${SITE_URL}/admin.html?resetToken=${token}&userId=${uid}`, 'Reset Password →'));
+    `<p style="color:#444;font-size:15px;">Hi <strong>${name}</strong>,</p>
+     <p style="color:#666;font-size:14px;">We received a request to reset your KidsCart password. Click the button below to create a new one.</p>
+     <div style="background:#fff8e1;border-radius:10px;padding:12px 16px;margin:16px 0;">
+       <p style="margin:0;color:#e65100;font-size:13px;">⏱️ This link expires in <strong>1 hour</strong>.</p>
+     </div>
+     <p style="color:#bbb;font-size:12px;">Didn't request this? You can safely ignore this email — your password will remain unchanged.</p>`,
+    `${SITE_URL}/admin.html?resetToken=${token}&userId=${uid}`, 'Reset My Password →'));
 
-const emailWelcome = (to, name) => sendEmail(to, `Welcome to ${BRAND}! 🎉`,
+const emailWelcome = (to, name) => sendEmail(to, `Welcome to KidsCart! 🎉 Here's a gift for you`,
   emailWrap(`Welcome, ${name}! 🎉`,
-    `<p style="color:#444;font-size:15px;">Thank you for joining ${BRAND} — your favourite kids fashion store!</p>
-     <div style="background:#F5F0F8;border-radius:12px;padding:18px;text-align:center;margin:16px 0;">
-       <p style="color:${PP};font-weight:bold;font-size:16px;margin:0;">Use <span style="font-size:22px;letter-spacing:4px;">WELCOME10</span> for 10% off your first order!</p>
-     </div>`, SITE_URL, 'Start Shopping →'));
+    `<p style="color:#444;font-size:15px;">Thank you for joining <strong>KidsCart</strong> — India's favourite kids fashion store! 👗👕</p>
+     
+     <!-- Welcome gift box -->
+     <div style="background:linear-gradient(135deg,${PP},#5C1F7A);border-radius:14px;padding:22px;text-align:center;margin:20px 0;">
+       <p style="color:rgba(255,255,255,.8);font-size:12px;margin:0 0 6px;letter-spacing:1px;">YOUR WELCOME GIFT 🎁</p>
+       <p style="color:#fff;font-size:32px;font-weight:900;letter-spacing:6px;margin:0 0 6px;">WELCOME10</p>
+       <p style="color:rgba(255,255,255,.9);font-size:14px;margin:0;">10% off your first order!</p>
+     </div>
+
+     <!-- Features -->
+     <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+       <tr>
+         <td style="text-align:center;padding:10px;">
+           <p style="font-size:28px;margin:0;">🚚</p>
+           <p style="font-size:12px;color:#666;margin:4px 0 0;">Free delivery<br>above ₹999</p>
+         </td>
+         <td style="text-align:center;padding:10px;">
+           <p style="font-size:28px;margin:0;">👗</p>
+           <p style="font-size:12px;color:#666;margin:4px 0 0;">Premium kids<br>fashion</p>
+         </td>
+         <td style="text-align:center;padding:10px;">
+           <p style="font-size:28px;margin:0;">🔒</p>
+           <p style="font-size:12px;color:#666;margin:4px 0 0;">Secure<br>payments</p>
+         </td>
+       </tr>
+     </table>`, SITE_URL, 'Start Shopping →'));
 
 const emailOrderConfirm = (to, name, order) => {
   const rows = order.items.map(i =>
-    `<tr><td style="padding:8px 4px;border-bottom:1px solid #f0e5f8;">${i.emoji || '🛍️'} ${i.name} (${i.size || '-'})</td>
-     <td style="padding:8px;text-align:center;border-bottom:1px solid #f0e5f8;">×${i.qty}</td>
-     <td style="padding:8px;text-align:right;border-bottom:1px solid #f0e5f8;">₹${i.price * i.qty}</td></tr>`).join('');
+    `<tr><td style="padding:10px 4px;border-bottom:1px solid #f0e5f8;font-size:13px;">${i.emoji || '🛍️'} ${i.name} <span style="color:#999;">(${i.size || 'Free Size'})</span></td>
+     <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0e5f8;font-size:13px;">×${i.qty}</td>
+     <td style="padding:10px 4px;text-align:right;border-bottom:1px solid #f0e5f8;font-weight:700;font-size:13px;">₹${(i.price * i.qty).toLocaleString('en-IN')}</td></tr>`).join('');
+  const isPaid = order.payment?.status === 'paid';
+  const payLabel = order.payment?.method === 'online' ? '💳 Online — Paid ✅' : '💵 Cash on Delivery';
+  const disc = order.discount > 0 ? `<tr style="background:#fff8f0;"><td colspan="2" style="padding:8px 4px;font-size:13px;color:#e65100;">🎟️ Coupon Discount</td><td style="padding:8px 4px;text-align:right;color:#e65100;font-weight:700;">−₹${order.discount.toLocaleString('en-IN')}</td></tr>` : '';
+  const delFee = `<tr><td colspan="2" style="padding:8px 4px;font-size:13px;color:#666;">🚚 Delivery</td><td style="padding:8px 4px;text-align:right;font-size:13px;">${order.deliveryFee === 0 ? '🎉 FREE' : '₹60'}</td></tr>`;
   return sendEmail(to, `${BRAND} – Order #${order.orderId} Confirmed! 🎉`,
-    emailWrap('Order Confirmed! 🎉',
-      `<p style="color:#444;font-size:15px;">Hi ${name}, your order <strong style="color:${PP};">#${order.orderId}</strong> has been placed!</p>
-       <table width="100%" style="border-collapse:collapse;font-size:13px;margin:14px 0;">
-         <tr style="background:#F5F0F8;"><th style="padding:8px;text-align:left;">Item</th><th style="padding:8px;">Qty</th><th style="padding:8px;text-align:right;">Price</th></tr>
+    emailWrap('Your Order is Confirmed! 🎉',
+      `<p style="color:#444;font-size:15px;margin:0 0 16px;">Hi <strong>${name}</strong>, thank you for shopping with us! 🛍️</p>
+       
+       <!-- Order ID badge -->
+       <div style="background:#F5F0F8;border-radius:12px;padding:14px 18px;margin-bottom:18px;text-align:center;">
+         <p style="margin:0;color:#888;font-size:12px;">Order ID</p>
+         <p style="margin:4px 0 0;color:${PP};font-size:22px;font-weight:900;letter-spacing:2px;">#${order.orderId}</p>
+       </div>
+
+       <!-- Items table -->
+       <table width="100%" style="border-collapse:collapse;margin-bottom:6px;">
+         <tr style="background:#F5F0F8;"><th style="padding:10px 4px;text-align:left;font-size:12px;color:#888;font-weight:700;">ITEM</th><th style="padding:10px 8px;font-size:12px;color:#888;font-weight:700;">QTY</th><th style="padding:10px 4px;text-align:right;font-size:12px;color:#888;font-weight:700;">PRICE</th></tr>
          ${rows}
-         <tr><td colspan="2" style="padding:8px;font-weight:bold;color:#333;">Total</td>
-             <td style="padding:8px;text-align:right;font-weight:bold;color:${PP};font-size:15px;">₹${order.total.toLocaleString('en-IN')}</td></tr>
+         ${disc}
+         ${delFee}
+         <tr style="background:#F5F0F8;"><td colspan="2" style="padding:12px 4px;font-weight:900;color:#333;font-size:15px;">Total</td>
+             <td style="padding:12px 4px;text-align:right;font-weight:900;color:${PP};font-size:18px;">₹${order.total.toLocaleString('en-IN')}</td></tr>
        </table>
-       <p style="color:#666;font-size:13px;">Payment: <strong>${(order.payment?.method || 'COD').toUpperCase()}</strong> | Estimated delivery: 3-5 business days</p>`));
+
+       <!-- Payment + delivery info -->
+       <div style="display:flex;gap:10px;margin:18px 0 0;">
+         <div style="flex:1;background:#f9f9f9;border-radius:10px;padding:12px;text-align:center;">
+           <p style="margin:0;font-size:11px;color:#999;">PAYMENT</p>
+           <p style="margin:4px 0 0;font-size:13px;font-weight:700;color:#333;">${payLabel}</p>
+         </div>
+         <div style="flex:1;background:#f9f9f9;border-radius:10px;padding:12px;text-align:center;">
+           <p style="margin:0;font-size:11px;color:#999;">ESTIMATED DELIVERY</p>
+           <p style="margin:4px 0 0;font-size:13px;font-weight:700;color:#333;">3–5 Business Days</p>
+         </div>
+       </div>
+
+       <!-- Ship to -->
+       <div style="background:#f9f9f9;border-radius:10px;padding:14px;margin-top:12px;">
+         <p style="margin:0 0 4px;font-size:11px;color:#999;font-weight:700;">SHIPPING TO</p>
+         <p style="margin:0;font-size:13px;color:#333;line-height:1.6;">
+           📍 ${order.shippingAddress?.name}, ${order.shippingAddress?.phone}<br>
+           ${order.shippingAddress?.line1}${order.shippingAddress?.line2 ? ', ' + order.shippingAddress.line2 : ''}<br>
+           ${order.shippingAddress?.city}, ${order.shippingAddress?.state} – ${order.shippingAddress?.pincode}
+         </p>
+       </div>
+       
+       <p style="color:#888;font-size:13px;margin:16px 0 0;text-align:center;">We'll email you when your order ships. Happy shopping! 🛍️</p>`,
+      `${SITE_URL}`, 'Track My Order →'));
 };
 
+const STATUS_META = {
+  confirmed:        { emoji: '✅', color: '#2e7d32', label: 'Order Confirmed',        bg: '#e8f5e9', msg: 'Great news! Your order has been confirmed and is being prepared.' },
+  processing:       { emoji: '⚙️', color: '#e65100', label: 'Being Prepared',         bg: '#fff3e0', msg: 'Our team is carefully picking and packing your items.' },
+  shipped:          { emoji: '🚚', color: '#1565c0', label: 'Shipped!',               bg: '#e3f2fd', msg: 'Your order is on its way! Expected delivery in 2–3 days.' },
+  out_for_delivery: { emoji: '🏍️', color: '#6a1b9a', label: 'Out for Delivery',       bg: '#f3e5f5', msg: 'Your order is out for delivery today. Please keep your phone handy!' },
+  delivered:        { emoji: '🎉', color: '#2e7d32', label: 'Delivered!',             bg: '#e8f5e9', msg: 'Your order has been delivered. Hope your little ones love it!' },
+  cancelled:        { emoji: '❌', color: '#c62828', label: 'Order Cancelled',        bg: '#ffebee', msg: 'Your order has been cancelled. Refund (if any) will be processed in 5–7 days.' },
+  returned:         { emoji: '↩️', color: '#555',    label: 'Return Initiated',       bg: '#f5f5f5', msg: 'Your return has been initiated. We will process it shortly.' },
+};
 const emailOrderStatus = (to, name, orderId, status, msg) => {
-  const emoji = { confirmed: '✅', processing: '⚙️', shipped: '🚚', out_for_delivery: '🏍️', delivered: '🎉', cancelled: '❌' }[status] || '📦';
-  return sendEmail(to, `${BRAND} – Order #${orderId} ${status}`,
-    emailWrap(`Order ${status.charAt(0).toUpperCase() + status.slice(1)} ${emoji}`,
-      `<p style="color:#444;font-size:15px;">Hi ${name}, your order <strong>#${orderId}</strong> is now <strong>${status.toUpperCase()}</strong>.</p>
-       ${msg ? `<div style="background:#F5F0F8;border-left:4px solid ${OR};padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;">${msg}</div>` : ''}`));
+  const meta = STATUS_META[status] || { emoji: '📦', color: PP, label: status, bg: '#F5F0F8', msg: '' };
+  const finalMsg = msg || meta.msg;
+  const subj = { delivered: `🎉 Delivered! Your KidsCart order #${orderId}`, shipped: `🚚 Shipped! Your KidsCart order #${orderId} is on the way`, out_for_delivery: `🏍️ Out for Delivery! Order #${orderId} arrives today`, cancelled: `Order #${orderId} Cancelled` }[status] || `${BRAND} – Order #${orderId} ${meta.label}`;
+  return sendEmail(to, subj,
+    emailWrap(`${meta.emoji} ${meta.label}`,
+      `<p style="color:#444;font-size:15px;">Hi <strong>${name}</strong>,</p>
+       
+       <!-- Status badge -->
+       <div style="background:${meta.bg};border-radius:14px;padding:20px;text-align:center;margin:18px 0;">
+         <div style="font-size:42px;margin-bottom:8px;">${meta.emoji}</div>
+         <p style="margin:0;color:${meta.color};font-size:18px;font-weight:900;">${meta.label}</p>
+         <p style="margin:6px 0 0;color:#666;font-size:13px;">Order <strong style="color:${PP};">#${orderId}</strong></p>
+       </div>
+
+       <!-- Message -->
+       <div style="background:#f9f9f9;border-left:4px solid ${meta.color};border-radius:0 10px 10px 0;padding:14px 18px;margin:16px 0;">
+         <p style="margin:0;color:#444;font-size:14px;line-height:1.6;">${finalMsg}</p>
+       </div>
+
+       ${status === 'delivered' ? `
+       <div style="background:#F5F0F8;border-radius:12px;padding:16px;text-align:center;margin-top:16px;">
+         <p style="margin:0;color:#666;font-size:13px;">Love your new clothes? 💜</p>
+         <p style="margin:6px 0 0;color:${PP};font-weight:700;font-size:14px;">Share a photo & tag us on Instagram!</p>
+         <a href="https://instagram.com/kidscart.kids" style="color:${PP};font-weight:800;font-size:13px;">@kidscart.kids</a>
+       </div>` : ''}
+
+       ${status === 'shipped' ? `
+       <div style="background:#e3f2fd;border-radius:12px;padding:14px;text-align:center;margin-top:14px;">
+         <p style="margin:0;color:#1565c0;font-size:13px;">📦 Keep your phone handy for delivery updates from our courier partner.</p>
+       </div>` : ''}
+
+       <p style="color:#999;font-size:12px;text-align:center;margin:20px 0 0;">Need help? Reply to this email or contact us at <a href="mailto:admin@kidscart.kids" style="color:${PP};">admin@kidscart.kids</a></p>`,
+      status !== 'cancelled' ? SITE_URL : null,
+      status !== 'cancelled' ? 'Continue Shopping →' : null));
 };
 
 // ── MODELS ────────────────────────────────────────────────

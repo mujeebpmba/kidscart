@@ -50,6 +50,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
 
 // ── CONSTANTS ─────────────────────────────────────────────
+// Required env vars: MONGO_URI, JWT_SECRET, CLOUDINARY_*, ZEPTO_API_KEY,
+// ZEPTO_FROM_EMAIL, ADMIN_EMAIL, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET,
+// WA_ACCESS_TOKEN, WA_PHONE_NUMBER_ID, WA_VERIFY_TOKEN (optional, default set)
+
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) { console.error('❌ FATAL: JWT_SECRET not set in .env'); process.exit(1); }
 
@@ -110,6 +114,77 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 console.log('✅ Razorpay init — key:', process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.slice(0,12)+'...' : 'NOT SET');
+
+
+// ══════════════════════════════════════════════════════════
+// WHATSAPP CLOUD API HELPERS
+// ══════════════════════════════════════════════════════════
+const WA_TOKEN    = process.env.WA_ACCESS_TOKEN;
+const WA_PHONE_ID = process.env.WA_PHONE_NUMBER_ID;
+const WA_VERIFY   = process.env.WA_VERIFY_TOKEN || 'kidscart_wa_verify_2026';
+
+async function waSend(to, text) {
+  if (!WA_TOKEN || !WA_PHONE_ID) { console.error('❌ WhatsApp env vars not set'); return null; }
+  try {
+    const r = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type:    'individual',
+        to,
+        type:    'text',
+        text:    { preview_url: false, body: text }
+      })
+    });
+    const d = await r.json();
+    if (r.ok) return d.messages?.[0]?.id;
+    console.error('WA send error:', JSON.stringify(d));
+    return null;
+  } catch(e) { console.error('WA send exception:', e.message); return null; }
+}
+
+async function waSendTemplate(to, templateName, params = []) {
+  if (!WA_TOKEN || !WA_PHONE_ID) return null;
+  try {
+    const components = params.length ? [{ type: 'body', parameters: params.map(p => ({ type: 'text', text: p })) }] : [];
+    const r = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to,
+        type: 'template',
+        template: { name: templateName, language: { code: 'en' }, components }
+      })
+    });
+    const d = await r.json();
+    return r.ok ? d.messages?.[0]?.id : null;
+  } catch(e) { return null; }
+}
+
+// Upsert Lead + Conversation from an inbound WhatsApp number
+async function upsertWaContact(phone, name = '') {
+  // Ensure default CRM stage exists
+  let stage = await CrmStage.findOne({ order: 0 });
+
+  // Upsert Lead
+  let lead = await Lead.findOne({ phone });
+  if (!lead) {
+    lead = await Lead.create({ phone, name: name || phone, source: 'whatsapp', stage: stage?._id });
+    console.log('📋 New CRM Lead created:', phone);
+  } else if (name && !lead.name) {
+    lead.name = name; await lead.save();
+  }
+
+  // Upsert Conversation
+  let conv = await WaConversation.findOne({ phone });
+  if (!conv) {
+    conv = await WaConversation.create({ phone, lead: lead._id, contactName: name || phone });
+  }
+
+  return { lead, conv };
+}
 
 // ── ZEPTOMAIL REST API ────────────────────────────────────
 // Uses HTTP REST (port 443) - works on Railway (SMTP ports blocked)
@@ -499,6 +574,81 @@ const SettingsSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+
+// ══════════════════════════════════════════════════════════
+// CRM + WHATSAPP SCHEMAS
+// ══════════════════════════════════════════════════════════
+
+const CrmStageSchema = new mongoose.Schema({
+  name:    { type: String, required: true, trim: true },
+  color:   { type: String, default: '#7B2D8B' },
+  order:   { type: Number, default: 0 },
+  isWon:   { type: Boolean, default: false },
+  isLost:  { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const CrmTagSchema = new mongoose.Schema({
+  name:  { type: String, required: true, unique: true, trim: true },
+  color: { type: String, default: '#F7941D' }
+});
+
+const LeadSchema = new mongoose.Schema({
+  phone:       { type: String, required: true, unique: true, trim: true },
+  name:        { type: String, trim: true, default: '' },
+  email:       { type: String, trim: true, default: '' },
+  stage:       { type: mongoose.Schema.Types.ObjectId, ref: 'CrmStage' },
+  tags:        [{ type: mongoose.Schema.Types.ObjectId, ref: 'CrmTag' }],
+  source:      { type: String, enum: ['whatsapp', 'instagram', 'website', 'manual'], default: 'whatsapp' },
+  status:      { type: String, enum: ['open', 'won', 'lost'], default: 'open' },
+  value:       { type: Number, default: 0 },         // expected order value
+  wonValue:    { type: Number, default: 0 },          // actual revenue on win
+  assignedTo:  { type: String, default: '' },
+  lastSeen:    { type: Date, default: Date.now },
+  notes: [{
+    text:      String,
+    createdBy: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
+  linkedUser:  { type: mongoose.Schema.Types.ObjectId, ref: 'User', sparse: true },
+  createdAt:   { type: Date, default: Date.now },
+  updatedAt:   { type: Date, default: Date.now }
+});
+
+const WaConversationSchema = new mongoose.Schema({
+  phone:         { type: String, required: true, unique: true, trim: true },
+  lead:          { type: mongoose.Schema.Types.ObjectId, ref: 'Lead' },
+  contactName:   { type: String, default: '' },
+  unreadCount:   { type: Number, default: 0 },
+  lastMessage:   { type: String, default: '' },
+  lastMessageAt: { type: Date, default: Date.now },
+  isBlocked:     { type: Boolean, default: false },
+  createdAt:     { type: Date, default: Date.now }
+});
+
+const WaMessageSchema = new mongoose.Schema({
+  waMessageId:   String,                        // Meta's message ID
+  conversation:  { type: mongoose.Schema.Types.ObjectId, ref: 'WaConversation' },
+  lead:          { type: mongoose.Schema.Types.ObjectId, ref: 'Lead' },
+  phone:         { type: String, required: true },
+  direction:     { type: String, enum: ['inbound', 'outbound'], required: true },
+  type:          { type: String, enum: ['text', 'image', 'document', 'audio', 'video', 'template', 'interactive'], default: 'text' },
+  body:          { type: String, default: '' },
+  mediaUrl:      String,
+  status:        { type: String, enum: ['sent', 'delivered', 'read', 'failed', 'received'], default: 'sent' },
+  sentBy:        { type: String, default: 'customer' },  // 'customer' or admin name
+  timestamp:     { type: Date, default: Date.now },
+  createdAt:     { type: Date, default: Date.now }
+});
+
+const WaTemplateSchema = new mongoose.Schema({
+  name:     { type: String, required: true },
+  body:     { type: String, required: true },
+  category: { type: String, default: 'general' },
+  isActive: { type: Boolean, default: true },
+  createdAt:{ type: Date, default: Date.now }
+});
+
 const User     = mongoose.model('User',     UserSchema);
 const Product  = mongoose.model('Product',  ProductSchema);
 const Order    = mongoose.model('Order',    OrderSchema);
@@ -506,7 +656,13 @@ const Review   = mongoose.model('Review',   ReviewSchema);
 const Coupon   = mongoose.model('Coupon',   CouponSchema);
 const Banner   = mongoose.model('Banner',   BannerSchema);
 const Chat     = mongoose.model('Chat',     ChatSchema);
-const Settings = mongoose.model('Settings', SettingsSchema);
+const Settings       = mongoose.model('Settings',       SettingsSchema);
+const CrmStage       = mongoose.model('CrmStage',       CrmStageSchema);
+const CrmTag         = mongoose.model('CrmTag',          CrmTagSchema);
+const Lead           = mongoose.model('Lead',            LeadSchema);
+const WaConversation = mongoose.model('WaConversation',  WaConversationSchema);
+const WaMessage      = mongoose.model('WaMessage',       WaMessageSchema);
+const WaTemplate     = mongoose.model('WaTemplate',      WaTemplateSchema);
 
 // ── HELPERS ───────────────────────────────────────────────
 const genOTP     = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -1421,6 +1577,431 @@ app.post('/api/admin/fix-admin', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ══════════════════════════════════════════════════════════
+// WHATSAPP WEBHOOK (Meta)
+// ══════════════════════════════════════════════════════════
+
+// Verification handshake — Meta calls this GET when you add webhook URL
+app.get('/api/webhook/whatsapp', (req, res) => {
+  const mode  = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+  if (mode === 'subscribe' && token === WA_VERIFY) {
+    console.log('✅ WhatsApp webhook verified');
+    return res.status(200).send(challenge);
+  }
+  res.sendStatus(403);
+});
+
+// Incoming messages from Meta
+app.post('/api/webhook/whatsapp', express.raw({ type: 'application/json' }), async (req, res) => {
+  res.sendStatus(200); // Always ack immediately
+  try {
+    const body = JSON.parse(req.body.toString());
+    if (body.object !== 'whatsapp_business_account') return;
+
+    for (const entry of body.entry || []) {
+      for (const change of entry.changes || []) {
+        if (change.field !== 'messages') continue;
+        const val = change.value;
+
+        // ── Handle status updates (delivered, read) ──
+        for (const status of val.statuses || []) {
+          const st = { delivered: 'delivered', read: 'read', failed: 'failed' }[status.status];
+          if (st) await WaMessage.findOneAndUpdate({ waMessageId: status.id }, { status: st });
+        }
+
+        // ── Handle incoming messages ──
+        for (const msg of val.messages || []) {
+          const phone      = msg.from;
+          const waId       = msg.id;
+          const profileName = val.contacts?.[0]?.profile?.name || '';
+          const msgType    = msg.type;
+          let body_text    = '';
+
+          if (msgType === 'text')        body_text = msg.text?.body || '';
+          else if (msgType === 'image')  body_text = '[Image]';
+          else if (msgType === 'audio')  body_text = '[Voice Message]';
+          else if (msgType === 'video')  body_text = '[Video]';
+          else if (msgType === 'document') body_text = '[Document]';
+          else if (msgType === 'interactive') body_text = msg.interactive?.button_reply?.title || msg.interactive?.list_reply?.title || '[Interactive]';
+          else body_text = `[${msgType}]`;
+
+          // Dedup — skip if already saved
+          if (await WaMessage.findOne({ waMessageId: waId })) continue;
+
+          const { lead, conv } = await upsertWaContact(phone, profileName);
+
+          // Save message
+          const waMsg = await WaMessage.create({
+            waMessageId: waId,
+            conversation: conv._id,
+            lead: lead._id,
+            phone,
+            direction: 'inbound',
+            type: msgType,
+            body: body_text,
+            status: 'received',
+            sentBy: 'customer',
+            timestamp: new Date(parseInt(msg.timestamp) * 1000)
+          });
+
+          // Update conversation
+          await WaConversation.findByIdAndUpdate(conv._id, {
+            lastMessage:   body_text,
+            lastMessageAt: waMsg.timestamp,
+            contactName:   profileName || conv.contactName,
+            $inc: { unreadCount: 1 }
+          });
+
+          // Update lead lastSeen
+          await Lead.findByIdAndUpdate(lead._id, { lastSeen: new Date(), updatedAt: new Date() });
+
+          // Real-time push to admin dashboard
+          io.to('admin').emit('wa_message', {
+            phone, profileName, body: body_text, type: msgType,
+            timestamp: waMsg.timestamp, leadId: lead._id, convId: conv._id,
+            waMessageId: waId
+          });
+          io.to('admin').emit('inbox_update', { phone, unreadCount: conv.unreadCount + 1, lastMessage: body_text });
+
+          console.log(`📱 WA inbound from ${phone}: ${body_text.slice(0,50)}`);
+        }
+      }
+    }
+  } catch(e) { console.error('WA webhook error:', e.message); }
+});
+
+// ══════════════════════════════════════════════════════════
+// WHATSAPP SEND API
+// ══════════════════════════════════════════════════════════
+
+app.post('/api/admin/whatsapp/send', adminAuth, async (req, res) => {
+  try {
+    const { phone, text } = req.body;
+    if (!phone || !text?.trim()) return res.status(400).json({ error: 'phone and text required' });
+
+    const waId = await waSend(phone, text.trim());
+    if (!waId) return res.status(502).json({ error: 'Failed to send via WhatsApp API. Check WA env vars.' });
+
+    const { lead, conv } = await upsertWaContact(phone);
+
+    const waMsg = await WaMessage.create({
+      waMessageId: waId,
+      conversation: conv._id,
+      lead: lead._id,
+      phone,
+      direction: 'outbound',
+      type: 'text',
+      body: text.trim(),
+      status: 'sent',
+      sentBy: req.admin?.name || 'Admin',
+      timestamp: new Date()
+    });
+
+    await WaConversation.findByIdAndUpdate(conv._id, {
+      lastMessage: text.trim(),
+      lastMessageAt: new Date()
+    });
+
+    io.to('admin').emit('wa_message_sent', { phone, body: text.trim(), waMessageId: waId, msgId: waMsg._id });
+
+    res.json({ success: true, messageId: waId, msg: waMsg });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Get conversation messages
+app.get('/api/admin/whatsapp/messages/:phone', adminAuth, async (req, res) => {
+  try {
+    const phone = decodeURIComponent(req.params.phone);
+    const page  = parseInt(req.query.page) || 1;
+    const limit = 50;
+    const msgs  = await WaMessage.find({ phone })
+      .sort({ timestamp: -1 }).skip((page-1)*limit).limit(limit).lean();
+    const conv  = await WaConversation.findOne({ phone }).lean();
+    res.json({ messages: msgs.reverse(), conv });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Get all conversations (inbox list)
+app.get('/api/admin/whatsapp/inbox', adminAuth, async (req, res) => {
+  try {
+    const search = req.query.search?.trim();
+    const filter = req.query.filter; // 'unread' | 'all'
+    let q = {};
+    if (search) { const rx = safeRegex(search); q.$or = [{ phone: rx }, { contactName: rx }]; }
+    if (filter === 'unread') q.unreadCount = { $gt: 0 };
+    const convs = await WaConversation.find(q)
+      .sort({ lastMessageAt: -1 }).limit(100)
+      .populate('lead', 'name stage tags status').lean();
+    res.json({ conversations: convs });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Mark conversation as read
+app.put('/api/admin/whatsapp/read/:phone', adminAuth, async (req, res) => {
+  try {
+    const phone = decodeURIComponent(req.params.phone);
+    await WaConversation.findOneAndUpdate({ phone }, { unreadCount: 0 });
+    io.to('admin').emit('inbox_read', { phone });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Send template message
+app.post('/api/admin/whatsapp/template', adminAuth, async (req, res) => {
+  try {
+    const { phone, templateName, params } = req.body;
+    const waId = await waSendTemplate(phone, templateName, params || []);
+    if (!waId) return res.status(502).json({ error: 'Template send failed' });
+    res.json({ success: true, messageId: waId });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── WhatsApp Quick Reply Templates (saved in DB) ──
+app.get('/api/admin/whatsapp/templates', adminAuth, async (req, res) => {
+  try { res.json({ templates: await WaTemplate.find({ isActive: true }).sort({ name: 1 }) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/admin/whatsapp/templates', adminAuth, async (req, res) => {
+  try { res.json({ template: await WaTemplate.create(req.body) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.put('/api/admin/whatsapp/templates/:id', adminAuth, async (req, res) => {
+  try { res.json({ template: await WaTemplate.findByIdAndUpdate(req.params.id, req.body, { new: true }) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/admin/whatsapp/templates/:id', adminAuth, async (req, res) => {
+  try { await WaTemplate.findByIdAndDelete(req.params.id); res.json({ success: true }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// CRM — PIPELINE STAGES
+// ══════════════════════════════════════════════════════════
+
+app.get('/api/admin/crm/stages', adminAuth, async (req, res) => {
+  try { res.json({ stages: await CrmStage.find().sort({ order: 1 }) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/crm/stages', adminAuth, async (req, res) => {
+  try {
+    const count = await CrmStage.countDocuments();
+    const stage = await CrmStage.create({ ...req.body, order: req.body.order ?? count });
+    res.status(201).json({ stage });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/admin/crm/stages/:id', adminAuth, async (req, res) => {
+  try { res.json({ stage: await CrmStage.findByIdAndUpdate(req.params.id, req.body, { new: true }) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/admin/crm/stages/reorder', adminAuth, async (req, res) => {
+  try {
+    const { order } = req.body; // array of { id, order }
+    await Promise.all(order.map(({ id, order: o }) => CrmStage.findByIdAndUpdate(id, { order: o })));
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/admin/crm/stages/:id', adminAuth, async (req, res) => {
+  try {
+    await Lead.updateMany({ stage: req.params.id }, { $unset: { stage: 1 } });
+    await CrmStage.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// CRM — TAGS
+// ══════════════════════════════════════════════════════════
+
+app.get('/api/admin/crm/tags', adminAuth, async (req, res) => {
+  try { res.json({ tags: await CrmTag.find().sort({ name: 1 }) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/admin/crm/tags', adminAuth, async (req, res) => {
+  try { res.json({ tag: await CrmTag.create(req.body) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.put('/api/admin/crm/tags/:id', adminAuth, async (req, res) => {
+  try { res.json({ tag: await CrmTag.findByIdAndUpdate(req.params.id, req.body, { new: true }) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/admin/crm/tags/:id', adminAuth, async (req, res) => {
+  try {
+    await Lead.updateMany({ tags: req.params.id }, { $pull: { tags: req.params.id } });
+    await CrmTag.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// CRM — LEADS
+// ══════════════════════════════════════════════════════════
+
+// All leads (with kanban grouping option)
+app.get('/api/admin/crm/leads', adminAuth, async (req, res) => {
+  try {
+    const { stage, status, tag, search, view } = req.query;
+    let q = {};
+    if (stage)  q.stage  = stage;
+    if (status) q.status = status;
+    if (tag)    q.tags   = tag;
+    if (search) { const rx = safeRegex(search); q.$or = [{ name: rx }, { phone: rx }, { email: rx }]; }
+
+    const leads = await Lead.find(q)
+      .populate('stage', 'name color isWon isLost')
+      .populate('tags',  'name color')
+      .populate('linkedUser', 'name email')
+      .sort({ updatedAt: -1 }).lean();
+
+    // For kanban view — group by stage
+    if (view === 'kanban') {
+      const stages = await CrmStage.find().sort({ order: 1 });
+      const kanban = stages.map(s => ({
+        stage: s,
+        leads: leads.filter(l => l.stage?._id?.toString() === s._id.toString())
+      }));
+      // Unassigned
+      kanban.unshift({
+        stage: { _id: 'unassigned', name: 'No Stage', color: '#999', order: -1 },
+        leads: leads.filter(l => !l.stage)
+      });
+      return res.json({ kanban });
+    }
+
+    res.json({ leads });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Single lead detail
+app.get('/api/admin/crm/leads/:id', adminAuth, async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id)
+      .populate('stage', 'name color isWon isLost')
+      .populate('tags',  'name color')
+      .populate('linkedUser', 'name email phone').lean();
+    if (!lead) return res.status(404).json({ error: 'Lead not found' });
+
+    // Attach recent messages
+    const messages = await WaMessage.find({ lead: lead._id })
+      .sort({ timestamp: -1 }).limit(20).lean();
+
+    // Attach linked orders
+    let orders = [];
+    if (lead.linkedUser) {
+      orders = await Order.find({ user: lead.linkedUser._id })
+        .sort({ createdAt: -1 }).limit(10).select('orderId total status createdAt').lean();
+    } else {
+      // Try to match by phone
+      const u = await User.findOne({ phone: lead.phone }).select('_id').lean();
+      if (u) orders = await Order.find({ user: u._id }).sort({ createdAt: -1 }).limit(10).select('orderId total status createdAt').lean();
+    }
+
+    res.json({ lead, messages: messages.reverse(), orders });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Create lead manually
+app.post('/api/admin/crm/leads', adminAuth, async (req, res) => {
+  try {
+    const lead = await Lead.create({ ...req.body, source: req.body.source || 'manual' });
+    // Auto-create conversation if phone provided
+    if (lead.phone) {
+      await WaConversation.findOneAndUpdate(
+        { phone: lead.phone },
+        { phone: lead.phone, lead: lead._id, contactName: lead.name },
+        { upsert: true, new: true }
+      );
+    }
+    res.status(201).json({ lead });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Update lead (stage change, tags, name, status, value etc)
+app.put('/api/admin/crm/leads/:id', adminAuth, async (req, res) => {
+  try {
+    const update = { ...req.body, updatedAt: new Date() };
+    // Won/Lost auto-set status
+    const stageDoc = update.stage ? await CrmStage.findById(update.stage) : null;
+    if (stageDoc?.isWon)  update.status = 'won';
+    if (stageDoc?.isLost) update.status = 'lost';
+
+    const lead = await Lead.findByIdAndUpdate(req.params.id, update, { new: true })
+      .populate('stage', 'name color isWon isLost')
+      .populate('tags',  'name color');
+
+    io.to('admin').emit('lead_updated', { leadId: req.params.id, changes: update });
+    res.json({ lead });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Add note to lead
+app.post('/api/admin/crm/leads/:id/notes', adminAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ error: 'Note text required' });
+    const lead = await Lead.findByIdAndUpdate(
+      req.params.id,
+      { $push: { notes: { text: text.trim(), createdBy: req.admin?.name || 'Admin', createdAt: new Date() } }, updatedAt: new Date() },
+      { new: true }
+    );
+    res.json({ notes: lead.notes });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Delete note
+app.delete('/api/admin/crm/leads/:leadId/notes/:noteId', adminAuth, async (req, res) => {
+  try {
+    await Lead.findByIdAndUpdate(req.params.leadId, { $pull: { notes: { _id: req.params.noteId } } });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Delete lead
+app.delete('/api/admin/crm/leads/:id', adminAuth, async (req, res) => {
+  try {
+    await Lead.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── CRM Stats ──
+app.get('/api/admin/crm/stats', adminAuth, async (req, res) => {
+  try {
+    const [total, open, won, lost, stages] = await Promise.all([
+      Lead.countDocuments(),
+      Lead.countDocuments({ status: 'open' }),
+      Lead.countDocuments({ status: 'won' }),
+      Lead.countDocuments({ status: 'lost' }),
+      CrmStage.find().sort({ order: 1 }).lean()
+    ]);
+    const wonValue = await Lead.aggregate([{ $match: { status: 'won' } }, { $group: { _id: null, total: { $sum: '$wonValue' } } }]);
+    const stageCounts = await Promise.all(stages.map(async s => ({
+      ...s, count: await Lead.countDocuments({ stage: s._id })
+    })));
+    const totalUnread = await WaConversation.aggregate([{ $group: { _id: null, total: { $sum: '$unreadCount' } } }]);
+    res.json({
+      total, open, won, lost,
+      wonRevenue: wonValue[0]?.total || 0,
+      stageCounts,
+      totalUnread: totalUnread[0]?.total || 0
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Socket.io admin room ──
+io.on('connection', socket => {
+  socket.on('join_admin', () => {
+    socket.join('admin');
+    console.log('👤 Admin joined socket room');
+  });
+});
+
 app.get('/api/health', (req, res) => res.json({ status: 'OK', version: '4.0', time: new Date(), domain: 'kidscart.kids' }));
 
 // ── SOCKET.IO LIVE CHAT ───────────────────────────────────
@@ -1496,6 +2077,44 @@ async function seed() {
     await Coupon.create({ code: 'FLAT100', type: 'flat', value: 100, minOrder: 799, perUserLimit: 2, validFrom: new Date(), validTill: new Date('2026-12-31'), isActive: true, usedBy: [] });
     console.log('✅ FLAT100 coupon seeded');
   }
+  // ── Seed default CRM pipeline stages ──
+  if (!await CrmStage.countDocuments()) {
+    await CrmStage.insertMany([
+      { name: 'New Lead',    color: '#3498db', order: 0, isWon: false, isLost: false },
+      { name: 'Contacted',   color: '#9b59b6', order: 1, isWon: false, isLost: false },
+      { name: 'Interested',  color: '#e67e22', order: 2, isWon: false, isLost: false },
+      { name: 'Quoted',      color: '#f39c12', order: 3, isWon: false, isLost: false },
+      { name: 'Won ✅',       color: '#27ae60', order: 4, isWon: true,  isLost: false },
+      { name: 'Lost ❌',      color: '#e74c3c', order: 5, isWon: false, isLost: true  },
+    ]);
+    console.log('✅ CRM default pipeline stages seeded');
+  }
+
+  // ── Seed default CRM tags ──
+  if (!await CrmTag.countDocuments()) {
+    await CrmTag.insertMany([
+      { name: 'VIP',       color: '#f1c40f' },
+      { name: 'Wholesale', color: '#3498db' },
+      { name: 'Kerala',    color: '#27ae60' },
+      { name: 'Repeat',    color: '#9b59b6' },
+      { name: 'Cold',      color: '#95a5a6' },
+      { name: 'Hot 🔥',    color: '#e74c3c' },
+    ]);
+    console.log('✅ CRM default tags seeded');
+  }
+
+  // ── Seed default WhatsApp quick reply templates ──
+  if (!await WaTemplate.countDocuments()) {
+    await WaTemplate.insertMany([
+      { name: "Welcome",       body: "Hi! 👋 Welcome to KidsCart — India's favourite kids fashion store. How can I help you today?", category: "greeting" },
+      { name: 'Order Update',  body: 'Hi! Your KidsCart order is on its way 🚚. Expected delivery in 2-3 business days. Thank you!', category: 'order' },
+      { name: 'Price Query',   body: 'Hi! Thank you for your interest. Please visit www.kidscart.kids to see all prices and place your order directly. Use WELCOME10 for 10% off! 🎉', category: 'sales' },
+      { name: 'Delivery Info', body: 'We deliver across Kerala! 🚚 Free delivery on orders above ₹999. Delivery takes 2-5 business days.', category: 'info' },
+      { name: 'COD Info',      body: 'Yes, we accept Cash on Delivery! 💵 Place your order at www.kidscart.kids and choose COD at checkout.', category: 'info' },
+    ]);
+    console.log('✅ WA quick reply templates seeded');
+  }
+
   if (!await Banner.countDocuments()) {
     await Banner.insertMany([
       { title: 'New AW25 Collection is Here!', subtitle: 'Premium kids fashion for every occasion', badge: '✨ New Arrivals', discountText: 'Up to 50% OFF', buttonText: 'Shop Now', color: '#7B2D8B', timerHours: 48, isActive: true, order: 1 },

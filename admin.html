@@ -277,6 +277,7 @@ tr:hover td{background:#FAF7FC;}
 
 /* ═══ MOBILE ═══ */
 @media(max-width:768px){
+  .sidebar{display:none!important;}
   .inbox-wrap{height:calc(100vh - 120px);border-radius:0;}
   .conv-list{width:100%;border-right:none;}
   .conv-list.hidden{display:none!important;}
@@ -293,6 +294,87 @@ tr:hover td{background:#FAF7FC;}
   .lm-grid{grid-template-columns:1fr!important;}
   .kanban-col{width:200px;}
 }
+
+/* ══════════════════════════════════════
+   MOBILE APP — TOP HEADER + BOTTOM NAV
+══════════════════════════════════════ */
+.mob-header{display:none;}
+.mob-bar{display:none;}
+
+@media(max-width:768px){
+  /* Hide desktop sidebar */
+  .sidebar{display:none!important;}
+  .main{margin-left:0!important;}
+
+  /* Mobile top header */
+  .mob-header{
+    display:flex;position:fixed;top:0;left:0;right:0;height:54px;
+    background:linear-gradient(90deg,var(--pp),var(--pp2,#5C1F7A));
+    z-index:300;align-items:center;padding:0 14px;gap:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.2);
+  }
+  .mob-header img{height:30px;object-fit:contain;filter:brightness(0) invert(1);}
+  .mob-hdr-title{flex:1;color:#fff;font-weight:800;font-size:.9rem;font-family:'Poppins',sans-serif;margin:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mob-hdr-right{color:rgba(255,255,255,.8);font-size:.72rem;text-align:right;line-height:1.3;flex-shrink:0;}
+
+  /* Main content offsets */
+  .main{margin-left:0!important;margin-top:54px;margin-bottom:66px;}
+  .content{padding:12px 10px!important;}
+  .topbar{display:none!important;}
+
+  /* Mobile bottom nav bar */
+  .mob-bar{
+    display:block;position:fixed;bottom:0;left:0;right:0;
+    height:62px;background:#fff;border-top:1.5px solid #f0e4f9;
+    z-index:300;box-shadow:0 -2px 12px rgba(123,45,139,.08);
+  }
+  .mob-bar-inner{
+    display:flex;height:100%;overflow-x:auto;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .mob-bar-inner::-webkit-scrollbar{display:none;}
+  .mob-btn{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:62px;flex:1;gap:2px;border:none;background:transparent;
+    cursor:pointer;color:#aaa;padding:6px 2px;font-family:'Nunito',sans-serif;
+    transition:.15s;position:relative;
+  }
+  .mob-btn.active{color:var(--pp);}
+  .mob-btn .mi{font-size:1.25rem;line-height:1;}
+  .mob-btn.active .mi{transform:scale(1.15);}
+  .mob-btn .ml{font-size:.55rem;font-weight:800;white-space:nowrap;margin-top:1px;}
+  .mob-badge{
+    position:absolute;top:4px;right:8px;
+    background:#25D366;color:#fff;
+    border-radius:50%;min-width:16px;height:16px;
+    font-size:.6rem;font-weight:900;
+    display:flex;align-items:center;justify-content:center;
+    padding:0 3px;
+  }
+
+  /* Stats */
+  .stats-grid{grid-template-columns:1fr 1fr!important;gap:8px;margin-bottom:16px;}
+  .stat-card{padding:14px 10px!important;}
+  .grid2,.grid3{grid-template-columns:1fr!important;gap:10px;}
+  .report-row{grid-template-columns:1fr!important;}
+  .card{padding:14px 12px!important;border-radius:14px!important;margin-bottom:14px;}
+  .card-head{flex-wrap:wrap;gap:8px;}
+  .tbl-wrap,.ord-table-wrap,.crm-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{font-size:.74rem;min-width:480px;}
+  table td,table th{padding:8px 6px!important;white-space:nowrap;}
+  .chat-grid{grid-template-columns:1fr!important;height:auto!important;}
+
+  /* Login */
+  #loginScreen{padding:16px;}
+  .login-box{width:100%!important;max-width:100%!important;padding:28px 20px!important;}
+
+  /* Modals */
+  #orderDetailModal > div{width:95vw!important;max-height:90vh;overflow-y:auto;}
+}
+@media(max-width:420px){
+  .mob-btn{min-width:54px;}
+}
+
 </style>
 </head>
 <body>
@@ -314,6 +396,34 @@ tr:hover td{background:#FAF7FC;}
 
 <!-- ── ADMIN APP ── -->
 <div id="adminApp">
+
+  <!-- MOBILE TOP HEADER -->
+  <div class="mob-header" id="mobHeader">
+    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
+    <span class="mob-hdr-title" id="mobTitle">Dashboard</span>
+    <div class="mob-hdr-right" id="mobUser"></div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV BAR -->
+  <div class="mob-bar">
+    <div class="mob-bar-inner">
+      <button class="mob-btn active" id="mb-dashboard" onclick="mobNav('dashboard',this)"><span class="mi">📊</span><span class="ml">Home</span></button>
+      <button class="mob-btn" id="mb-orders"    onclick="mobNav('orders',this)"><span class="mi">📦</span><span class="ml">Orders</span></button>
+      <button class="mob-btn" id="mb-products"  onclick="mobNav('products',this)"><span class="mi">👗</span><span class="ml">Products</span></button>
+      <button class="mob-btn" id="mb-addprod"   onclick="mobNav('addprod',this)"><span class="mi">➕</span><span class="ml">Add</span></button>
+      <button class="mob-btn" id="mb-stock"     onclick="mobNav('stock',this)"><span class="mi">📋</span><span class="ml">Stock</span></button>
+      <button class="mob-btn" id="mb-customers" onclick="mobNav('customers',this)"><span class="mi">👥</span><span class="ml">Customers</span></button>
+      <button class="mob-btn" id="mb-coupons"   onclick="mobNav('coupons',this)"><span class="mi">🎟️</span><span class="ml">Coupons</span></button>
+      <button class="mob-btn" id="mb-banners"   onclick="mobNav('banners',this)"><span class="mi">🎨</span><span class="ml">Banners</span></button>
+      <button class="mob-btn" id="mb-inbox"     onclick="mobNav('inbox',this)">
+        <span class="mi">📱</span><span class="ml">WhatsApp</span>
+        <span class="mob-badge" id="mobInboxBadge" style="display:none;">0</span>
+      </button>
+      <button class="mob-btn" id="mb-crm"       onclick="mobNav('crm',this)"><span class="mi">📊</span><span class="ml">CRM</span></button>
+      <button class="mob-btn" id="mb-reports"   onclick="mobNav('reports',this)"><span class="mi">📈</span><span class="ml">Reports</span></button>
+      <button class="mob-btn" id="mb-logout"    onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button>
+    </div>
+  </div>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -919,6 +1029,7 @@ function showLoginScreen() {
 function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('adminApp').style.display = 'flex';
+  setTimeout(updateMobUser, 100);
   if (adminUser) document.getElementById('adminName').textContent = '👤 ' + adminUser.name;
   // Show Admin Users nav only for super_admin
   if (adminUser?.role === 'super_admin') {
@@ -1877,12 +1988,12 @@ document.getElementById('orderModal').addEventListener('click', function(e) {
 const api = apiFetch;
 let activePhone=null,allConvs=[],convFilter='all',waTmpls=[],crmStages=[],crmTags=[],crmTab='kanban',dragLeadId=null;
 async function loadInbox(){await loadWaTmpls();await refreshConvs();loadSocketIO(()=>{if(typeof io==='undefined')return;const s=io(API.replace('/api',''),{auth:{token:localStorage.getItem('kc_admin_token')}});s.emit('join_admin');s.on('wa_message',d=>{if(d.phone===activePhone)appendMsg({direction:'inbound',body:d.body,timestamp:d.timestamp,status:'received'});refreshConvs();});s.on('inbox_update',()=>refreshConvs());});}
-async function refreshConvs(){try{const d=await api('/admin/whatsapp/inbox'+(convFilter==='unread'?'?filter=unread':''));allConvs=d.conversations||[];renderConvs(allConvs);updateBadge();}catch(e){console.error('inbox:',e.message);}}
-function updateBadge(){const n=allConvs.reduce((s,cv)=>s+(cv.unreadCount||0),0);const b=document.getElementById('inboxBadge');if(b){b.textContent=n;b.style.display=n>0?'inline-flex':'none';}}
+async function refreshConvs(){try{const d=await api('/admin/whatsapp/inbox'+(convFilter==='unread'?'?filter=unread':''));allConvs=d.conversations||[];renderConvs(allConvs);syncMobBadge();}catch(e){console.error('inbox:',e.message);}}
+function updateBadge(){syncMobBadge();return;} function _updateBadge_orig(){const n=allConvs.reduce((s,cv)=>s+(cv.unreadCount||0),0);const b=document.getElementById('inboxBadge');if(b){b.textContent=n;b.style.display=n>0?'inline-flex':'none';}}
 function setConvFilter(f,btn){convFilter=f;document.querySelectorAll('.conv-filter button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');refreshConvs();}
 function filterConvs(q){renderConvs(q?allConvs.filter(cv=>(cv.contactName||'').toLowerCase().includes(q.toLowerCase())||cv.phone.includes(q)):allConvs);}
 function renderConvs(list){const el=document.getElementById('convList');if(!el)return;if(!list.length){el.innerHTML='<div style="padding:30px;text-align:center;color:#bbb;"><div style="font-size:2rem;margin-bottom:8px;">💬</div><div style="font-size:.85rem;font-weight:700;">No conversations yet</div><div style="font-size:.75rem;margin-top:6px;color:#ccc;">Send a WhatsApp to your business number to start</div></div>';return;}el.innerHTML=list.map(cv=>{const nm=cv.contactName||cv.phone;const t=cv.lastMessageAt?fmtT(new Date(cv.lastMessageAt)):'';const u=(cv.unreadCount||0)>0;return `<div class="conv-item ${u?'unread':''} ${cv.phone===activePhone?'active':''}" onclick="openConv('${cv.phone}','${nm.replace(/'/g,"\'")}')"><div class="conv-avi">${nm.charAt(0).toUpperCase()}</div><div class="conv-info"><div class="conv-name">${nm}</div><div class="conv-last">${cv.lastMessage||''}</div></div><div class="conv-meta"><div class="conv-time">${t}</div>${u?`<div class="unread-dot">${cv.unreadCount}</div>`:''}</div></div>`;}).join('');}
-async function openConv(phone,name){activePhone=phone;await api('/admin/whatsapp/read/'+encodeURIComponent(phone),'PUT');const cv=allConvs.find(c=>c.phone===phone);if(cv)cv.unreadCount=0;updateBadge();document.getElementById('chatEmpty').style.display='none';const ca=document.getElementById('chatActive');ca.style.display='flex';if(window.innerWidth<=768){document.getElementById('convListPanel').classList.add('hidden');document.getElementById('chatWin').classList.add('mob-open');}const init=(name||phone).charAt(0).toUpperCase();document.getElementById('chatHeader').innerHTML=`<button class="chat-back-btn" onclick="closeMobileChat()">←</button><div class="chat-header-avi">${init}</div><div class="chat-header-info"><div class="chat-header-name">${name||phone}</div><div class="chat-header-sub">${phone}</div></div><div style="display:flex;gap:6px;margin-left:auto;"><button class="chat-act-btn green" onclick="openCrmForPhone('${phone}')">📊 CRM</button><button class="chat-act-btn" onclick="loadMsgs('${phone}')">↻</button></div>`;await loadMsgs(phone);loadContactPanel(phone);renderConvs(allConvs);}
+async function openConv(phone,name){activePhone=phone;await api('/admin/whatsapp/read/'+encodeURIComponent(phone),'PUT');const cv=allConvs.find(c=>c.phone===phone);if(cv)cv.unreadCount=0;syncMobBadge();document.getElementById('chatEmpty').style.display='none';const ca=document.getElementById('chatActive');ca.style.display='flex';if(window.innerWidth<=768){document.getElementById('convListPanel').classList.add('hidden');document.getElementById('chatWin').classList.add('mob-open');}const init=(name||phone).charAt(0).toUpperCase();document.getElementById('chatHeader').innerHTML=`<button class="chat-back-btn" onclick="closeMobileChat()">←</button><div class="chat-header-avi">${init}</div><div class="chat-header-info"><div class="chat-header-name">${name||phone}</div><div class="chat-header-sub">${phone}</div></div><div style="display:flex;gap:6px;margin-left:auto;"><button class="chat-act-btn green" onclick="openCrmForPhone('${phone}')">📊 CRM</button><button class="chat-act-btn" onclick="loadMsgs('${phone}')">↻</button></div>`;await loadMsgs(phone);loadContactPanel(phone);renderConvs(allConvs);}
 function closeMobileChat(){activePhone=null;document.getElementById('convListPanel').classList.remove('hidden');document.getElementById('chatWin').classList.remove('mob-open');document.getElementById('chatActive').style.display='none';document.getElementById('chatEmpty').style.display='flex';renderConvs(allConvs);}
 async function loadMsgs(phone){const el=document.getElementById('chatMsgs');if(!el)return;try{const d=await api('/admin/whatsapp/messages/'+encodeURIComponent(phone));const msgs=d.messages||[];el.innerHTML='';let lastD='';msgs.forEach(m=>{const ds=new Date(m.timestamp).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});if(ds!==lastD){el.innerHTML+=`<div class="msg-date-div">${ds}</div>`;lastD=ds;}el.innerHTML+=mkBubble(m);});el.scrollTop=el.scrollHeight;}catch(e){console.error('msgs:',e);}}
 function mkBubble(m){const dir=m.direction==='outbound'?'out':'in';const t=new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});const tick=dir==='out'?(m.status==='read'?'<span style="color:#4fc3f7">✓✓</span>':m.status==='delivered'?'<span style="color:#aaa">✓✓</span>':'<span style="color:#aaa">✓</span>'):'';const body=(m.type&&m.type!=='text')?`<em style="color:#aaa;font-size:.78rem;">[${m.type}] ${m.body||''}</em>`:(m.body||'');return `<div class="msg-wrap ${dir}"><div class="msg-bubble ${dir}">${body}<div class="msg-time">${t} ${tick}</div></div></div>`;}
@@ -1927,6 +2038,39 @@ async function deleteStage(id){if(!confirm('Delete stage?'))return;await api('/a
 async function deleteTag(id){await api('/admin/crm/tags/'+id,'DELETE');loadCrmSettings();toast('✅ Deleted');}
 async function deleteTmpl(id){await api('/admin/whatsapp/templates/'+id,'DELETE');loadCrmSettings();toast('✅ Deleted');}
 document.addEventListener('click',e=>{if(e.target.id==='leadModal')closeLead();if(e.target.id==='addLeadModal')closeAddLead();if(!e.target.closest('#tmplDD')&&!e.target.closest('.wa-tmpl-btn'))document.getElementById('tmplDD')?.classList.remove('open');});
+
+// ── MOBILE NAVIGATION ─────────────────────────────
+const mobTitles = {
+  dashboard:'Dashboard', orders:'Orders', products:'Products', addprod:'Add Product',
+  stock:'Stock', customers:'Customers', coupons:'Coupons', banners:'Banners',
+  inbox:'📱 WhatsApp Inbox', crm:'📊 CRM', crmstages:'⚙️ CRM Settings',
+  reports:'Reports', chat:'Live Chat', adminusers:'Admin Users'
+};
+
+function mobNav(id, btn) {
+  document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const t = document.getElementById('mobTitle');
+  if (t) t.textContent = mobTitles[id] || id;
+  show(id);
+}
+
+// Sync mob user display after login
+function updateMobUser() {
+  const el = document.getElementById('mobUser');
+  if (el && adminUser) el.textContent = adminUser.name || '';
+}
+
+// Sync inbox badge to mobile badge too
+const _origUpdateBadge = typeof updateBadge === 'function' ? updateBadge : null;
+function syncMobBadge() {
+  const total = allConvs.reduce((s,cv)=>s+(cv.unreadCount||0),0);
+  const mb = document.getElementById('mobInboxBadge');
+  if (mb) { mb.textContent = total; mb.style.display = total > 0 ? 'flex' : 'none'; }
+  const sb = document.getElementById('inboxBadge');
+  if (sb) { sb.textContent = total; sb.style.display = total > 0 ? 'inline-flex' : 'none'; }
+}
+
 </script>
 
 </body>

@@ -757,6 +757,111 @@ tr:hover td{background:#FAF7FC;}
         </div>
       </div>
 
+
+<!-- ═══ WHATSAPP INBOX PANEL ═══ -->
+<div class="panel" id="inboxPanel">
+  <div class="inbox-wrap">
+    <div class="conv-list" id="convListPanel">
+      <div class="conv-search"><input type="text" id="convSearch" placeholder="🔍 Search..." oninput="filterConvs(this.value)"></div>
+      <div class="conv-filter">
+        <button class="active" onclick="setConvFilter('all',this)">All</button>
+        <button onclick="setConvFilter('unread',this)">🟢 Unread</button>
+      </div>
+      <div class="conv-items" id="convList"><div style="padding:30px;text-align:center;color:#bbb;"><div style="font-size:2rem;margin-bottom:8px;">💬</div><div style="font-size:.85rem;font-weight:700;">Loading conversations...</div></div></div>
+    </div>
+    <div class="chat-win" id="chatWin">
+      <div class="chat-empty-state" id="chatEmpty">
+        <span style="font-size:3rem">💬</span>
+        <p style="font-weight:700">Select a conversation</p>
+        <small>Choose a chat from the left</small>
+      </div>
+      <div id="chatActive" style="display:none;flex-direction:column;height:100%;flex:1;">
+        <div class="chat-header" id="chatHeader"><button class="chat-back-btn" onclick="closeMobileChat()">←</button></div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div style="position:relative;">
+          <div class="tmpl-dd" id="tmplDD"></div>
+          <div class="chat-input-area">
+            <button class="wa-tmpl-btn" onclick="toggleTmpls()" title="Quick replies">⚡</button>
+            <textarea id="msgInput" rows="1" placeholder="Type a message..."
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}"
+              oninput="autoResizeTA(this)"></textarea>
+            <button class="wa-send-btn" onclick="sendWaMsg()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="contact-panel" id="contactPanel">
+      <div style="text-align:center;color:#ccc;padding:30px 10px;"><div style="font-size:2rem;margin-bottom:8px;">👤</div><div style="font-size:.8rem;">Select a conversation</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CRM PANEL ═══ -->
+<div class="panel" id="crmPanel">
+  <div class="crm-stats">
+    <div class="crm-stat"><p>Total Leads</p><h3 id="crmTotal">—</h3></div>
+    <div class="crm-stat"><p>Open</p><h3 id="crmOpen" style="color:var(--pp)">—</h3></div>
+    <div class="crm-stat"><p>Won ✅</p><h3 id="crmWon" style="color:#27ae60">—</h3></div>
+    <div class="crm-stat"><p>Lost ❌</p><h3 id="crmLost" style="color:#e74c3c">—</h3></div>
+    <div class="crm-stat"><p>Revenue Won</p><h3 id="crmRevenue" style="color:var(--or)">—</h3></div>
+  </div>
+  <div class="crm-top">
+    <div class="crm-tabs">
+      <button class="crm-tab active" onclick="setCrmTab('kanban',this)">🗂️ Kanban</button>
+      <button class="crm-tab" onclick="setCrmTab('list',this)">📋 List</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="text" id="crmSearch" placeholder="🔍 Search leads..." oninput="filterLeads()" style="padding:8px 14px;border:1px solid #ddd;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;width:180px;">
+      <select id="crmStageFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;"><option value="">All Stages</option></select>
+      <select id="crmTagFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;"><option value="">All Tags</option></select>
+      <button onclick="openAddLead()" style="padding:8px 18px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Lead</button>
+      <button onclick="show('crmstages')" style="padding:8px 14px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">⚙️ Settings</button>
+    </div>
+  </div>
+  <div id="kanbanView"><div class="kanban-board" id="kanbanBoard"><div style="color:#aaa;padding:24px;">Loading pipeline...</div></div></div>
+  <div id="listView" style="display:none;"><div class="crm-tbl-wrap"><table class="crm-tbl"><thead><tr><th>Name / Phone</th><th>Stage</th><th>Tags</th><th>Source</th><th>Last Seen</th><th>Status</th><th>Actions</th></tr></thead><tbody id="crmTBody"></tbody></table></div></div>
+</div>
+
+<!-- ═══ CRM SETTINGS PANEL ═══ -->
+<div class="panel" id="crmstagesPanel">
+  <div class="card"><div class="card-head"><h3>⚙️ Pipeline Stages</h3><button onclick="openAddStage()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Stage</button></div><div id="stagesList"></div></div>
+  <div class="card"><div class="card-head"><h3>🏷️ Tags</h3><button onclick="openAddTag()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Tag</button></div><div id="tagsList"></div></div>
+  <div class="card"><div class="card-head"><h3>⚡ Quick Reply Templates</h3><button onclick="openAddTmpl()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add</button></div><div id="tmplsList"></div></div>
+</div>
+
+<!-- ═══ LEAD MODAL ═══ -->
+<div id="leadModal" class="lm-wrap" style="display:none;">
+  <div class="lm-box">
+    <div class="lm-head">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">👤 Lead Details</h2>
+      <div style="display:flex;gap:8px;">
+        <button onclick="openInboxForLead()" style="padding:6px 14px;background:#e8f5e9;color:#25D366;border:1px solid #25D366;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">💬 Chat</button>
+        <button onclick="closeLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);font-size:1rem;">✕</button>
+      </div>
+    </div>
+    <div id="leadModalBody" style="padding:20px;"></div>
+  </div>
+</div>
+
+<!-- ═══ ADD LEAD MODAL ═══ -->
+<div id="addLeadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">➕ Add Lead</h2>
+      <button onclick="closeAddLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);font-size:1rem;">✕</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+      <input id="alName" placeholder="Name" class="linp" style="margin:0">
+      <input id="alPhone" placeholder="Phone (e.g. 919747867853)" class="linp" style="margin:0">
+      <input id="alEmail" placeholder="Email (optional)" class="linp" style="margin:0">
+      <select id="alStage" class="linp" style="margin:0"></select>
+      <select id="alSource" class="linp" style="margin:0"><option value="whatsapp">📱 WhatsApp</option><option value="instagram">📸 Instagram</option><option value="website">🌐 Website</option><option value="manual">✍️ Manual</option></select>
+      <input id="alValue" placeholder="Expected value ₹ (optional)" class="linp" type="number" style="margin:0">
+      <button onclick="saveNewLead()" class="lbtn">Save Lead</button>
+    </div>
+  </div>
+</div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /adminApp -->
@@ -1823,109 +1928,6 @@ async function deleteTag(id){await api('/admin/crm/tags/'+id,'DELETE');loadCrmSe
 async function deleteTmpl(id){await api('/admin/whatsapp/templates/'+id,'DELETE');loadCrmSettings();toast('✅ Deleted');}
 document.addEventListener('click',e=>{if(e.target.id==='leadModal')closeLead();if(e.target.id==='addLeadModal')closeAddLead();if(!e.target.closest('#tmplDD')&&!e.target.closest('.wa-tmpl-btn'))document.getElementById('tmplDD')?.classList.remove('open');});
 </script>
-<!-- ═══ WHATSAPP INBOX PANEL ═══ -->
-<div class="panel" id="inboxPanel">
-  <div class="inbox-wrap">
-    <div class="conv-list" id="convListPanel">
-      <div class="conv-search"><input type="text" id="convSearch" placeholder="🔍 Search..." oninput="filterConvs(this.value)"></div>
-      <div class="conv-filter">
-        <button class="active" onclick="setConvFilter('all',this)">All</button>
-        <button onclick="setConvFilter('unread',this)">🟢 Unread</button>
-      </div>
-      <div class="conv-items" id="convList"><div style="padding:30px;text-align:center;color:#bbb;"><div style="font-size:2rem;margin-bottom:8px;">💬</div><div style="font-size:.85rem;font-weight:700;">Loading conversations...</div></div></div>
-    </div>
-    <div class="chat-win" id="chatWin">
-      <div class="chat-empty-state" id="chatEmpty">
-        <span style="font-size:3rem">💬</span>
-        <p style="font-weight:700">Select a conversation</p>
-        <small>Choose a chat from the left</small>
-      </div>
-      <div id="chatActive" style="display:none;flex-direction:column;height:100%;flex:1;">
-        <div class="chat-header" id="chatHeader"><button class="chat-back-btn" onclick="closeMobileChat()">←</button></div>
-        <div class="chat-msgs" id="chatMsgs"></div>
-        <div style="position:relative;">
-          <div class="tmpl-dd" id="tmplDD"></div>
-          <div class="chat-input-area">
-            <button class="wa-tmpl-btn" onclick="toggleTmpls()" title="Quick replies">⚡</button>
-            <textarea id="msgInput" rows="1" placeholder="Type a message..."
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}"
-              oninput="autoResizeTA(this)"></textarea>
-            <button class="wa-send-btn" onclick="sendWaMsg()">➤</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="contact-panel" id="contactPanel">
-      <div style="text-align:center;color:#ccc;padding:30px 10px;"><div style="font-size:2rem;margin-bottom:8px;">👤</div><div style="font-size:.8rem;">Select a conversation</div></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ CRM PANEL ═══ -->
-<div class="panel" id="crmPanel">
-  <div class="crm-stats">
-    <div class="crm-stat"><p>Total Leads</p><h3 id="crmTotal">—</h3></div>
-    <div class="crm-stat"><p>Open</p><h3 id="crmOpen" style="color:var(--pp)">—</h3></div>
-    <div class="crm-stat"><p>Won ✅</p><h3 id="crmWon" style="color:#27ae60">—</h3></div>
-    <div class="crm-stat"><p>Lost ❌</p><h3 id="crmLost" style="color:#e74c3c">—</h3></div>
-    <div class="crm-stat"><p>Revenue Won</p><h3 id="crmRevenue" style="color:var(--or)">—</h3></div>
-  </div>
-  <div class="crm-top">
-    <div class="crm-tabs">
-      <button class="crm-tab active" onclick="setCrmTab('kanban',this)">🗂️ Kanban</button>
-      <button class="crm-tab" onclick="setCrmTab('list',this)">📋 List</button>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-      <input type="text" id="crmSearch" placeholder="🔍 Search leads..." oninput="filterLeads()" style="padding:8px 14px;border:1px solid #ddd;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;width:180px;">
-      <select id="crmStageFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;"><option value="">All Stages</option></select>
-      <select id="crmTagFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;"><option value="">All Tags</option></select>
-      <button onclick="openAddLead()" style="padding:8px 18px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Lead</button>
-      <button onclick="show('crmstages')" style="padding:8px 14px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">⚙️ Settings</button>
-    </div>
-  </div>
-  <div id="kanbanView"><div class="kanban-board" id="kanbanBoard"><div style="color:#aaa;padding:24px;">Loading pipeline...</div></div></div>
-  <div id="listView" style="display:none;"><div class="crm-tbl-wrap"><table class="crm-tbl"><thead><tr><th>Name / Phone</th><th>Stage</th><th>Tags</th><th>Source</th><th>Last Seen</th><th>Status</th><th>Actions</th></tr></thead><tbody id="crmTBody"></tbody></table></div></div>
-</div>
-
-<!-- ═══ CRM SETTINGS PANEL ═══ -->
-<div class="panel" id="crmstagesPanel">
-  <div class="card"><div class="card-head"><h3>⚙️ Pipeline Stages</h3><button onclick="openAddStage()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Stage</button></div><div id="stagesList"></div></div>
-  <div class="card"><div class="card-head"><h3>🏷️ Tags</h3><button onclick="openAddTag()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Tag</button></div><div id="tagsList"></div></div>
-  <div class="card"><div class="card-head"><h3>⚡ Quick Reply Templates</h3><button onclick="openAddTmpl()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add</button></div><div id="tmplsList"></div></div>
-</div>
-
-<!-- ═══ LEAD MODAL ═══ -->
-<div id="leadModal" class="lm-wrap" style="display:none;">
-  <div class="lm-box">
-    <div class="lm-head">
-      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">👤 Lead Details</h2>
-      <div style="display:flex;gap:8px;">
-        <button onclick="openInboxForLead()" style="padding:6px 14px;background:#e8f5e9;color:#25D366;border:1px solid #25D366;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">💬 Chat</button>
-        <button onclick="closeLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);font-size:1rem;">✕</button>
-      </div>
-    </div>
-    <div id="leadModalBody" style="padding:20px;"></div>
-  </div>
-</div>
-
-<!-- ═══ ADD LEAD MODAL ═══ -->
-<div id="addLeadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#fff;border-radius:20px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
-    <div style="padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;">
-      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">➕ Add Lead</h2>
-      <button onclick="closeAddLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);font-size:1rem;">✕</button>
-    </div>
-    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
-      <input id="alName" placeholder="Name" class="linp" style="margin:0">
-      <input id="alPhone" placeholder="Phone (e.g. 919747867853)" class="linp" style="margin:0">
-      <input id="alEmail" placeholder="Email (optional)" class="linp" style="margin:0">
-      <select id="alStage" class="linp" style="margin:0"></select>
-      <select id="alSource" class="linp" style="margin:0"><option value="whatsapp">📱 WhatsApp</option><option value="instagram">📸 Instagram</option><option value="website">🌐 Website</option><option value="manual">✍️ Manual</option></select>
-      <input id="alValue" placeholder="Expected value ₹ (optional)" class="linp" type="number" style="margin:0">
-      <button onclick="saveNewLead()" class="lbtn">Save Lead</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>

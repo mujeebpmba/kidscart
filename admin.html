@@ -203,6 +203,7 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
 /* ── PANELS ── */
 .panel{display:none;}
 .panel.active{display:block;}
+.panel.active#inboxPanel{display:flex;flex-direction:column;}
 
 /* ── CARDS ── */
 .card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:var(--shadow);margin-bottom:20px;}
@@ -1120,6 +1121,9 @@ async function apiFetch(path, method = 'GET', body = null) {
   if (!r.ok) throw new Error(d.error || 'Request failed (' + r.status + ')');
   return d;
 }
+
+// Alias so CRM/Inbox code works with same api() shorthand
+const api = apiFetch;
 
 // Fix image src - converts /uploads/file.jpg → absolute URL
 function fixImgSrc(src) {
@@ -2415,7 +2419,7 @@ async function loadInbox() {
   // Connect socket for real-time
   loadSocketIO(() => {
     if (typeof io === 'undefined') return;
-    const s = io(API.replace('/api',''), { auth: { token: localStorage.getItem('kc_token') } });
+    const s = io(API.replace('/api',''), { auth: { token: localStorage.getItem('kc_admin_token') } });
     s.emit('join_admin');
     s.on('wa_message', d => {
       if (d.phone === activePhone) appendMsg({ direction:'inbound', body:d.body, timestamp:d.timestamp, status:'received' });
@@ -3072,7 +3076,7 @@ function mobShow(id, btn) {
         <p>Select a conversation</p>
         <small style="font-size:.8rem;">Choose a chat from the left</small>
       </div>
-      <div id="chatActive" style="display:none;flex:1;display:none;flex-direction:column;height:100%;">
+      <div id="chatActive" style="display:none;flex:1;flex-direction:column;height:100%;">
         <div class="chat-header" id="chatHeader"></div>
         <div class="chat-msgs" id="chatMsgs"></div>
         <div style="position:relative;">

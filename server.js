@@ -36,14 +36,17 @@ const allowedOrigins = [
 const io = new Server(server, {
   cors: { origin: allowedOrigins, credentials: true }
 });
-app.use(cors({
-  origin: (origin, cb) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-}));
+app.use((req, res, next) => {
+  // Webhook routes from Meta/Razorpay — always allow, no CORS check
+  if (req.path.startsWith('/api/webhook/')) return next();
+  cors({
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+  })(req, res, next);
+});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

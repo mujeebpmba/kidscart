@@ -26,6 +26,146 @@ function loadSocketIO(cb) {
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:100vh;}
 
+
+/* ════════════════════════════
+   WHATSAPP INBOX
+════════════════════════════ */
+.inbox-wrap { display:flex; height:calc(100vh - 120px); background:#fff; border-radius:14px; overflow:hidden; box-shadow:var(--shadow); }
+
+/* Conversation list */
+.conv-list { width:300px; flex-shrink:0; border-right:1px solid #f0e5f8; display:flex; flex-direction:column; }
+.conv-search { padding:12px; border-bottom:1px solid #f0e5f8; }
+.conv-search input { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:20px; font-family:'Nunito',sans-serif; font-size:.85rem; outline:none; }
+.conv-search input:focus { border-color:var(--pp); }
+.conv-filter { display:flex; gap:6px; padding:8px 12px; border-bottom:1px solid #f0e5f8; }
+.conv-filter button { padding:4px 12px; border-radius:20px; border:1px solid #ddd; background:#fff; font-size:.75rem; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; color:#666; transition:.2s; }
+.conv-filter button.active { background:var(--pp); color:#fff; border-color:var(--pp); }
+.conv-items { flex:1; overflow-y:auto; }
+.conv-item { display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; border-bottom:1px solid #f9f4fc; transition:.15s; }
+.conv-item:hover { background:#f9f4fc; }
+.conv-item.active { background:#f0e5f8; }
+.conv-item.unread .conv-name { color:var(--pp); font-weight:800; }
+.conv-avi { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#25D366,#128C7E); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:1rem; flex-shrink:0; }
+.conv-info { flex:1; min-width:0; }
+.conv-name { font-size:.85rem; font-weight:700; color:#222; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.conv-last { font-size:.75rem; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+.conv-meta { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.conv-time { font-size:.68rem; color:#aaa; white-space:nowrap; }
+.unread-dot { width:18px; height:18px; background:#25D366; border-radius:50%; color:#fff; font-size:.65rem; font-weight:800; display:flex; align-items:center; justify-content:center; }
+
+/* Chat window */
+.chat-win { flex:1; display:flex; flex-direction:column; }
+.chat-header { padding:14px 18px; border-bottom:1px solid #f0e5f8; display:flex; align-items:center; gap:12px; background:#fff; }
+.chat-header-avi { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#25D366,#128C7E); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; }
+.chat-header-info { flex:1; }
+.chat-header-name { font-weight:800; font-size:.95rem; color:#222; }
+.chat-header-sub { font-size:.75rem; color:#888; }
+.chat-header-actions { display:flex; gap:8px; }
+.chat-action-btn { padding:6px 12px; border-radius:8px; border:1px solid #ddd; background:#fff; font-size:.75rem; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; color:#555; transition:.2s; }
+.chat-action-btn:hover { background:var(--lt); border-color:var(--pp); color:var(--pp); }
+.chat-action-btn.green { background:#e8f5e9; border-color:#25D366; color:#25D366; }
+
+.chat-msgs { flex:1; overflow-y:auto; padding:16px; background:#f0f2f5; display:flex; flex-direction:column; gap:8px; }
+.msg-bubble { max-width:70%; padding:9px 13px; border-radius:14px; font-size:.85rem; line-height:1.5; position:relative; }
+.msg-bubble.in { background:#fff; border-radius:0 14px 14px 14px; align-self:flex-start; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+.msg-bubble.out { background:#dcf8c6; border-radius:14px 14px 0 14px; align-self:flex-end; }
+.msg-time { font-size:.65rem; color:#aaa; margin-top:3px; text-align:right; }
+.msg-status { font-size:.7rem; }
+.msg-date-divider { text-align:center; font-size:.72rem; color:#aaa; font-weight:700; margin:8px 0; background:rgba(255,255,255,.8); padding:3px 12px; border-radius:20px; align-self:center; }
+
+.chat-input-wrap { padding:12px 16px; border-top:1px solid #f0e5f8; background:#fff; display:flex; gap:10px; align-items:flex-end; }
+.chat-input-wrap textarea { flex:1; padding:10px 14px; border:1px solid #ddd; border-radius:20px; font-family:'Nunito',sans-serif; font-size:.88rem; outline:none; resize:none; max-height:120px; line-height:1.5; }
+.chat-input-wrap textarea:focus { border-color:#25D366; }
+.send-btn { width:42px; height:42px; border-radius:50%; background:#25D366; color:#fff; border:none; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s; flex-shrink:0; }
+.send-btn:hover { background:#128C7E; }
+.tmpl-btn { width:38px; height:38px; border-radius:50%; background:var(--lt); color:var(--pp); border:1px solid var(--lt2); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+/* Contact panel */
+.contact-panel { width:260px; flex-shrink:0; border-left:1px solid #f0e5f8; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; background:#fafafa; }
+.contact-panel h4 { font-size:.82rem; font-weight:800; color:var(--pp); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.cp-field { font-size:.82rem; color:#444; margin-bottom:4px; }
+.cp-label { font-size:.72rem; color:#aaa; font-weight:700; display:block; }
+.tag-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:.72rem; font-weight:700; color:#fff; margin:2px; }
+.cp-orders { font-size:.78rem; }
+.cp-order-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0e4f9; color:#444; }
+
+/* Quick reply templates dropdown */
+.tmpl-dropdown { position:absolute; bottom:70px; left:60px; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.15); padding:8px; min-width:280px; max-height:300px; overflow-y:auto; z-index:50; display:none; }
+.tmpl-dropdown.show { display:block; }
+.tmpl-item { padding:10px 12px; border-radius:8px; cursor:pointer; transition:.15s; }
+.tmpl-item:hover { background:var(--lt); }
+.tmpl-item-name { font-size:.82rem; font-weight:700; color:var(--pp); }
+.tmpl-item-body { font-size:.75rem; color:#666; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* ════════════════════════════
+   CRM
+════════════════════════════ */
+.crm-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+.crm-tabs { display:flex; gap:6px; background:#fff; border-radius:10px; padding:4px; box-shadow:var(--shadow); }
+.crm-tab { padding:7px 18px; border-radius:8px; font-size:.82rem; font-weight:700; cursor:pointer; border:none; background:transparent; font-family:'Nunito',sans-serif; color:#666; transition:.2s; }
+.crm-tab.active { background:var(--pp); color:#fff; }
+
+/* CRM Stats */
+.crm-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px; }
+.crm-stat { background:#fff; border-radius:12px; padding:14px 16px; box-shadow:var(--shadow); text-align:center; }
+.crm-stat p { font-size:.72rem; color:#888; font-weight:700; text-transform:uppercase; }
+.crm-stat h3 { font-size:1.6rem; font-weight:900; font-family:'Poppins',sans-serif; margin:4px 0; }
+.crm-stat small { font-size:.72rem; color:#aaa; }
+
+/* Kanban board */
+.kanban-board { display:flex; gap:14px; overflow-x:auto; padding-bottom:20px; min-height:500px; }
+.kanban-col { flex-shrink:0; width:240px; display:flex; flex-direction:column; }
+.kanban-col-head { padding:10px 14px; border-radius:10px 10px 0 0; display:flex; align-items:center; justify-content:space-between; }
+.kanban-col-head h4 { font-size:.82rem; font-weight:800; color:#fff; }
+.kanban-col-head span { background:rgba(255,255,255,.25); color:#fff; border-radius:20px; padding:2px 8px; font-size:.72rem; font-weight:800; }
+.kanban-col-body { flex:1; background:#f5f5f5; border-radius:0 0 10px 10px; padding:8px; min-height:400px; }
+.kanban-card { background:#fff; border-radius:10px; padding:12px; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,.07); cursor:grab; transition:.2s; border-left:3px solid #ddd; }
+.kanban-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.12); transform:translateY(-1px); }
+.kanban-card.dragging { opacity:.5; }
+.kc-name { font-size:.85rem; font-weight:800; color:#222; margin-bottom:4px; }
+.kc-phone { font-size:.75rem; color:#888; margin-bottom:6px; }
+.kc-tags { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:6px; }
+.kc-tag { padding:2px 7px; border-radius:20px; font-size:.65rem; font-weight:700; color:#fff; }
+.kc-footer { display:flex; justify-content:space-between; align-items:center; }
+.kc-source { font-size:.68rem; color:#aaa; }
+.kc-time { font-size:.68rem; color:#aaa; }
+.kc-actions { display:flex; gap:4px; }
+.kc-btn { width:24px; height:24px; border-radius:6px; border:none; background:var(--lt); color:var(--pp); font-size:.75rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+/* CRM List view */
+.crm-table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:var(--shadow); }
+.crm-table th { background:var(--lt); padding:10px 14px; font-size:.78rem; font-weight:800; color:var(--pp); text-align:left; }
+.crm-table td { padding:10px 14px; font-size:.82rem; border-bottom:1px solid #f5f0f8; color:#333; vertical-align:middle; }
+.crm-table tr:hover td { background:#faf7fd; }
+
+/* Lead detail modal */
+.lead-modal-wrap { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:500; display:flex; align-items:center; justify-content:center; padding:16px; }
+.lead-modal { background:#fff; border-radius:20px; width:100%; max-width:720px; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.lead-modal-head { position:sticky; top:0; background:#fff; padding:16px 20px; border-bottom:1px solid #f0e4f9; display:flex; justify-content:space-between; align-items:center; z-index:1; }
+.lead-modal-body { padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.lead-section { margin-bottom:16px; }
+.lead-section h4 { font-size:.8rem; font-weight:800; color:var(--pp); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--lt2); }
+.note-item { background:var(--lt); border-radius:8px; padding:8px 12px; margin-bottom:6px; font-size:.82rem; color:#444; }
+.note-item small { color:#aaa; font-size:.72rem; }
+.note-add { display:flex; gap:8px; margin-top:8px; }
+.note-add textarea { flex:1; padding:8px; border:1px solid #ddd; border-radius:8px; font-family:'Nunito',sans-serif; font-size:.82rem; resize:none; outline:none; }
+.note-add textarea:focus { border-color:var(--pp); }
+
+/* Stage select */
+.stage-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 14px; border-radius:20px; font-size:.78rem; font-weight:700; color:#fff; cursor:pointer; }
+
+/* Won/Lost badges */
+.won-badge { background:#e8f5e9; color:#2e7d32; padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:800; }
+.lost-badge { background:#ffebee; color:#c62828; padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:800; }
+
+/* Drag over highlight */
+.kanban-col-body.drag-over { background:#e8d5f5; border:2px dashed var(--pp); border-radius:0 0 10px 10px; }
+
+/* Empty inbox state */
+.inbox-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#aaa; gap:12px; }
+.inbox-empty span { font-size:3rem; }
+.inbox-empty p { font-size:.9rem; font-weight:700; }
+
 /* ── LOGIN ── */
 #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--pp),var(--pp2));}
 .login-box{background:#fff;border-radius:20px;padding:40px 36px;width:360px;max-width:96vw;box-shadow:0 8px 40px rgba(0,0,0,.18);}
@@ -354,6 +494,8 @@ tr:hover td{background:#FAF7FC;}
       <div class="nav-item" onclick="show('coupons',this)"><span class="ico">🎟️</span><span class="lbl">Coupons</span></div>
       <div class="nav-item" onclick="show('banners',this)"><span class="ico">🎨</span><span class="lbl">Banners</span></div>
       <div class="nav-item" onclick="show('chat',this)"><span class="ico">💬</span><span class="lbl">Live Chat</span></div>
+      <div class="nav-item" onclick="show('inbox',this)" id="navInbox"><span class="ico">📱</span><span class="lbl">WhatsApp Inbox</span><span id="inboxBadge" style="display:none;background:#25D366;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;">0</span></div>
+      <div class="nav-item" onclick="show('crm',this)"><span class="ico">📊</span><span class="lbl">CRM</span></div>
       <div class="nav-item" onclick="show('reports',this)"><span class="ico">📈</span><span class="lbl">Reports</span></div>
       <div class="nav-item" id="adminUsersNav" style="display:none" onclick="show('adminusers',this)"><span class="ico">🔐</span><span class="lbl">Admin Users</span></div>
     </nav>
@@ -943,7 +1085,7 @@ const panelTitles = {
   dashboard:'Dashboard', orders:'Orders', products:'Product Catalog',
   stock:'Stock Management', addprod:'Add New Product', customers:'Customers',
   coupons:'Coupons', banners:'Banners & Promotions', chat:'Live Chat', reports:'Reports & Analytics',
-  adminusers:'Admin Users'
+  adminusers:'Admin Users', inbox:'📱 WhatsApp Inbox', crm:'📊 CRM — Pipeline', crmstages:'⚙️ CRM Settings'
 };
 
 function show(id, navEl) {
@@ -958,6 +1100,7 @@ function show(id, navEl) {
     dashboard: loadDashboard, orders: loadOrders, products: loadProducts,
     stock: loadStock, customers: loadCustomers, coupons: loadCoupons,
     banners: () => { loadBanners(); loadAnnouncement(); }, chat: loadChats, reports: () => setReportRange(30),
+    inbox: loadInbox, crm: loadCrm, crmstages: loadCrmSettings,
     adminusers: loadAdminUsers
   };
   if (loaders[id]) loaders[id]();
@@ -2251,6 +2394,642 @@ function showBannerDragger(src){
   setTimeout(initBannerDrag,100);
 }
 
+
+// ══════════════════════════════════════════════════════════
+// WHATSAPP INBOX
+// ══════════════════════════════════════════════════════════
+let activePhone = null;
+let allConvs = [];
+let convFilter = 'all';
+let waTemplates = [];
+let crmStages = [];
+let crmTags = [];
+let allLeads = [];
+let currentLeadId = null;
+let crmTab = 'kanban';
+let dragLeadId = null;
+
+async function loadInbox() {
+  await loadWaTemplates();
+  await refreshConvList();
+  // Connect socket for real-time
+  loadSocketIO(() => {
+    if (typeof io === 'undefined') return;
+    const s = io(API.replace('/api',''), { auth: { token: localStorage.getItem('kc_token') } });
+    s.emit('join_admin');
+    s.on('wa_message', d => {
+      if (d.phone === activePhone) appendMsg({ direction:'inbound', body:d.body, timestamp:d.timestamp, status:'received' });
+      refreshConvList();
+      updateInboxBadge();
+    });
+    s.on('inbox_update', () => { refreshConvList(); updateInboxBadge(); });
+    s.on('wa_message_sent', d => {
+      if (d.phone === activePhone) appendMsg({ direction:'outbound', body:d.body, timestamp:new Date(), status:'sent' });
+    });
+  });
+}
+
+async function refreshConvList() {
+  try {
+    const params = convFilter === 'unread' ? '?filter=unread' : '';
+    const d = await api('/admin/whatsapp/inbox' + params);
+    allConvs = d.conversations || [];
+    renderConvList(allConvs);
+    updateInboxBadge();
+  } catch(e) {}
+}
+
+function updateInboxBadge() {
+  const total = allConvs.reduce((s,c) => s + (c.unreadCount||0), 0);
+  const badge = document.getElementById('inboxBadge');
+  if (badge) { badge.textContent = total; badge.style.display = total > 0 ? 'inline-flex' : 'none'; }
+}
+
+function setConvFilter(f, btn) {
+  convFilter = f;
+  document.querySelectorAll('.conv-filter button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  refreshConvList();
+}
+
+function filterConvs(q) {
+  const filtered = q ? allConvs.filter(c =>
+    (c.contactName||'').toLowerCase().includes(q.toLowerCase()) ||
+    c.phone.includes(q)
+  ) : allConvs;
+  renderConvList(filtered);
+}
+
+function renderConvList(convs) {
+  const el = document.getElementById('convList');
+  if (!convs.length) { el.innerHTML = '<div style="padding:24px;text-align:center;color:#aaa;font-size:.82rem;">No conversations yet</div>'; return; }
+  el.innerHTML = convs.map(c => {
+    const name = c.contactName || c.phone;
+    const initial = name.charAt(0).toUpperCase();
+    const time = c.lastMessageAt ? fmtConvTime(new Date(c.lastMessageAt)) : '';
+    const unread = c.unreadCount > 0;
+    return `<div class="conv-item ${unread?'unread':''} ${c.phone===activePhone?'active':''}" onclick="openConv('${c.phone}','${name.replace(/'/g,"\'")}')">
+      <div class="conv-avi">${initial}</div>
+      <div class="conv-info">
+        <div class="conv-name">${name}</div>
+        <div class="conv-last">${c.lastMessage||'No messages yet'}</div>
+      </div>
+      <div class="conv-meta">
+        <div class="conv-time">${time}</div>
+        ${unread ? `<div class="unread-dot">${c.unreadCount}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function openConv(phone, name) {
+  activePhone = phone;
+  // Mark read
+  await api('/admin/whatsapp/read/' + encodeURIComponent(phone), 'PUT');
+  // Update UI
+  document.getElementById('chatEmpty').style.display = 'none';
+  const chatActive = document.getElementById('chatActive');
+  chatActive.style.display = 'flex';
+  chatActive.style.flexDirection = 'column';
+  chatActive.style.height = '100%';
+  // Render header
+  const initial = name.charAt(0).toUpperCase();
+  document.getElementById('chatHeader').innerHTML = `
+    <div class="chat-header-avi">${initial}</div>
+    <div class="chat-header-info">
+      <div class="chat-header-name">${name}</div>
+      <div class="chat-header-sub">${phone}</div>
+    </div>
+    <div class="chat-header-actions">
+      <button class="chat-action-btn green" onclick="openCrmForPhone('${phone}')">📊 CRM</button>
+      <button class="chat-action-btn" onclick="refreshMsgs()">↻ Refresh</button>
+    </div>`;
+  // Load messages
+  await loadMsgs(phone);
+  // Load contact panel
+  loadContactPanel(phone);
+  // Refresh conv list to update active state
+  renderConvList(allConvs);
+}
+
+async function loadMsgs(phone) {
+  try {
+    const d = await api('/admin/whatsapp/messages/' + encodeURIComponent(phone));
+    const msgs = d.messages || [];
+    const el = document.getElementById('chatMsgs');
+    el.innerHTML = '';
+    let lastDate = '';
+    msgs.forEach(m => {
+      const d = new Date(m.timestamp);
+      const dateStr = d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+      if (dateStr !== lastDate) {
+        el.innerHTML += `<div class="msg-date-divider">${dateStr}</div>`;
+        lastDate = dateStr;
+      }
+      el.innerHTML += renderBubble(m);
+    });
+    el.scrollTop = el.scrollHeight;
+  } catch(e) {}
+}
+
+function renderBubble(m) {
+  const dir = m.direction === 'outbound' ? 'out' : 'in';
+  const time = new Date(m.timestamp).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+  const status = m.direction === 'outbound' ? (m.status==='read'?'✓✓':m.status==='delivered'?'✓✓':'✓') : '';
+  return `<div class="msg-bubble ${dir}">
+    ${m.type !== 'text' ? `<em style="color:#aaa;font-size:.78rem;">${m.body}</em>` : m.body}
+    <div class="msg-time">${time} <span style="color:${m.status==='read'?'#4fc3f7':'#aaa'}">${dir==='out'?(m.status==='read'?'✓✓':m.status==='delivered'?'✓✓':'✓'):''}</span></div>
+  </div>`;
+}
+
+function appendMsg(m) {
+  const el = document.getElementById('chatMsgs');
+  if (!el) return;
+  el.innerHTML += renderBubble(m);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function refreshMsgs() { if (activePhone) await loadMsgs(activePhone); }
+
+async function sendWaMsg() {
+  const inp = document.getElementById('msgInput');
+  const text = inp.value.trim();
+  if (!text || !activePhone) return;
+  inp.value = ''; inp.style.height = 'auto';
+  try {
+    appendMsg({ direction:'outbound', body:text, timestamp:new Date(), status:'sent' });
+    await api('/admin/whatsapp/send', 'POST', { phone: activePhone, text });
+    refreshConvList();
+  } catch(e) { toast('❌ Send failed: ' + e.message); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// Quick reply templates
+async function loadWaTemplates() {
+  try {
+    const d = await api('/admin/whatsapp/templates');
+    waTemplates = d.templates || [];
+  } catch(e) {}
+}
+
+function toggleTemplates() {
+  const dd = document.getElementById('tmplDropdown');
+  if (!dd) return;
+  dd.classList.toggle('show');
+  if (dd.classList.contains('show')) renderTemplateDropdown();
+}
+
+function renderTemplateDropdown() {
+  const dd = document.getElementById('tmplDropdown');
+  dd.innerHTML = waTemplates.length ? waTemplates.map(t =>
+    `<div class="tmpl-item" onclick="useTemplate('${t.body.replace(/'/g,"\'").replace(/\n/g,' ')}')">
+      <div class="tmpl-item-name">⚡ ${t.name}</div>
+      <div class="tmpl-item-body">${t.body}</div>
+    </div>`
+  ).join('') : '<div style="padding:12px;color:#aaa;font-size:.82rem;">No templates yet</div>';
+}
+
+function useTemplate(body) {
+  document.getElementById('msgInput').value = body;
+  document.getElementById('tmplDropdown').classList.remove('show');
+  document.getElementById('msgInput').focus();
+}
+
+// Contact info panel
+async function loadContactPanel(phone) {
+  const panel = document.getElementById('contactPanel');
+  panel.innerHTML = '<div style="color:#aaa;font-size:.82rem;text-align:center;padding:20px;">Loading...</div>';
+  try {
+    // Find lead for this phone
+    const d = await api('/admin/crm/leads?search=' + encodeURIComponent(phone));
+    const lead = d.leads?.[0];
+    if (!lead) {
+      panel.innerHTML = `<h4>Contact</h4>
+        <div class="cp-field"><span class="cp-label">Phone</span>${phone}</div>
+        <button onclick="createLeadFromPhone('${phone}')" style="width:100%;padding:8px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;margin-top:8px;">+ Add to CRM</button>`;
+      return;
+    }
+    const stageDot = lead.stage ? `<span style="background:${lead.stage.color};border-radius:50%;width:10px;height:10px;display:inline-block;margin-right:4px;"></span>` : '';
+    const tags = (lead.tags||[]).map(t => `<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');
+    panel.innerHTML = `
+      <h4>Contact</h4>
+      <div class="cp-field"><span class="cp-label">Name</span>${lead.name||phone}</div>
+      <div class="cp-field"><span class="cp-label">Phone</span>${phone}</div>
+      ${lead.email ? `<div class="cp-field"><span class="cp-label">Email</span>${lead.email}</div>` : ''}
+      <div class="cp-field"><span class="cp-label">Stage</span>${stageDot}${lead.stage?.name||'No stage'}</div>
+      <div class="cp-field"><span class="cp-label">Status</span>
+        ${lead.status==='won'?'<span class="won-badge">Won ✅</span>':lead.status==='lost'?'<span class="lost-badge">Lost ❌</span>':'Open'}
+      </div>
+      ${tags ? `<div><span class="cp-label">Tags</span><div style="margin-top:4px;">${tags}</div></div>` : ''}
+      <button onclick="openLeadById('${lead._id}')" style="width:100%;padding:8px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">View Full Lead →</button>
+    `;
+  } catch(e) {}
+}
+
+async function createLeadFromPhone(phone) {
+  try {
+    await api('/admin/crm/leads', 'POST', { phone, name: phone, source: 'whatsapp' });
+    loadContactPanel(phone);
+    toast('✅ Lead created in CRM!');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+function openCrmForPhone(phone) { show('crm'); loadCrm(); }
+
+function fmtConvTime(d) {
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 86400000) return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  if (diff < 604800000) return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+}
+
+// ══════════════════════════════════════════════════════════
+// CRM
+// ══════════════════════════════════════════════════════════
+async function loadCrm() {
+  await Promise.all([loadCrmStages(), loadCrmTags(), loadCrmStats()]);
+  if (crmTab === 'kanban') await loadKanban();
+  else await loadCrmList();
+  populateCrmFilters();
+}
+
+async function loadCrmStats() {
+  try {
+    const d = await api('/admin/crm/stats');
+    document.getElementById('crmTotal').textContent   = d.total || 0;
+    document.getElementById('crmOpen').textContent    = d.open  || 0;
+    document.getElementById('crmWon').textContent     = d.won   || 0;
+    document.getElementById('crmLost').textContent    = d.lost  || 0;
+    document.getElementById('crmRevenue').textContent = '₹' + (d.wonRevenue||0).toLocaleString('en-IN');
+  } catch(e) {}
+}
+
+async function loadCrmStages() {
+  try { const d = await api('/admin/crm/stages'); crmStages = d.stages||[]; } catch(e) {}
+}
+async function loadCrmTags() {
+  try { const d = await api('/admin/crm/tags'); crmTags = d.tags||[]; } catch(e) {}
+}
+
+function populateCrmFilters() {
+  const sf = document.getElementById('crmStageFilter');
+  const tf = document.getElementById('crmTagFilter');
+  if (sf) sf.innerHTML = '<option value="">All Stages</option>' + crmStages.map(s=>`<option value="${s._id}">${s.name}</option>`).join('');
+  if (tf) tf.innerHTML = '<option value="">All Tags</option>' + crmTags.map(t=>`<option value="${t._id}">${t.name}</option>`).join('');
+}
+
+async function loadKanban() {
+  const board = document.getElementById('kanbanBoard');
+  board.innerHTML = '<div style="color:#aaa;padding:24px;">Loading...</div>';
+  try {
+    const stageFilter = document.getElementById('crmStageFilter')?.value||'';
+    const tagFilter   = document.getElementById('crmTagFilter')?.value||'';
+    const search      = document.getElementById('crmSearch')?.value||'';
+    let url = '/admin/crm/leads?view=kanban';
+    if (search) url += '&search='+encodeURIComponent(search);
+    if (tagFilter) url += '&tag='+tagFilter;
+    const d = await api(url);
+    const kanban = d.kanban || [];
+    board.innerHTML = kanban.map(col => {
+      const cards = col.leads.map(lead => renderKanbanCard(lead)).join('');
+      const headBg = col.stage.color || '#888';
+      return `<div class="kanban-col">
+        <div class="kanban-col-head" style="background:${headBg};">
+          <h4>${col.stage.name}</h4>
+          <span>${col.leads.length}</span>
+        </div>
+        <div class="kanban-col-body" id="col_${col.stage._id}"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="dropLead(event,'${col.stage._id}')">
+          ${cards || '<div style="padding:12px;color:#ccc;font-size:.78rem;text-align:center;">Drop leads here</div>'}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { board.innerHTML = '<div style="color:red;padding:16px;">Error: '+e.message+'</div>'; }
+}
+
+function renderKanbanCard(lead) {
+  const tags = (lead.tags||[]).map(t=>`<span class="kc-tag" style="background:${t.color}">${t.name}</span>`).join('');
+  const src = {whatsapp:'📱',instagram:'📸',website:'🌐',manual:'✍️'}[lead.source]||'👤';
+  const time = lead.lastSeen ? fmtConvTime(new Date(lead.lastSeen)) : '';
+  return `<div class="kanban-card" draggable="true"
+    style="border-left-color:${lead.stage?.color||'#ddd'}"
+    ondragstart="dragLead(event,'${lead._id}')"
+    ondragend="document.querySelectorAll('.kanban-col-body').forEach(c=>c.classList.remove('drag-over'))">
+    <div class="kc-name">${lead.name||lead.phone}</div>
+    <div class="kc-phone">📱 ${lead.phone}</div>
+    ${tags ? `<div class="kc-tags">${tags}</div>` : ''}
+    <div class="kc-footer">
+      <span class="kc-source">${src} ${lead.source}</span>
+      <span class="kc-time">${time}</span>
+    </div>
+    <div style="display:flex;gap:4px;margin-top:8px;">
+      <button class="kc-btn" onclick="openLeadById('${lead._id}')" title="View">👁️</button>
+      <button class="kc-btn" onclick="quickChat('${lead.phone}')" title="Chat" style="background:#e8f5e9;color:#25D366;">💬</button>
+      <button class="kc-btn" onclick="deleteLead('${lead._id}')" title="Delete" style="background:#ffebee;color:#e74c3c;">🗑️</button>
+    </div>
+  </div>`;
+}
+
+function dragLead(e, leadId) { dragLeadId = leadId; e.dataTransfer.effectAllowed = 'move'; }
+
+async function dropLead(e, stageId) {
+  e.preventDefault();
+  document.querySelectorAll('.kanban-col-body').forEach(c=>c.classList.remove('drag-over'));
+  if (!dragLeadId) return;
+  try {
+    await api('/admin/crm/leads/'+dragLeadId, 'PUT', { stage: stageId === 'unassigned' ? null : stageId });
+    await loadKanban();
+    loadCrmStats();
+  } catch(err) { toast('❌ ' + err.message); }
+}
+
+async function loadCrmList() {
+  const tbody = document.getElementById('crmTableBody');
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px;">Loading...</td></tr>';
+  try {
+    const search = document.getElementById('crmSearch')?.value||'';
+    const stage  = document.getElementById('crmStageFilter')?.value||'';
+    const tag    = document.getElementById('crmTagFilter')?.value||'';
+    let url = '/admin/crm/leads?';
+    if (search) url += 'search='+encodeURIComponent(search)+'&';
+    if (stage)  url += 'stage='+stage+'&';
+    if (tag)    url += 'tag='+tag+'&';
+    const d = await api(url);
+    allLeads = d.leads||[];
+    tbody.innerHTML = allLeads.length ? allLeads.map(lead => {
+      const stagePill = lead.stage ? `<span style="background:${lead.stage.color};color:#fff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">${lead.stage.name}</span>` : '—';
+      const tags = (lead.tags||[]).map(t=>`<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');
+      const src = {whatsapp:'📱',instagram:'📸',website:'🌐',manual:'✍️'}[lead.source]||'👤';
+      const status = lead.status==='won'?'<span class="won-badge">Won ✅</span>':lead.status==='lost'?'<span class="lost-badge">Lost ❌</span>':'<span style="color:#666;">Open</span>';
+      const time = lead.lastSeen ? new Date(lead.lastSeen).toLocaleDateString('en-IN') : '—';
+      return `<tr>
+        <td><strong>${lead.name||'—'}</strong><br><small style="color:#888">${lead.phone}</small></td>
+        <td>${stagePill}</td>
+        <td>${tags||'—'}</td>
+        <td>${src} ${lead.source}</td>
+        <td>${time}</td>
+        <td>${status}</td>
+        <td>
+          <button class="kc-btn" onclick="openLeadById('${lead._id}')" title="View">👁️</button>
+          <button class="kc-btn" onclick="quickChat('${lead.phone}')" style="background:#e8f5e9;color:#25D366;" title="Chat">💬</button>
+          <button class="kc-btn" onclick="deleteLead('${lead._id}')" style="background:#ffebee;color:#e74c3c;" title="Delete">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px;">No leads found</td></tr>';
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="7" style="color:red;padding:16px;">Error: '+e.message+'</td></tr>'; }
+}
+
+async function filterLeads() {
+  if (crmTab === 'kanban') await loadKanban(); else await loadCrmList();
+}
+
+function setCrmTab(tab, btn) {
+  crmTab = tab;
+  document.querySelectorAll('.crm-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('kanbanView').style.display = tab==='kanban' ? 'block' : 'none';
+  document.getElementById('listView').style.display   = tab==='list'   ? 'block' : 'none';
+  if (tab==='kanban') loadKanban(); else loadCrmList();
+}
+
+// Lead detail modal
+async function openLeadById(id) {
+  currentLeadId = id;
+  const modal = document.getElementById('leadModal');
+  modal.style.display = 'flex';
+  const body = document.getElementById('leadModalBody');
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;">Loading...</div>';
+  try {
+    const d = await api('/admin/crm/leads/'+id);
+    const lead = d.lead; const msgs = d.messages||[]; const orders = d.orders||[];
+    const stageSel = crmStages.map(s=>`<option value="${s._id}" ${lead.stage?._id===s._id?'selected':''}>${s.name}</option>`).join('');
+    const tagChecks = crmTags.map(t=>{
+      const has = (lead.tags||[]).some(lt=>lt._id===t._id);
+      return `<label style="display:inline-flex;align-items:center;gap:4px;margin:3px;cursor:pointer;">
+        <input type="checkbox" value="${t._id}" ${has?'checked':''} onchange="toggleLeadTag('${id}','${t._id}',this.checked)">
+        <span class="tag-chip" style="background:${t.color}">${t.name}</span>
+      </label>`;
+    }).join('');
+    const notesList = (lead.notes||[]).map(n=>`
+      <div class="note-item">${n.text}
+        <div><small>${n.createdBy} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</small></div>
+      </div>`).join('');
+    const ordersList = orders.length ? orders.map(o=>`
+      <div class="cp-order-row"><span>#${o.orderId}</span><span>₹${o.total?.toLocaleString('en-IN')}</span><span>${o.status}</span></div>
+    `).join('') : '<div style="color:#aaa;font-size:.78rem;">No orders found</div>';
+    const recentMsgs = msgs.slice(-5).map(m=>`
+      <div style="margin-bottom:6px;"><span style="font-size:.7rem;color:${m.direction==='inbound'?'#25D366':'#7B2D8B'}">${m.direction==='inbound'?'👤':'👨‍💼'}</span>
+      <span style="font-size:.8rem;color:#444;"> ${m.body}</span>
+      <span style="font-size:.68rem;color:#aaa;"> ${new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('');
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div class="lead-section">
+            <h4>Contact Info</h4>
+            <input value="${lead.name||''}" placeholder="Name" class="linp" style="margin-bottom:8px;" onchange="updateLeadField('${id}','name',this.value)">
+            <div class="cp-field"><span class="cp-label">Phone</span>${lead.phone}</div>
+            <div class="cp-field"><span class="cp-label">Email</span><input value="${lead.email||''}" placeholder="Email" style="border:1px solid #ddd;border-radius:6px;padding:4px 8px;font-size:.8rem;font-family:'Nunito',sans-serif;outline:none;width:100%;" onchange="updateLeadField('${id}','email',this.value)"></div>
+            <div class="cp-field"><span class="cp-label">Source</span>${lead.source}</div>
+          </div>
+          <div class="lead-section">
+            <h4>Pipeline Stage</h4>
+            <select class="linp" style="margin:0;" onchange="updateLeadField('${id}','stage',this.value)">${stageSel}</select>
+          </div>
+          <div class="lead-section">
+            <h4>Tags</h4>
+            <div>${tagChecks}</div>
+          </div>
+          <div class="lead-section">
+            <h4>Value</h4>
+            <input type="number" value="${lead.value||0}" placeholder="Expected ₹" class="linp" style="margin:0;" onchange="updateLeadField('${id}','value',this.value)">
+          </div>
+        </div>
+        <div>
+          <div class="lead-section">
+            <h4>Recent Messages</h4>
+            <div style="max-height:140px;overflow-y:auto;background:var(--lt);border-radius:8px;padding:10px;">
+              ${recentMsgs||'<div style="color:#aaa;font-size:.78rem;">No messages yet</div>'}
+            </div>
+          </div>
+          <div class="lead-section">
+            <h4>Orders</h4>
+            ${ordersList}
+          </div>
+          <div class="lead-section">
+            <h4>Notes</h4>
+            <div id="notesList_${id}">${notesList||'<div style="color:#aaa;font-size:.78rem;">No notes yet</div>'}</div>
+            <div class="note-add">
+              <textarea id="noteInput_${id}" placeholder="Add a note..." rows="2"></textarea>
+              <button onclick="addNote('${id}')" style="padding:8px 14px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;align-self:flex-end;">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  } catch(e) { body.innerHTML = '<div style="color:red;padding:16px;">Error: '+e.message+'</div>'; }
+}
+
+function closeLead() { document.getElementById('leadModal').style.display='none'; currentLeadId=null; }
+
+function openInboxForLead() {
+  closeLead();
+  show('inbox');
+}
+
+async function updateLeadField(id, field, value) {
+  try {
+    await api('/admin/crm/leads/'+id, 'PUT', { [field]: value });
+    if (crmTab==='kanban') loadKanban(); else loadCrmList();
+    loadCrmStats();
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function toggleLeadTag(leadId, tagId, checked) {
+  try {
+    const d = await api('/admin/crm/leads/'+leadId);
+    const currentTags = (d.lead.tags||[]).map(t=>t._id||t);
+    const newTags = checked ? [...currentTags, tagId] : currentTags.filter(t=>t!==tagId);
+    await api('/admin/crm/leads/'+leadId, 'PUT', { tags: newTags });
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function addNote(leadId) {
+  const inp = document.getElementById('noteInput_'+leadId);
+  const text = inp?.value?.trim();
+  if (!text) return;
+  try {
+    const d = await api('/admin/crm/leads/'+leadId+'/notes', 'POST', { text });
+    inp.value = '';
+    const nl = document.getElementById('notesList_'+leadId);
+    if (nl) nl.innerHTML = d.notes.map(n=>`<div class="note-item">${n.text}<div><small>${n.createdBy} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</small></div></div>`).join('');
+    toast('✅ Note added');
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+async function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  try {
+    await api('/admin/crm/leads/'+id, 'DELETE');
+    toast('✅ Lead deleted');
+    if (crmTab==='kanban') loadKanban(); else loadCrmList();
+    loadCrmStats();
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+function quickChat(phone) { show('inbox'); setTimeout(()=>{ openConv(phone,phone); },300); }
+
+// Add lead
+function openAddLead() {
+  const modal = document.getElementById('addLeadModal');
+  modal.style.display = 'flex';
+  const stageEl = document.getElementById('leadStage');
+  stageEl.innerHTML = '<option value="">No Stage</option>' + crmStages.map(s=>`<option value="${s._id}">${s.name}</option>`).join('');
+}
+function closeAddLead() { document.getElementById('addLeadModal').style.display='none'; }
+
+async function saveNewLead() {
+  const name=document.getElementById('leadName').value.trim();
+  const phone=document.getElementById('leadPhone').value.trim();
+  if (!phone) { toast('⚠️ Phone is required'); return; }
+  try {
+    await api('/admin/crm/leads','POST',{
+      name,phone,
+      email:document.getElementById('leadEmail').value.trim(),
+      stage:document.getElementById('leadStage').value||null,
+      source:document.getElementById('leadSource').value,
+      value:parseFloat(document.getElementById('leadValue').value)||0,
+      assignedTo:document.getElementById('leadAssigned').value.trim()
+    });
+    closeAddLead();
+    toast('✅ Lead added to CRM!');
+    loadCrm();
+  } catch(e) { toast('❌ '+e.message); }
+}
+
+// ── CRM Settings (stages, tags, templates) ──
+async function loadCrmSettings() {
+  await loadCrmStages(); await loadCrmTags(); await loadWaTemplates();
+  renderStagesList(); renderTagsList(); renderTemplatesList();
+}
+
+function renderStagesList() {
+  const el = document.getElementById('stagesList');
+  el.innerHTML = crmStages.map(s=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--lt2);">
+      <span style="width:16px;height:16px;border-radius:50%;background:${s.color};display:inline-block;"></span>
+      <span style="flex:1;font-weight:700;font-size:.85rem;">${s.name}</span>
+      <span style="font-size:.72rem;color:#aaa;">${s.isWon?'✅ Won':s.isLost?'❌ Lost':'Active'}</span>
+      <button onclick="deleteStage('${s._id}')" style="background:#ffebee;color:#e74c3c;border:none;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;">Delete</button>
+    </div>`).join('') || '<div style="color:#aaa;padding:12px;">No stages yet</div>';
+}
+
+function renderTagsList() {
+  const el = document.getElementById('tagsList');
+  el.innerHTML = crmTags.map(t=>`
+    <div style="display:inline-flex;align-items:center;gap:6px;margin:4px;">
+      <span class="tag-chip" style="background:${t.color}">${t.name}</span>
+      <button onclick="deleteTag('${t._id}')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:.8rem;">✕</button>
+    </div>`).join('') || '<div style="color:#aaa;padding:12px;">No tags yet</div>';
+}
+
+function renderTemplatesList() {
+  const el = document.getElementById('templatesList');
+  el.innerHTML = waTemplates.map(t=>`
+    <div style="padding:12px;border-bottom:1px solid var(--lt2);">
+      <div style="font-weight:700;font-size:.85rem;color:var(--pp);">⚡ ${t.name}</div>
+      <div style="font-size:.8rem;color:#555;margin:4px 0;">${t.body}</div>
+      <button onclick="deleteWaTemplate('${t._id}')" style="background:#ffebee;color:#e74c3c;border:none;border-radius:6px;padding:3px 10px;font-size:.72rem;cursor:pointer;">Delete</button>
+    </div>`).join('') || '<div style="color:#aaa;padding:12px;">No templates yet</div>';
+}
+
+function openAddStage() {
+  const name = prompt('Stage name:'); if (!name) return;
+  const color = prompt('Color (hex):', '#7B2D8B'); if (!color) return;
+  const isWon  = confirm('Is this a "Won" stage?');
+  const isLost = !isWon && confirm('Is this a "Lost" stage?');
+  api('/admin/crm/stages','POST',{name,color,isWon,isLost}).then(()=>{ loadCrmSettings(); toast('✅ Stage added'); }).catch(e=>toast('❌'+e.message));
+}
+
+function openAddTag() {
+  const name = prompt('Tag name:'); if (!name) return;
+  const color = prompt('Tag color (hex):', '#F7941D'); if (!color) return;
+  api('/admin/crm/tags','POST',{name,color}).then(()=>{ loadCrmSettings(); toast('✅ Tag added'); }).catch(e=>toast('❌'+e.message));
+}
+
+function openAddTemplate() {
+  const name = prompt('Template name:'); if (!name) return;
+  const body = prompt('Template message:'); if (!body) return;
+  api('/admin/whatsapp/templates','POST',{name,body}).then(()=>{ loadCrmSettings(); toast('✅ Template added'); }).catch(e=>toast('❌'+e.message));
+}
+
+async function deleteStage(id) {
+  if (!confirm('Delete this stage? All leads in it will become unassigned.')) return;
+  await api('/admin/crm/stages/'+id,'DELETE');
+  loadCrmSettings(); loadCrm(); toast('✅ Stage deleted');
+}
+async function deleteTag(id) {
+  await api('/admin/crm/tags/'+id,'DELETE');
+  loadCrmSettings(); toast('✅ Tag deleted');
+}
+async function deleteWaTemplate(id) {
+  await api('/admin/whatsapp/templates/'+id,'DELETE');
+  loadCrmSettings(); toast('✅ Template deleted');
+}
+
+// Close modals on outside click
+document.addEventListener('click', e => {
+  if (e.target.id==='leadModal') closeLead();
+  if (e.target.id==='addLeadModal') closeAddLead();
+  if (!e.target.closest('#tmplDropdown') && !e.target.closest('.tmpl-btn'))
+    document.getElementById('tmplDropdown')?.classList.remove('show');
+});
+
 // ── MOBILE NAVIGATION ─────────────────────
 function mobShow(id, btn) {
   document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
@@ -2258,13 +3037,180 @@ function mobShow(id, btn) {
   const titles = {
     dashboard:'Dashboard', orders:'Orders', products:'Products', addprod:'Add Product',
     stock:'Stock', customers:'Customers', coupons:'Coupons', banners:'Banners',
-    reports:'Reports', chat:'Live Chat', adminusers:'Admin Users'
+    reports:'Reports', chat:'Live Chat', adminusers:'Admin Users', inbox:'WhatsApp Inbox', crm:'CRM', crmstages:'CRM Settings'
   };
   const t = document.getElementById('mobTitle');
   if (t) t.textContent = titles[id] || id;
   show(id);
 }
 </script>
+
+
+<!-- ══════════════════════════════════
+     WHATSAPP INBOX PANEL
+══════════════════════════════════ -->
+<div class="panel" id="inboxPanel">
+  <div class="inbox-wrap">
+    <!-- Left: conversation list -->
+    <div class="conv-list">
+      <div class="conv-search">
+        <input type="text" id="convSearch" placeholder="🔍 Search conversations..." oninput="filterConvs(this.value)">
+      </div>
+      <div class="conv-filter">
+        <button class="active" onclick="setConvFilter('all',this)">All</button>
+        <button onclick="setConvFilter('unread',this)">Unread</button>
+      </div>
+      <div class="conv-items" id="convList">
+        <div style="padding:24px;text-align:center;color:#aaa;font-size:.85rem;">Loading conversations...</div>
+      </div>
+    </div>
+
+    <!-- Middle: chat window -->
+    <div class="chat-win" id="chatWin">
+      <div class="inbox-empty" id="chatEmpty">
+        <span>💬</span>
+        <p>Select a conversation</p>
+        <small style="font-size:.8rem;">Choose a chat from the left</small>
+      </div>
+      <div id="chatActive" style="display:none;flex:1;display:none;flex-direction:column;height:100%;">
+        <div class="chat-header" id="chatHeader"></div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div style="position:relative;">
+          <div class="tmpl-dropdown" id="tmplDropdown"></div>
+          <div class="chat-input-wrap">
+            <button class="tmpl-btn" onclick="toggleTemplates()" title="Quick replies">⚡</button>
+            <textarea id="msgInput" rows="1" placeholder="Type a message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}" oninput="autoResize(this)"></textarea>
+            <button class="send-btn" onclick="sendWaMsg()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: contact info panel -->
+    <div class="contact-panel" id="contactPanel">
+      <div style="color:#aaa;font-size:.82rem;text-align:center;padding-top:40px;">Select a conversation to see contact details</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CRM PANEL
+══════════════════════════════════ -->
+<div class="panel" id="crmPanel">
+  <!-- Stats row -->
+  <div class="crm-stats" id="crmStats">
+    <div class="crm-stat"><p>Total Leads</p><h3 id="crmTotal">—</h3></div>
+    <div class="crm-stat"><p>Open</p><h3 id="crmOpen" style="color:var(--pp)">—</h3></div>
+    <div class="crm-stat"><p>Won ✅</p><h3 id="crmWon" style="color:#27ae60">—</h3></div>
+    <div class="crm-stat"><p>Lost ❌</p><h3 id="crmLost" style="color:#e74c3c">—</h3></div>
+    <div class="crm-stat"><p>Revenue Won</p><h3 id="crmRevenue" style="color:var(--or)">—</h3><small>from won leads</small></div>
+  </div>
+
+  <!-- Top bar -->
+  <div class="crm-top">
+    <div class="crm-tabs">
+      <button class="crm-tab active" onclick="setCrmTab('kanban',this)">🗂️ Kanban</button>
+      <button class="crm-tab" onclick="setCrmTab('list',this)">📋 List</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="text" id="crmSearch" placeholder="🔍 Search leads..." oninput="filterLeads(this.value)"
+        style="padding:8px 14px;border:1px solid #ddd;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;width:200px;">
+      <select id="crmStageFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;">
+        <option value="">All Stages</option>
+      </select>
+      <select id="crmTagFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;">
+        <option value="">All Tags</option>
+      </select>
+      <button onclick="openAddLead()" style="padding:8px 18px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Lead</button>
+      <button onclick="show('crmstages')" style="padding:8px 14px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">⚙️ Stages</button>
+    </div>
+  </div>
+
+  <!-- Kanban view -->
+  <div id="kanbanView">
+    <div class="kanban-board" id="kanbanBoard">
+      <div style="color:#aaa;padding:24px;">Loading pipeline...</div>
+    </div>
+  </div>
+
+  <!-- List view -->
+  <div id="listView" style="display:none;">
+    <div style="overflow-x:auto;">
+      <table class="crm-table">
+        <thead>
+          <tr>
+            <th>Name / Phone</th><th>Stage</th><th>Tags</th><th>Source</th><th>Last Seen</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="crmTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CRM STAGES MANAGEMENT PANEL
+══════════════════════════════════ -->
+<div class="panel" id="crmstagesPanel">
+  <div class="card">
+    <div class="card-head">
+      <h3>⚙️ Pipeline Stages</h3>
+      <button onclick="openAddStage()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Stage</button>
+    </div>
+    <div id="stagesList"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>🏷️ Tags</h3>
+      <button onclick="openAddTag()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Tag</button>
+    </div>
+    <div id="tagsList"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>⚡ Quick Reply Templates</h3>
+      <button onclick="openAddTemplate()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Template</button>
+    </div>
+    <div id="templatesList"></div>
+  </div>
+</div>
+
+<!-- ══ LEAD DETAIL MODAL ══ -->
+<div id="leadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div class="lead-modal">
+    <div class="lead-modal-head">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">👤 Lead Details</h2>
+      <div style="display:flex;gap:8px;">
+        <button onclick="openInboxForLead()" style="padding:6px 14px;background:#e8f5e9;color:#25D366;border:1px solid #25D366;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">💬 Open Chat</button>
+        <button onclick="closeLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;color:var(--pp);">✕</button>
+      </div>
+    </div>
+    <div id="leadModalBody" style="padding:20px;"></div>
+  </div>
+</div>
+
+<!-- ══ ADD/EDIT LEAD MODAL ══ -->
+<div id="addLeadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)" id="addLeadTitle">➕ Add Lead</h2>
+      <button onclick="closeAddLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);">✕</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;" id="addLeadForm">
+      <input id="leadName" placeholder="Name" class="linp" style="margin:0">
+      <input id="leadPhone" placeholder="Phone (e.g. 919747867853)" class="linp" style="margin:0">
+      <input id="leadEmail" placeholder="Email (optional)" class="linp" style="margin:0">
+      <select id="leadStage" class="linp" style="margin:0"></select>
+      <select id="leadSource" class="linp" style="margin:0">
+        <option value="whatsapp">WhatsApp</option>
+        <option value="instagram">Instagram</option>
+        <option value="website">Website</option>
+        <option value="manual">Manual</option>
+      </select>
+      <input id="leadValue" placeholder="Expected value ₹ (optional)" class="linp" type="number" style="margin:0">
+      <input id="leadAssigned" placeholder="Assigned to" class="linp" style="margin:0">
+      <button onclick="saveNewLead()" class="lbtn">Save Lead</button>
+    </div>
+  </div>
+</div>
 
 <!-- ORDER DETAIL MODAL -->
 <div id="orderDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px">

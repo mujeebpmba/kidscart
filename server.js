@@ -1595,10 +1595,10 @@ app.get('/api/webhook/whatsapp', (req, res) => {
 });
 
 // Incoming messages from Meta
-app.post('/api/webhook/whatsapp', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/api/webhook/whatsapp', async (req, res) => {
   res.sendStatus(200); // Always ack immediately
   try {
-    const body = JSON.parse(req.body.toString());
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     if (body.object !== 'whatsapp_business_account') return;
 
     for (const entry of body.entry || []) {

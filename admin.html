@@ -26,181 +26,273 @@ function loadSocketIO(cb) {
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:100vh;}
 
+/* ── LOGIN ── */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--pp),var(--pp2));}
+.login-box{background:#fff;border-radius:20px;padding:40px 36px;width:360px;max-width:96vw;box-shadow:0 8px 40px rgba(0,0,0,.18);}
+.login-logo{text-align:center;margin-bottom:24px;}
+.login-logo img{height:90px;}
+.login-box h2{text-align:center;font-family:'Poppins',sans-serif;color:var(--pp);font-size:1.4rem;margin-bottom:6px;}
+.login-box p{text-align:center;color:var(--gy);font-size:.85rem;margin-bottom:24px;}
+.linp{width:100%;padding:12px 14px;border:2px solid #ddd;border-radius:var(--rs);font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;transition:.2s;margin-bottom:12px;}
+.linp:focus{border-color:var(--pp);}
+.lbtn{width:100%;padding:13px;background:linear-gradient(135deg,var(--pp),var(--pp2));color:#fff;border:none;border-radius:var(--rs);font-family:'Poppins',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;margin-top:4px;}
+.lbtn:hover{opacity:.92;}
+#loginErr{color:var(--er);font-size:.83rem;text-align:center;margin-top:10px;display:none;}
 
-/* ════════════════════════════
-   WHATSAPP INBOX — MOBILE FIRST
-════════════════════════════ */
+/* ── LAYOUT ── */
+#adminApp{display:none;min-height:100vh;}
+.sidebar{position:fixed;left:0;top:0;width:230px;height:100vh;background:linear-gradient(180deg,var(--pp) 0%,var(--pp2) 100%);overflow-y:auto;z-index:100;display:flex;flex-direction:column;}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.15);}
+.sb-logo img{height:72px;filter:brightness(0) invert(1);object-fit:contain;max-width:180px;}
+.sb-logo small{display:block;color:rgba(255,255,255,.6);font-size:.7rem;margin-top:4px;}
+.sb-nav{flex:1;padding:12px 0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:rgba(255,255,255,.8);font-size:.88rem;font-weight:700;cursor:pointer;border-left:3px solid transparent;transition:.2s;}
+.nav-item:hover,.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#fff;}
+.nav-item span.ico{font-size:1.1rem;width:22px;text-align:center;}
+.sb-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.15);}
+.sb-footer button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;width:100%;}
+.sb-footer button:hover{background:rgba(255,255,255,.25);}
 
-/* ── Desktop inbox layout ── */
-.inbox-wrap {
-  display: flex;
-  height: calc(100vh - 130px);
-  background: #fff;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
+.main{margin-left:230px;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.topbar h2{font-family:'Poppins',sans-serif;color:var(--pp);font-size:1.15rem;font-weight:800;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.admin-badge{background:var(--lt2);color:var(--pp);font-size:.78rem;font-weight:800;padding:5px 12px;border-radius:50px;}
+.content{flex:1;padding:24px 28px;}
+
+/* ── PANELS ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:14px;padding:20px 24px;box-shadow:var(--shadow);margin-bottom:20px;}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-head h3{font-family:'Poppins',sans-serif;font-size:1rem;color:var(--pp);}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:#fff;border-radius:14px;padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--pp);}
+.stat-card.or{border-left-color:var(--or);}
+.stat-card.ok{border-left-color:var(--ok);}
+.stat-card.er{border-left-color:var(--er);}
+.stat-card p{color:var(--gy);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.stat-card h2{font-family:'Poppins',sans-serif;font-size:1.8rem;font-weight:800;color:#222;}
+.stat-card small{font-size:.75rem;color:var(--gy);margin-top:4px;display:block;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+th{background:var(--lt);color:var(--pp);font-weight:800;padding:10px 12px;text-align:left;white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid #f0e5f8;vertical-align:middle;}
+tr:hover td{background:#FAF7FC;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:.72rem;font-weight:800;}
+.b-placed{background:#e3f2fd;color:#1565c0;}
+.b-confirmed{background:#e8f5e9;color:#2e7d32;}
+.b-processing{background:#fff8e1;color:#e65100;}
+.b-shipped{background:#e1f5fe;color:#0277bd;}
+.b-out_for_delivery{background:#f3e5f5;color:#6a1b9a;}
+.b-delivered{background:#e8f5e9;color:#1b5e20;}
+.b-cancelled{background:#ffebee;color:#b71c1c;}
+.b-returned{background:#fce4ec;color:#880e4f;}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:8px;border:none;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;font-size:.82rem;transition:.2s;}
+.btn-sm{padding:5px 12px;font-size:.78rem;}
+.btn-ok-g{background:#e8f5e9;color:#2e7d32;}
+.btn-ok-g:hover{background:#2e7d32;color:#fff;}
+.btn-er-g{background:#ffebee;color:var(--er);}
+.btn-er-g:hover{background:var(--er);color:#fff;}
+.btn-pp{background:var(--pp);color:#fff;}
+.btn-pp:hover{background:var(--pp2);}
+.btn-or{background:var(--or);color:#fff;}
+.btn-ghost{background:var(--lt);color:var(--pp);}
+.btn-ghost:hover{background:var(--lt2);}
+.btn-full{width:100%;padding:12px;border-radius:var(--rs);border:none;background:linear-gradient(135deg,var(--pp),var(--pp2));color:#fff;font-family:'Poppins',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;}
+.btn-full:hover{opacity:.9;}
+
+/* ── FORM ── */
+.fgroup{margin-bottom:14px;}
+.fgroup label{display:block;font-weight:800;font-size:.8rem;color:#555;margin-bottom:5px;}
+.fgroup input,.fgroup select,.fgroup textarea{width:100%;padding:10px 12px;border:2px solid #e0d6ee;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;transition:.2s;}
+.fgroup input:focus,.fgroup select:focus,.fgroup textarea:focus{border-color:var(--pp);}
+.fgroup textarea{resize:vertical;min-height:80px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* ── SEARCH BAR ── */
+.search-bar{display:flex;gap:10px;margin-bottom:16px;}
+.search-bar input{flex:1;padding:9px 14px;border:2px solid #e0d6ee;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;}
+.search-bar input:focus{border-color:var(--pp);}
+.search-bar select{padding:9px 12px;border:2px solid #e0d6ee;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;}
+
+/* ── CHAT ── */
+.chat-grid{display:grid;grid-template-columns:260px 1fr;gap:16px;height:500px;}
+.chat-list{overflow-y:auto;border-right:1px solid #f0e5f8;padding-right:12px;}
+.chat-sess{padding:10px;border-radius:10px;cursor:pointer;margin-bottom:6px;border:2px solid transparent;}
+.chat-sess:hover{background:var(--lt);}
+.chat-sess.active{border-color:var(--pp);background:var(--lt);}
+.chat-sess h4{font-size:.85rem;font-weight:800;}
+.chat-sess p{font-size:.75rem;color:var(--gy);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-sess span.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:5px;}
+.chat-box{display:flex;flex-direction:column;}
+.chat-msgs{flex:1;overflow-y:auto;padding:10px;background:var(--lt);border-radius:10px;margin-bottom:10px;}
+.chat-msg{max-width:75%;margin-bottom:8px;padding:8px 12px;border-radius:10px;font-size:.85rem;line-height:1.5;}
+.chat-admin{background:var(--pp);color:#fff;margin-left:auto;border-radius:10px 10px 0 10px;}
+.chat-customer{background:#fff;border:1px solid #ddd;border-radius:10px 10px 10px 0;}
+.chat-input-row{display:flex;gap:8px;}
+.chat-input-row input{flex:1;padding:10px 12px;border:2px solid #e0d6ee;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;}
+.chat-input-row input:focus{border-color:var(--pp);}
+.chat-empty{text-align:center;color:var(--gy);padding:40px 20px;font-size:.9rem;}
+
+/* ── PROMO BANNER PREVIEW ── */
+.banner-preview{border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.banner-card{border:2px solid #f0e5f8;border-radius:12px;padding:14px;margin-bottom:10px;}
+.banner-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+
+/* ── REPORTS ── */
+.report-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:11px 24px;border-radius:50px;font-size:.88rem;font-weight:700;opacity:0;transition:.3s;z-index:9999;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── LOW STOCK LIST ── */
+.ls-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0e5f8;font-size:.85rem;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .sidebar{width:60px;}
+  .nav-item span.lbl{display:none;}
+  .sb-logo small,.sb-logo span{display:none;}
+  .main{margin-left:60px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .chat-grid{grid-template-columns:1fr;height:auto;}
+  .chat-list{border-right:none;border-bottom:1px solid #f0e5f8;padding-bottom:12px;max-height:180px;}
 }
-.conv-list { width: 300px; flex-shrink: 0; border-right: 1px solid #f0e5f8; display: flex; flex-direction: column; background: #fff; }
-.conv-search { padding: 10px 12px; border-bottom: 1px solid #f0e5f8; }
-.conv-search input { width: 100%; padding: 8px 14px; border: 1.5px solid #e8d5f5; border-radius: 22px; font-family: 'Nunito',sans-serif; font-size: .85rem; outline: none; background: #faf6ff; }
-.conv-search input:focus { border-color: var(--pp); }
-.conv-filter { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid #f0e5f8; }
-.conv-filter button { padding: 5px 14px; border-radius: 22px; border: 1.5px solid #e0d0f0; background: #fff; font-size: .75rem; font-weight: 700; cursor: pointer; font-family: 'Nunito',sans-serif; color: #888; transition: .2s; }
-.conv-filter button.active { background: var(--pp); color: #fff; border-color: var(--pp); }
-.conv-items { flex: 1; overflow-y: auto; }
-.conv-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #f9f4fc; transition: .15s; }
-.conv-item:hover { background: #faf4ff; }
-.conv-item.active { background: #f0e5f8; border-left: 3px solid var(--pp); }
-.conv-avi { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#25D366,#128C7E); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 1.1rem; flex-shrink: 0; }
-.conv-info { flex: 1; min-width: 0; }
-.conv-name { font-size: .86rem; font-weight: 700; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conv-item.unread .conv-name { font-weight: 900; color: #111; }
-.conv-last { font-size: .75rem; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-.conv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.conv-time { font-size: .68rem; color: #bbb; white-space: nowrap; }
-.unread-dot { width: 20px; height: 20px; background: #25D366; border-radius: 50%; color: #fff; font-size: .65rem; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-
-/* Chat window */
-.chat-win { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #f0f2f5; }
-.chat-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #bbb; gap: 10px; background: #f8f4ff; }
-.chat-empty-state span { font-size: 3rem; }
-.chat-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; background: #fff; flex-shrink: 0; }
-.chat-back-btn { display: none; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--pp); padding: 4px; }
-.chat-header-avi { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#25D366,#128C7E); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 1rem; flex-shrink: 0; }
-.chat-header-info { flex: 1; min-width: 0; }
-.chat-header-name { font-weight: 800; font-size: .92rem; color: #222; }
-.chat-header-sub { font-size: .72rem; color: #999; }
-.chat-header-actions { display: flex; gap: 6px; }
-.chat-action-btn { padding: 5px 10px; border-radius: 8px; border: 1.5px solid #e0d0f0; background: #fff; font-size: .72rem; font-weight: 700; cursor: pointer; font-family: 'Nunito',sans-serif; color: #555; white-space: nowrap; }
-.chat-action-btn.green { background: #e8f5e9; border-color: #25D366; color: #25D366; }
-
-.chat-msgs { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; background: #ece5dd; }
-.msg-wrap { display: flex; flex-direction: column; }
-.msg-wrap.out { align-items: flex-end; }
-.msg-wrap.in  { align-items: flex-start; }
-.msg-bubble { max-width: 75%; padding: 8px 12px 6px; border-radius: 8px; font-size: .85rem; line-height: 1.5; word-break: break-word; position: relative; }
-.msg-bubble.in  { background: #fff; border-radius: 0 8px 8px 8px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
-.msg-bubble.out { background: #dcf8c6; border-radius: 8px 0 8px 8px; }
-.msg-time { font-size: .64rem; color: #999; margin-top: 2px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
-.msg-date-div { text-align: center; font-size: .72rem; color: #888; font-weight: 700; background: rgba(255,255,255,.75); padding: 4px 14px; border-radius: 20px; align-self: center; margin: 6px 0; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-
-.chat-input-area { padding: 10px 12px; border-top: 1px solid #e0e0e0; background: #f0f2f5; display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0; }
-.chat-input-area textarea { flex: 1; padding: 10px 14px; border: none; border-radius: 22px; font-family: 'Nunito',sans-serif; font-size: .88rem; outline: none; resize: none; max-height: 100px; line-height: 1.5; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
-.wa-send-btn { width: 44px; height: 44px; border-radius: 50%; background: #25D366; color: #fff; border: none; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(37,211,102,.4); transition: .2s; }
-.wa-send-btn:hover { background: #20b858; transform: scale(1.05); }
-.wa-tmpl-btn { width: 40px; height: 40px; border-radius: 50%; background: #fff; color: var(--pp); border: 1.5px solid #e0d0f0; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-/* Template dropdown */
-.tmpl-dropdown { position: absolute; bottom: 68px; left: 8px; background: #fff; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.15); padding: 6px; min-width: 260px; max-height: 260px; overflow-y: auto; z-index: 100; display: none; border: 1px solid #f0e5f8; }
-.tmpl-dropdown.show { display: block; }
-.tmpl-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: .12s; border-bottom: 1px solid #f9f4fc; }
-.tmpl-item:last-child { border-bottom: none; }
-.tmpl-item:hover { background: var(--lt); }
-.tmpl-item-name { font-size: .82rem; font-weight: 800; color: var(--pp); }
-.tmpl-item-body { font-size: .75rem; color: #666; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-/* Right contact panel */
-.contact-panel { width: 240px; flex-shrink: 0; border-left: 1px solid #f0e5f8; padding: 14px; overflow-y: auto; background: #fafafa; }
-.contact-panel h4 { font-size: .75rem; font-weight: 800; color: var(--pp); text-transform: uppercase; letter-spacing: .5px; margin: 10px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--lt2); }
-.cp-field { font-size: .82rem; color: #444; margin-bottom: 6px; line-height: 1.5; }
-.cp-label { font-size: .68rem; color: #aaa; font-weight: 700; display: block; text-transform: uppercase; margin-bottom: 1px; }
-.tag-chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 20px; font-size: .7rem; font-weight: 700; color: #fff; margin: 2px; }
-
-/* ════════════════════════════
-   CRM — MOBILE FIRST
-════════════════════════════ */
-.crm-stats { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 18px; }
-.crm-stat { background: #fff; border-radius: 12px; padding: 14px 12px; box-shadow: var(--shadow); text-align: center; }
-.crm-stat p { font-size: .68rem; color: #999; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-.crm-stat h3 { font-size: 1.5rem; font-weight: 900; font-family: 'Poppins',sans-serif; }
-.crm-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-.crm-tabs { display: flex; gap: 4px; background: #fff; border-radius: 10px; padding: 4px; box-shadow: var(--shadow); }
-.crm-tab { padding: 7px 16px; border-radius: 7px; font-size: .82rem; font-weight: 700; cursor: pointer; border: none; background: transparent; font-family: 'Nunito',sans-serif; color: #888; transition: .2s; }
-.crm-tab.active { background: var(--pp); color: #fff; }
-
-/* Kanban */
-.kanban-board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 16px; min-height: 420px; }
-.kanban-board::-webkit-scrollbar { height: 4px; }
-.kanban-board::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
-.kanban-col { flex-shrink: 0; width: 220px; display: flex; flex-direction: column; }
-.kanban-col-head { padding: 10px 12px; border-radius: 10px 10px 0 0; display: flex; align-items: center; justify-content: space-between; }
-.kanban-col-head h4 { font-size: .8rem; font-weight: 800; color: #fff; margin: 0; }
-.kanban-col-count { background: rgba(255,255,255,.3); color: #fff; border-radius: 20px; padding: 1px 8px; font-size: .72rem; font-weight: 800; }
-.kanban-col-body { flex: 1; background: #f5f5f7; border-radius: 0 0 10px 10px; padding: 8px; min-height: 350px; transition: .15s; }
-.kanban-col-body.drag-over { background: #e8d5f5; border: 2px dashed var(--pp); }
-.kanban-card { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,.07); cursor: grab; border-left: 3px solid #ddd; transition: .15s; }
-.kanban-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.12); transform: translateY(-1px); }
-.kanban-card:active { cursor: grabbing; }
-.kc-name { font-size: .85rem; font-weight: 800; color: #111; margin-bottom: 3px; }
-.kc-phone { font-size: .74rem; color: #888; margin-bottom: 6px; }
-.kc-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px; }
-.kc-tag { padding: 2px 7px; border-radius: 20px; font-size: .64rem; font-weight: 700; color: #fff; }
-.kc-footer { display: flex; justify-content: space-between; font-size: .68rem; color: #bbb; margin-bottom: 8px; }
-.kc-actions { display: flex; gap: 4px; }
-.kc-btn { height: 28px; padding: 0 8px; border-radius: 6px; border: none; background: var(--lt); color: var(--pp); font-size: .75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; font-family: 'Nunito',sans-serif; font-weight: 700; }
-.kc-btn.red { background: #ffebee; color: #e74c3c; }
-.kc-btn.green { background: #e8f5e9; color: #25D366; }
-
-/* CRM List table */
-.crm-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
-.crm-table th { background: var(--lt); padding: 10px 12px; font-size: .75rem; font-weight: 800; color: var(--pp); text-align: left; white-space: nowrap; }
-.crm-table td { padding: 10px 12px; font-size: .8rem; border-bottom: 1px solid #f5f0f8; color: #333; vertical-align: middle; }
-.crm-table tr:hover td { background: #faf7fd; }
-
-/* Lead modal */
-.lead-modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.lead-modal { background: #fff; border-radius: 20px; width: 100%; max-width: 700px; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
-.lead-modal-head { position: sticky; top: 0; background: #fff; padding: 14px 18px; border-bottom: 1px solid #f0e4f9; display: flex; justify-content: space-between; align-items: center; z-index: 1; border-radius: 20px 20px 0 0; }
-.note-item { background: var(--lt); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: .82rem; color: #444; line-height: 1.5; }
-.note-item small { color: #aaa; font-size: .7rem; }
-.won-badge { background: #e8f5e9; color: #2e7d32; padding: 3px 10px; border-radius: 20px; font-size: .74rem; font-weight: 800; }
-.lost-badge { background: #ffebee; color: #c62828; padding: 3px 10px; border-radius: 20px; font-size: .74rem; font-weight: 800; }
-
-/* ── MOBILE OVERRIDES ── */
-@media(max-width: 768px) {
-  /* Inbox — full screen mobile WhatsApp style */
-  .inbox-wrap { height: calc(100vh - 120px); border-radius: 0; flex-direction: column; }
-  
-  /* Show conv list by default, hide chat */
-  .conv-list { width: 100%; height: 100%; border-right: none; display: flex; }
-  .conv-list.hidden { display: none; }
-  .chat-win { display: none; position: fixed; inset: 0; z-index: 200; background: #ece5dd; flex-direction: column; margin-top: 0; }
-  .chat-win.open { display: flex; }
-  .chat-back-btn { display: block; }
-  .contact-panel { display: none; }
-
-  /* CRM stats - 2+3 grid */
-  .crm-stats { grid-template-columns: repeat(2,1fr) !important; }
-  .crm-stats .crm-stat:last-child { grid-column: 1/-1; }
-  .crm-stat h3 { font-size: 1.3rem; }
-
-  /* Kanban - horizontal scroll on mobile */
-  .kanban-board { min-height: 300px; }
-  .kanban-col { width: 200px; }
-
-  /* Lead modal full screen on mobile */
-  .lead-modal-wrap { padding: 0; align-items: flex-end; }
-  .lead-modal { border-radius: 20px 20px 0 0; max-height: 95vh; }
-  .lead-modal-body-grid { grid-template-columns: 1fr !important; }
-
-  /* CRM top bar wrap */
-  .crm-top { flex-direction: column; align-items: stretch; }
-  .crm-top > div { flex-wrap: wrap; }
-  
-  /* Table wrap */
-  .crm-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .content{padding:14px;}
+  .grid2,.grid3{grid-template-columns:1fr;}
+  .report-row{grid-template-columns:1fr;}
 }
 
-/* ── Product image thumbnails ── */
-.img-thumb-wrap{position:relative;display:inline-block;border-radius:10px;overflow:hidden;border:2px solid var(--lt2);cursor:pointer;vertical-align:top}
-.img-thumb-wrap[data-is-cover="yes"]{border-color:#f7c600!important;box-shadow:0 0 0 3px #f7c60066}
-.img-thumb{width:80px;height:80px;object-fit:cover;display:block}
-.img-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);display:flex;flex-direction:column;justify-content:space-between;padding:4px;opacity:0;transition:.15s}
-.img-thumb-wrap:hover .img-thumb-overlay{opacity:1}
-.img-star-btn,.img-del-btn{border:none;cursor:pointer;border-radius:4px;font-size:.72rem;padding:3px 6px;font-weight:900;line-height:1.3}
-.img-star-btn{background:rgba(0,0,0,.5);color:#fff;align-self:flex-start}
-.img-del-btn{background:var(--er);color:#fff;align-self:flex-end}
-.img-cover-badge{position:absolute;bottom:0;left:0;right:0;background:#f7c600;color:#333;font-size:.58rem;font-weight:900;text-align:center;padding:2px;letter-spacing:.5px}
+/* ═══ WHATSAPP INBOX ═══ */
+.inbox-wrap{display:flex;height:calc(100vh - 130px);background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+.conv-list{width:300px;flex-shrink:0;border-right:1px solid #f0e5f8;display:flex;flex-direction:column;background:#fff;}
+.conv-search{padding:10px 12px;border-bottom:1px solid #f0e5f8;}
+.conv-search input{width:100%;padding:8px 14px;border:1.5px solid #e8d5f5;border-radius:22px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;background:#faf6ff;}
+.conv-search input:focus{border-color:var(--pp);}
+.conv-filter{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid #f0e5f8;}
+.conv-filter button{padding:5px 14px;border-radius:22px;border:1.5px solid #e0d0f0;background:#fff;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
+.conv-filter button.active{background:var(--pp);color:#fff;border-color:var(--pp);}
+.conv-items{flex:1;overflow-y:auto;}
+.conv-item{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;border-bottom:1px solid #f9f4fc;transition:.15s;}
+.conv-item:hover{background:#faf4ff;}
+.conv-item.active{background:#f0e5f8;border-left:3px solid var(--pp);}
+.conv-item.unread .conv-name{font-weight:900;color:#111;}
+.conv-avi{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.1rem;flex-shrink:0;}
+.conv-info{flex:1;min-width:0;}
+.conv-name{font-size:.86rem;font-weight:700;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.conv-last{font-size:.75rem;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.conv-time{font-size:.68rem;color:#bbb;white-space:nowrap;}
+.unread-dot{width:20px;height:20px;background:#25D366;border-radius:50%;color:#fff;font-size:.65rem;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.chat-win{flex:1;display:flex;flex-direction:column;min-width:0;background:#ece5dd;}
+.chat-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#bbb;gap:10px;background:#f8f4ff;}
+.chat-back-btn{display:none;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--pp);padding:4px 8px;}
+.chat-header{padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;background:#fff;flex-shrink:0;}
+.chat-header-avi{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1rem;flex-shrink:0;}
+.chat-header-info{flex:1;min-width:0;}
+.chat-header-name{font-weight:800;font-size:.92rem;color:#222;}
+.chat-header-sub{font-size:.72rem;color:#999;}
+.chat-act-btn{padding:5px 10px;border-radius:8px;border:1.5px solid #e0d0f0;background:#fff;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:#555;white-space:nowrap;}
+.chat-act-btn.green{background:#e8f5e9;border-color:#25D366;color:#25D366;}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:4px;}
+.msg-wrap{display:flex;flex-direction:column;}
+.msg-wrap.out{align-items:flex-end;}
+.msg-wrap.in{align-items:flex-start;}
+.msg-bubble{max-width:75%;padding:8px 12px 4px;border-radius:8px;font-size:.85rem;line-height:1.5;word-break:break-word;}
+.msg-bubble.in{background:#fff;border-radius:0 8px 8px 8px;box-shadow:0 1px 2px rgba(0,0,0,.1);}
+.msg-bubble.out{background:#dcf8c6;border-radius:8px 0 8px 8px;}
+.msg-time{font-size:.64rem;color:#999;margin-top:2px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:3px;}
+.msg-date-div{text-align:center;font-size:.72rem;color:#888;font-weight:700;background:rgba(255,255,255,.8);padding:4px 14px;border-radius:20px;align-self:center;margin:6px 0;}
+.chat-input-area{padding:10px 12px;border-top:1px solid #e0e0e0;background:#f0f2f5;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+.chat-input-area textarea{flex:1;padding:10px 14px;border:none;border-radius:22px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;resize:none;max-height:100px;line-height:1.5;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.wa-send-btn{width:44px;height:44px;border-radius:50%;background:#25D366;color:#fff;border:none;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(37,211,102,.4);}
+.wa-tmpl-btn{width:40px;height:40px;border-radius:50%;background:#fff;color:var(--pp);border:1.5px solid #e0d0f0;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tmpl-dd{position:absolute;bottom:68px;left:8px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.15);padding:6px;min-width:270px;max-height:260px;overflow-y:auto;z-index:100;display:none;border:1px solid #f0e5f8;}
+.tmpl-dd.open{display:block;}
+.tmpl-item{padding:10px 12px;border-radius:8px;cursor:pointer;border-bottom:1px solid #f9f4fc;}
+.tmpl-item:hover{background:var(--lt);}
+.tmpl-item-name{font-size:.82rem;font-weight:800;color:var(--pp);}
+.tmpl-item-body{font-size:.75rem;color:#666;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.contact-panel{width:240px;flex-shrink:0;border-left:1px solid #f0e5f8;padding:14px;overflow-y:auto;background:#fafafa;}
+.contact-panel h4{font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--lt2);}
+.cp-field{font-size:.82rem;color:#444;margin-bottom:6px;line-height:1.5;}
+.cp-lbl{font-size:.68rem;color:#aaa;font-weight:700;display:block;text-transform:uppercase;margin-bottom:1px;}
+.tag-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;color:#fff;margin:2px;}
+
+/* ═══ CRM ═══ */
+.crm-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;}
+.crm-stat{background:#fff;border-radius:12px;padding:14px 12px;box-shadow:var(--shadow);text-align:center;}
+.crm-stat p{font-size:.68rem;color:#999;font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+.crm-stat h3{font-size:1.5rem;font-weight:900;font-family:'Poppins',sans-serif;margin:0;}
+.crm-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.crm-tabs{display:flex;gap:4px;background:#fff;border-radius:10px;padding:4px;box-shadow:var(--shadow);}
+.crm-tab{padding:7px 16px;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
+.crm-tab.active{background:var(--pp);color:#fff;}
+.kanban-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;min-height:420px;}
+.kanban-board::-webkit-scrollbar{height:4px;}
+.kanban-board::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px;}
+.kanban-col{flex-shrink:0;width:220px;display:flex;flex-direction:column;}
+.kanban-col-head{padding:10px 12px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between;}
+.kanban-col-head h4{font-size:.8rem;font-weight:800;color:#fff;margin:0;}
+.k-count{background:rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:1px 8px;font-size:.72rem;font-weight:800;}
+.kanban-col-body{flex:1;background:#f5f5f7;border-radius:0 0 10px 10px;padding:8px;min-height:350px;transition:.15s;}
+.kanban-col-body.drag-over{background:#e8d5f5;border:2px dashed var(--pp);}
+.kanban-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.07);cursor:grab;border-left:3px solid #ddd;transition:.15s;}
+.kanban-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.12);transform:translateY(-1px);}
+.kc-name{font-size:.85rem;font-weight:800;color:#111;margin-bottom:3px;}
+.kc-phone{font-size:.74rem;color:#888;margin-bottom:6px;}
+.kc-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;}
+.kc-tag{padding:2px 7px;border-radius:20px;font-size:.64rem;font-weight:700;color:#fff;}
+.kc-foot{display:flex;justify-content:space-between;font-size:.68rem;color:#bbb;margin-bottom:8px;}
+.kc-acts{display:flex;gap:4px;}
+.kb{height:28px;padding:0 8px;border-radius:6px;border:none;background:var(--lt);color:var(--pp);font-size:.75rem;cursor:pointer;display:inline-flex;align-items:center;gap:3px;font-family:'Nunito',sans-serif;font-weight:700;}
+.kb.red{background:#ffebee;color:#e74c3c;}
+.kb.green{background:#e8f5e9;color:#25D366;}
+.crm-tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+.crm-tbl th{background:var(--lt);padding:10px 12px;font-size:.75rem;font-weight:800;color:var(--pp);text-align:left;white-space:nowrap;}
+.crm-tbl td{padding:10px 12px;font-size:.8rem;border-bottom:1px solid #f5f0f8;color:#333;vertical-align:middle;}
+.crm-tbl tr:hover td{background:#faf7fd;}
+.won-b{background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:800;}
+.lost-b{background:#ffebee;color:#c62828;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:800;}
+.lm-wrap{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}
+.lm-box{background:#fff;border-radius:20px;width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.lm-head{position:sticky;top:0;background:#fff;padding:14px 18px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;z-index:1;border-radius:20px 20px 0 0;}
+.note-item{background:var(--lt);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:.82rem;color:#444;line-height:1.5;}
+.note-item small{color:#aaa;font-size:.7rem;}
+
+/* ═══ MOBILE ═══ */
+@media(max-width:768px){
+  .inbox-wrap{height:calc(100vh - 120px);border-radius:0;}
+  .conv-list{width:100%;border-right:none;}
+  .conv-list.hidden{display:none!important;}
+  .chat-win{display:none!important;position:fixed;inset:0;z-index:250;background:#ece5dd;flex-direction:column;top:54px;bottom:62px;}
+  .chat-win.mob-open{display:flex!important;}
+  .chat-back-btn{display:block;}
+  .contact-panel{display:none;}
+  .crm-stats{grid-template-columns:1fr 1fr!important;}
+  .crm-stats .crm-stat:last-child{grid-column:1/-1;}
+  .crm-top{flex-direction:column;}
+  .crm-tbl-wrap{overflow-x:auto;}
+  .lm-wrap{padding:0;align-items:flex-end;}
+  .lm-box{border-radius:20px 20px 0 0;max-height:95vh;}
+  .lm-grid{grid-template-columns:1fr!important;}
+  .kanban-col{width:200px;}
+}
 </style>
 </head>
 <body>
@@ -211,58 +303,17 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
     <div class="login-logo">
       <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
     </div>
-    <div id="screenLogin">
-      <h2>Admin Panel</h2><p>Sign in to manage your store</p>
-      <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
-      <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
-      <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
-      <div id="loginErr"></div>
-      <p style="text-align:center;margin-top:14px"><a href="#" onclick="showForgot();return false;" style="color:var(--pp);font-size:.83rem;text-decoration:none">Forgot password?</a></p>
-    </div>
-    <div id="screenForgot" style="display:none">
-      <h2>Reset Password</h2><p>Enter your admin email</p>
-      <input class="linp" type="email" id="forgotEmail" placeholder="admin@kidscart.kids">
-      <button class="lbtn" onclick="sendResetLink()">📧 Send Reset Link</button>
-      <div id="forgotMsg" style="font-size:.83rem;text-align:center;margin-top:10px;display:none"></div>
-      <p style="text-align:center;margin-top:14px"><a href="#" onclick="showLoginScr();return false;" style="color:var(--pp);font-size:.83rem;text-decoration:none">← Back to login</a></p>
-    </div>
-    <div id="screenReset" style="display:none">
-      <h2>New Password</h2><p>Enter your new password</p>
-      <input class="linp" type="password" id="newPass1" placeholder="Min 8 characters">
-      <input class="linp" type="password" id="newPass2" placeholder="Confirm password" onkeydown="if(event.key==='Enter')doReset()">
-      <button class="lbtn" onclick="doReset()">✅ Set New Password</button>
-      <div id="resetMsg" style="font-size:.83rem;text-align:center;margin-top:10px;display:none"></div>
-    </div>
+    <h2>Admin Panel</h2>
+    <p>Sign in to manage your store</p>
+    <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
+    <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
+    <div id="loginErr"></div>
   </div>
 </div>
 
 <!-- ── ADMIN APP ── -->
 <div id="adminApp">
-
-  <!-- MOBILE HEADER -->
-  <header class="mob-header" id="mobHeader">
-    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" onerror="this.style.display='none'" style="background:#fff;border-radius:10px;padding:6px;box-sizing:border-box">
-    <span class="mh-title" id="mobTitle">Dashboard</span>
-    <div class="mh-user" id="mobUser"></div>
-  </header>
-
-  <!-- MOBILE BOTTOM NAV -->
-  <nav class="mob-bar" id="mobBar">
-    <div class="mob-bar-inner">
-      <button class="mob-btn active" id="mb-dashboard" onclick="mobShow('dashboard',this)"><span class="mi">📊</span><span class="ml">Home</span></button>
-      <button class="mob-btn" id="mb-orders" onclick="mobShow('orders',this)"><span class="mi">📦</span><span class="ml">Orders</span></button>
-      <button class="mob-btn" id="mb-products" onclick="mobShow('products',this)"><span class="mi">👗</span><span class="ml">Products</span></button>
-      <button class="mob-btn" id="mb-addprod" onclick="mobShow('addprod',this)"><span class="mi">➕</span><span class="ml">Add</span></button>
-      <button class="mob-btn" id="mb-stock" onclick="mobShow('stock',this)"><span class="mi">📋</span><span class="ml">Stock</span></button>
-      <button class="mob-btn" id="mb-customers" onclick="mobShow('customers',this)"><span class="mi">👥</span><span class="ml">Customers</span></button>
-      <button class="mob-btn" id="mb-banners" onclick="mobShow('banners',this)"><span class="mi">🎨</span><span class="ml">Banners</span></button>
-      <button class="mob-btn" id="mb-coupons" onclick="mobShow('coupons',this)"><span class="mi">🎟️</span><span class="ml">Coupons</span></button>
-      <button class="mob-btn" id="mb-reports" onclick="mobShow('reports',this)"><span class="mi">📈</span><span class="ml">Reports</span></button>
-      <button class="mob-btn" id="mb-inbox" onclick="mobShow('inbox',this)"><span class="mi">📱</span><span class="ml">Inbox</span></button>
-      <button class="mob-btn" id="mb-crm" onclick="mobShow('crm',this)"><span class="mi">📊</span><span class="ml">CRM</span></button>
-      <button class="mob-btn" id="mb-logout" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button>
-    </div>
-  </nav>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -280,8 +331,9 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
       <div class="nav-item" onclick="show('coupons',this)"><span class="ico">🎟️</span><span class="lbl">Coupons</span></div>
       <div class="nav-item" onclick="show('banners',this)"><span class="ico">🎨</span><span class="lbl">Banners</span></div>
       <div class="nav-item" onclick="show('chat',this)"><span class="ico">💬</span><span class="lbl">Live Chat</span></div>
-      <div class="nav-item" onclick="show('inbox',this)" id="navInbox"><span class="ico">📱</span><span class="lbl">WhatsApp Inbox</span><span id="inboxBadge" style="display:none;background:#25D366;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;">0</span></div>
+      <div class="nav-item" onclick="show('inbox',this)" id="navInbox"><span class="ico">📱</span><span class="lbl">WhatsApp</span><span id="inboxBadge" style="display:none;background:#25D366;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;margin-left:auto;align-items:center;justify-content:center;">0</span></div>
       <div class="nav-item" onclick="show('crm',this)"><span class="ico">📊</span><span class="lbl">CRM</span></div>
+      <div class="nav-item" onclick="show('crmstages',this)"><span class="ico">⚙️</span><span class="lbl">CRM Settings</span></div>
       <div class="nav-item" onclick="show('reports',this)"><span class="ico">📈</span><span class="lbl">Reports</span></div>
       <div class="nav-item" id="adminUsersNav" style="display:none" onclick="show('adminusers',this)"><span class="ico">🔐</span><span class="lbl">Admin Users</span></div>
     </nav>
@@ -349,8 +401,8 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
         </div>
 
         <!-- Update Status Modal -->
-        <div id="orderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeOrderModal()">
-          <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:500px;position:relative;max-height:90vh;overflow-y:auto;" onclick="event.stopPropagation()">
+        <div id="orderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:16px;padding:28px;width:420px;max-width:94vw;position:relative;">
             <button onclick="closeOrderModal()" style="position:absolute;top:12px;right:14px;border:none;background:none;font-size:1.2rem;cursor:pointer;color:#888;">✕</button>
             <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);margin-bottom:18px;">📦 Update Order #<span id="modalOrderId"></span></h3>
             <div class="fgroup">
@@ -426,8 +478,8 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
           <div class="card-head"><h3>📋 Stock Management</h3><span style="font-size:.8rem;color:var(--gy);">Click a stock value to edit inline</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Product</th><th>0-3M</th><th>3-6M</th><th>6-12M</th><th>1-2Y</th><th>2-3Y</th><th>3-4Y</th><th>4-5Y</th><th>5-6Y</th><th>6-8Y</th><th>8-10Y</th><th>10-12Y</th><th>12-15Y</th><th>Total</th><th>Save</th></tr></thead>
-              <tbody id="stockTableBody"><tr><td colspan="15" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
+              <thead><tr><th>Product</th><th>XS/0-3M</th><th>S/3-6M</th><th>M/6-12M</th><th>L/1-2Y</th><th>XL/2-4Y</th><th>XXL/4-6Y</th><th>Total</th><th>Save</th></tr></thead>
+              <tbody id="stockTableBody"><tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -443,14 +495,11 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
             <!-- Row 1: Basic Info -->
             <div class="grid2">
               <div class="fgroup"><label>Product Name *</label><input type="text" name="name" placeholder="e.g. Floral Frock Dress" required></div>
-            <div class="fgroup" style="margin-bottom:12px"><label style="font-size:.78rem">📊 Display Order <span style="color:var(--gy);font-weight:400">(1=first, 0=default newest-first)</span></label><input type="number" name="order" id="prodOrder" min="0" max="9999" value="0" style="width:100%;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none"></div>
-
               <div class="fgroup"><label>Category *</label>
                 <select name="category" required>
-                  <option value="">Select Category…</option>
+                  <option value="">Select…</option>
                   <option>Girls</option><option>Boys</option><option>Baby</option>
-                  <option>Western</option><option>Party</option><option>Ethnic</option>
-                  <option>Festive</option><option>Winter</option><option>School</option><option>Accessories</option>
+                  <option>Party</option><option>Ethnic</option><option>Winter</option><option>School</option><option>Accessories</option>
                 </select>
               </div>
               <div class="fgroup"><label>Selling Price (₹) *</label><input type="number" name="price" placeholder="599" required min="1"></div>
@@ -476,53 +525,28 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
             <!-- Product Images - Upload -->
             <div style="margin-bottom:16px;background:var(--lt);border-radius:12px;padding:16px;">
               <div style="font-weight:800;font-size:.88rem;color:var(--pp);margin-bottom:10px;">🖼️ Product Images (Upload from computer)</div>
-              <!-- Hidden input to track existing images on edit -->
-              <input type="hidden" id="existingImages" value="">
-              <input type="hidden" id="coverImageUrl" value="">
-
-              <!-- Existing images (shown when editing) -->
-              <div id="existingImgRow" style="display:none;margin-bottom:12px">
-                <div style="font-size:.78rem;font-weight:800;color:var(--pp);margin-bottom:6px">📸 Current Images — tap ⭐ to set cover, ✕ to delete</div>
-                <div id="existingImgPreviews" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-              </div>
-
-              <!-- New images upload -->
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-                <label style="background:var(--pp);color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:800;font-size:.82rem;display:inline-flex;align-items:center;gap:6px">
-                  📁 Add Images
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+                <label style="background:var(--pp);color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:800;font-size:.82rem;">
+                  📁 Choose Images
                   <input type="file" id="prodImageInput" accept="image/*" multiple style="display:none" onchange="previewProdImages(this)">
                 </label>
-                <span style="font-size:.75rem;color:var(--gy)">JPG/PNG/WebP • Max 5MB each</span>
+                <span style="font-size:.78rem;color:var(--gy)">Or paste URL below • Max 5MB each • JPG/PNG/WebP</span>
               </div>
-              <div id="prodImagePreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;min-height:10px"></div>
-              
-              <input type="text" id="prodThumbUrl" name="thumbnail" placeholder="Or paste an image URL here" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;margin-bottom:6px">
-              <div style="font-size:.75rem;color:var(--gy)">⭐ = Cover/thumbnail image shown in shop listing</div>
+              <div id="prodImagePreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;min-height:20px"></div>
+              <input type="text" id="prodThumbUrl" name="thumbnail" placeholder="Paste image URL (optional if uploading)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;margin-bottom:6px">
+              <div style="font-size:.75rem;color:var(--gy)">First image becomes the thumbnail. You can upload multiple images for gallery view.</div>
             </div>
             
-            <!-- Colors -->
-            <div style="margin-bottom:16px;background:var(--lt);border-radius:12px;padding:14px;">
-              <div style="font-weight:800;font-size:.88rem;color:var(--pp);margin-bottom:8px;">🎨 Available Colors</div>
-              <input type="text" id="colorsInput" placeholder="e.g. Red, Blue, Pink, White" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;margin-bottom:8px" oninput="renderColorTags()">
-              <div id="colorTags" style="display:flex;gap:6px;flex-wrap:wrap;min-height:10px"></div>
-              <div style="font-size:.75rem;color:var(--gy);margin-top:6px">Separate colors with commas.</div>
-            </div>
-            <!-- Stock by Size 0M-15Y -->
+            <!-- Stock by Size -->
             <div style="margin-bottom:16px;">
-              <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:10px;">📦 Stock by Size (0 months → 15 years)</div>
+              <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:10px;">📦 Initial Stock by Size</div>
               <div class="grid3">
-                <div class="fgroup"><label>0–3 Months</label><input type="number" name="s_0_3M" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>3–6 Months</label><input type="number" name="s_3_6M" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>6–12 Months</label><input type="number" name="s_6_12M" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>1–2 Years</label><input type="number" name="s_1_2Y" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>2–3 Years</label><input type="number" name="s_2_3Y" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>3–4 Years</label><input type="number" name="s_3_4Y" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>4–5 Years</label><input type="number" name="s_4_5Y" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>5–6 Years</label><input type="number" name="s_5_6Y" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>6–8 Years</label><input type="number" name="s_6_8Y" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>8–10 Years</label><input type="number" name="s_8_10Y" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>10–12 Years</label><input type="number" name="s_10_12Y" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>12–15 Years</label><input type="number" name="s_12_15Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>XS / 0-3M</label><input type="number" name="stockXS" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>S / 3-6M</label><input type="number" name="stockS" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>M / 6-12M</label><input type="number" name="stockM" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>L / 1-2Y</label><input type="number" name="stockL" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>XL / 2-4Y</label><input type="number" name="stockXL" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>XXL / 4-6Y</label><input type="number" name="stockXXL" placeholder="0" min="0" value="0"></div>
               </div>
             </div>
             
@@ -671,14 +695,6 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
                 </label>
                 <span style="font-size:.75rem;color:var(--gy);margin-left:8px">1200×400px ideal • JPG/PNG</span>
                 <div id="bannerImagePreview" style="margin-top:10px"></div>
-                <div id="bannerPosDragger" style="display:none;margin-top:10px">
-                  <div style="font-size:.78rem;font-weight:800;color:var(--pp);margin-bottom:6px">🖱️ Drag to reposition image</div>
-                  <div id="bannerDragBox" style="width:100%;height:110px;border-radius:10px;overflow:hidden;cursor:grab;border:2px dashed var(--pp)">
-                    <img id="bannerDragImg" src="" style="width:100%;height:100%;object-fit:cover;object-position:50% 50%;pointer-events:none" draggable="false">
-                  </div>
-                  <input type="hidden" id="bannerImgPosX" value="50">
-                  <input type="hidden" id="bannerImgPosY" value="50">
-                </div>
                 <input type="hidden" id="bannerImageUrl">
                 <div style="margin-top:8px"><input type="text" id="bannerImageLink" placeholder="Or paste image URL" style="width:100%;padding:8px;border:1.5px solid #ddd;border-radius:7px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none" oninput="setBannerImageFromUrl(this.value)"></div>
               </div>
@@ -692,34 +708,6 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
               </div>
             </form>
           </div>
-          <!-- Announcement Bar Manager -->
-          <div class="card" style="margin-bottom:18px">
-            <div class="card-head"><h3>📢 Announcement Bar</h3><span style="font-size:.78rem;color:var(--gy)">Purple strip at the top of the shop page</span></div>
-            <div style="padding:16px 18px">
-              <div class="fgroup">
-                <label>Bar Text</label>
-                <input type="text" id="announceText" placeholder="e.g. 🎉 Sale is Live! Use CODE10 for 10% off" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none">
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <div class="fgroup">
-                  <label>Link (optional)</label>
-                  <input type="text" id="announceLink" placeholder="#products or https://..." style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none">
-                </div>
-                <div class="fgroup">
-                  <label>Link Button Text</label>
-                  <input type="text" id="announceLinkText" placeholder="Shop Now →" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none">
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:14px;margin-top:8px">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;font-weight:700">
-                  <input type="checkbox" id="announceHidden" style="width:16px;height:16px"> Hide bar (turn off)
-                </label>
-                <button onclick="saveAnnouncement()" style="background:var(--pp);color:#fff;border:none;padding:9px 22px;border-radius:8px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.85rem">💾 Save</button>
-              </div>
-              <div id="announcePreview" style="margin-top:12px;background:linear-gradient(135deg,#7B2D8B,#9b3db5);color:#fff;text-align:center;padding:8px 16px;border-radius:8px;font-size:.8rem;font-weight:700;display:none"></div>
-            </div>
-          </div>
-
           <div class="card">
             <div class="card-head"><h3>All Banners</h3><span style="font-size:.78rem;color:var(--gy)">Banners show full-width at top of shop</span></div>
             <div id="bannersList"><p style="color:var(--gy);text-align:center;padding:24px;">Loading…</p></div>
@@ -777,7 +765,7 @@ body{font-family:'Nunito',sans-serif;background:#F5F0F8;color:#222;min-height:10
 
 <script>
 // ── CONFIG ──────────────────────────────────
-const API = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://kidscart-production.up.railway.app/api';
+const API = '/api';
 let token = localStorage.getItem('kc_admin_token') || '';
 let adminUser = null;
 let ordersData = [];
@@ -811,7 +799,7 @@ window.addEventListener('DOMContentLoaded', () => {
 async function tryAutoLogin() {
   try {
     const r = await apiFetch('/auth/me');
-    if (r.user && ['admin','super_admin'].includes(r.user.role)) {
+    if (r.user && r.user.role === 'admin') {
       adminUser = r.user;
       showApp();
     } else { showLoginScreen(); }
@@ -871,7 +859,7 @@ const panelTitles = {
   dashboard:'Dashboard', orders:'Orders', products:'Product Catalog',
   stock:'Stock Management', addprod:'Add New Product', customers:'Customers',
   coupons:'Coupons', banners:'Banners & Promotions', chat:'Live Chat', reports:'Reports & Analytics',
-  adminusers:'Admin Users', inbox:'📱 WhatsApp Inbox', crm:'📊 CRM — Pipeline', crmstages:'⚙️ CRM Settings'
+  adminusers:'Admin Users', inbox:'📱 WhatsApp Inbox', crm:'📊 CRM', crmstages:'⚙️ CRM Settings'
 };
 
 function show(id, navEl) {
@@ -885,9 +873,9 @@ function show(id, navEl) {
   const loaders = {
     dashboard: loadDashboard, orders: loadOrders, products: loadProducts,
     stock: loadStock, customers: loadCustomers, coupons: loadCoupons,
-    banners: () => { loadBanners(); loadAnnouncement(); }, chat: loadChats, reports: () => setReportRange(30),
-    inbox: loadInbox, crm: loadCrm, crmstages: loadCrmSettings,
-    adminusers: loadAdminUsers
+    banners: loadBanners, chat: loadChats, reports: () => setReportRange(30),
+    adminusers: loadAdminUsers,
+    inbox: loadInbox, crm: loadCrm, crmstages: loadCrmSettings
   };
   if (loaders[id]) loaders[id]();
 }
@@ -906,9 +894,6 @@ async function apiFetch(path, method = 'GET', body = null) {
   if (!r.ok) throw new Error(d.error || 'Request failed (' + r.status + ')');
   return d;
 }
-
-// Alias so CRM/Inbox code works with same api() shorthand
-const api = apiFetch;
 
 // Fix image src - converts /uploads/file.jpg → absolute URL
 function fixImgSrc(src) {
@@ -956,7 +941,7 @@ function renderDashOrders(orders) {
       <td><b>#${o.orderId}</b></td>
       <td>${o.user?.name || '—'}</td>
       <td>₹${(o.total || 0).toLocaleString('en-IN')}</td>
-      <td><span class="badge b-${o.status}" style="text-transform:capitalize;white-space:nowrap">${{placed:'📋 Placed',confirmed:'✅ Confirmed',processing:'⚙️ Processing',shipped:'🚚 Shipped',out_for_delivery:'🏍️ Out for Delivery',delivered:'🎉 Delivered',cancelled:'❌ Cancelled',returned:'↩️ Returned'}[o.status]||o.status}</span></td>
+      <td><span class="badge b-${o.status}">${o.status}</span></td>
       <td><button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}')">Update</button></td>
     </tr>`).join('');
 }
@@ -998,7 +983,7 @@ function renderOrders(orders) {
         <small style="color:${o.payment?.status==='paid'?'var(--ok)':'var(--or)'};">${o.payment?.status||'pending'}</small>
       </td>
       <td>${fmtDate(o.createdAt)}</td>
-      <td><span class="badge b-${o.status}" style="text-transform:capitalize;white-space:nowrap">${{placed:'📋 Placed',confirmed:'✅ Confirmed',processing:'⚙️ Processing',shipped:'🚚 Shipped',out_for_delivery:'🏍️ Out for Delivery',delivered:'🎉 Delivered',cancelled:'❌ Cancelled',returned:'↩️ Returned'}[o.status]||o.status}</span></td>
+      <td><span class="badge b-${o.status}">${o.status}</span></td>
       <td>
         <div style="display:flex;gap:5px;flex-wrap:wrap;">
           <button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}','${o.payment?.method||'cod'}','${o.payment?.status||'pending'}')">✏️ Update</button>
@@ -1060,95 +1045,18 @@ async function deleteOrder(id, orderId) {
 
 async function viewOrderDetail(id) {
   try {
-    let o;
-    // Try admin single-order route first, fallback to list search
-    try {
-      const r = await apiFetch('/admin/orders/' + id);
-      o = r.order;
-    } catch {
-      const r = await apiFetch('/admin/orders?limit=200');
-      o = (r.orders || []).find(x => x._id === id);
-    }
+    const r = await apiFetch('/admin/orders?limit=200');
+    const o = (r.orders || []).find(x => x._id === id);
     if (!o) { toast('Order not found'); return; }
-    const addr = o.shippingAddress || {};
-    const statusEmoji = {placed:'📋',confirmed:'✅',processing:'⚙️',shipped:'🚚',out_for_delivery:'🏍️',delivered:'🎉',cancelled:'❌',returned:'↩️'};
-    const steps = ['placed','confirmed','processing','shipped','out_for_delivery','delivered'];
-    const si = steps.indexOf(o.status);
-    
-    document.getElementById('ordDetailBody').innerHTML = `
-      <div style="background:var(--lt);border-radius:12px;padding:16px;margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3 style="font-size:1rem;font-weight:900;color:var(--pp)">Order #${o.orderId}</h3>
-          <span class="badge b-${o.status}" style="text-transform:capitalize">${statusEmoji[o.status]||'📦'} ${o.status.replace('_',' ')}</span>
-        </div>
-        <p style="font-size:.82rem;color:var(--gy)">${new Date(o.createdAt).toLocaleString('en-IN')}</p>
-      </div>
-
-      <!-- Customer + Address -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px">
-          <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:8px">👤 CUSTOMER</div>
-          <p style="font-weight:800;font-size:.9rem">${o.user?.name||'—'}</p>
-          <p style="font-size:.78rem;color:var(--gy)">${o.user?.email||''}</p>
-          <p style="font-size:.82rem;margin-top:4px">${o.user?.phone||''}</p>
-        </div>
-        <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px">
-          <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:8px">📍 DELIVERY ADDRESS</div>
-          <p style="font-weight:800;font-size:.88rem">${addr.name||'—'}</p>
-          <p style="font-size:.78rem;color:#444;line-height:1.5">${addr.line1||''}${addr.line2?', '+addr.line2:''}<br>${addr.city||''} ${addr.state||''} – ${addr.pincode||''}</p>
-          <p style="font-size:.82rem;margin-top:4px">📞 ${addr.phone||'—'}</p>
-        </div>
-      </div>
-
-      <!-- Order tracking -->
-      <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px;margin-bottom:16px">
-        <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:12px">📦 ORDER TRACKING</div>
-        <div style="position:relative">
-          ${steps.map((st,i)=>{
-            const done = i <= si;
-            const evt = o.tracking?.find(t=>t.status===st);
-            return '<div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">' +
-              '<div style="display:flex;flex-direction:column;align-items:center;min-width:28px">' +
-              '<div style="width:28px;height:28px;border-radius:50%;background:'+(done?'var(--pp)':'#eee')+';color:'+(done?'#fff':'#aaa')+';display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0">'+(done?(statusEmoji[st]||'✓'):'·')+'</div>' +
-              (i<steps.length-1?'<div style="width:2px;height:20px;background:'+(done?'var(--pp)':'#eee')+'"></div>':'') +
-              '</div>' +
-              '<div style="padding-top:4px">' +
-              '<div style="font-weight:800;font-size:.82rem;text-transform:capitalize;color:'+(done?'#222':'#aaa')+'">'+st.replace('_',' ')+'</div>' +
-              (evt?'<div style="font-size:.73rem;color:var(--gy)">'+new Date(evt.time).toLocaleString('en-IN')+(evt.message?'<br>'+evt.message:'')+'</div>':'<div style="font-size:.73rem;color:#ccc">Pending</div>') +
-              '</div></div>';
-          }).join('')}
-        </div>
-      </div>
-
-      <!-- Items -->
-      <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px;margin-bottom:16px">
-        <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:10px">🛍️ ITEMS (${o.items?.length||0})</div>
-        ${(o.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f8f0ff;font-size:.82rem"><span>${i.emoji||'📦'} ${i.name} <span style="color:var(--gy)">${i.size?'('+i.size+')':''} ×${i.qty}</span></span><span style="font-weight:800">₹${(i.price*i.qty).toLocaleString('en-IN')}</span></div>`).join('')}
-        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.82rem;color:var(--gy)"><span>Subtotal</span><span>₹${(o.subtotal||0).toLocaleString('en-IN')}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.82rem;color:var(--gy)"><span>Delivery</span><span>₹${(o.deliveryFee||0).toLocaleString('en-IN')}</span></div>
-        ${o.discount?`<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.82rem;color:var(--ok)"><span>Discount</span><span>-₹${o.discount.toLocaleString('en-IN')}</span></div>`:''}
-        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;font-weight:900;color:var(--pp)"><span>Total</span><span>₹${(o.total||0).toLocaleString('en-IN')}</span></div>
-      </div>
-
-      <!-- Payment -->
-      <div style="background:#fff;border:1.5px solid #f0e4f9;border-radius:12px;padding:14px">
-        <div style="font-weight:800;font-size:.8rem;color:var(--pp);margin-bottom:8px">💳 PAYMENT</div>
-        <div style="display:flex;gap:16px;font-size:.85rem">
-          <span>Method: <b>${(o.payment?.method||'COD').toUpperCase()}</b></span>
-          <span>Status: <b style="color:${o.payment?.status==='paid'?'var(--ok)':'var(--or)'}">${o.payment?.status||'pending'}</b></span>
-        </div>
-        ${o.payment?.transactionId?`<p style="font-size:.75rem;color:var(--gy);margin-top:4px">Txn: ${o.payment.transactionId}</p>`:''}
-      </div>
-    `;
-    document.getElementById('orderDetailModal').style.display = 'flex';
+    const info = `Order #${o.orderId}\nCustomer: ${o.user?.name} (${o.user?.email})\nItems:\n${o.items.map(i => `  ${i.emoji} ${i.name} (${i.size}) x${i.qty} = ₹${i.price * i.qty}`).join('\n')}\nSubtotal: ₹${o.subtotal}\nDelivery: ₹${o.deliveryFee || 0}\nDiscount: ₹${o.discount || 0}\nTotal: ₹${o.total}\nPayment: ${o.payment?.method?.toUpperCase()}\nStatus: ${o.status}\nAddress: ${o.shippingAddress?.name}, ${o.shippingAddress?.line1}, ${o.shippingAddress?.city} - ${o.shippingAddress?.pincode}`;
+    alert(info);
   } catch(e) { toast('❌ ' + e.message); }
 }
-function closeOrderDetail() { document.getElementById('orderDetailModal').style.display = 'none'; }
 
 // ── PRODUCTS ────────────────────────────────
 async function loadProducts() {
   try {
-    const r = await apiFetch('/admin/products?limit=500');
+    const r = await apiFetch('/products?limit=200');
     prodsData = r.products || [];
     renderProducts(prodsData);
   } catch(e) {
@@ -1158,7 +1066,7 @@ async function loadProducts() {
 
 function renderProducts(prods) {
   const el = document.getElementById('productsTable');
-  if (!prods.length) { el.innerHTML = '<tr><td colspan="15" style="text-align:center;color:var(--gy);padding:24px;">No products found</td></tr>'; return; }
+  if (!prods.length) { el.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">No products found</td></tr>'; return; }
   el.innerHTML = prods.map(p => {
     const off = p.mrp > p.price ? Math.round((1 - p.price/p.mrp)*100) : 0;
     const profit = p.costPrice > 0 ? Math.round(((p.price - p.costPrice) / p.price) * 100) : null;
@@ -1195,169 +1103,33 @@ function filterProductList() {
 // ── PRODUCT IMAGE UPLOAD ────────────────────
 let uploadedProdImages = [];
 
-// ══════════════════════════════════════════════════════════
-// IMAGE MANAGEMENT — complete rewrite
-// Uses window._newProdFiles[] to store File objects safely
-// ══════════════════════════════════════════════════════════
-
-// Global store for pending file uploads
-window._newProdFiles = window._newProdFiles || [];
-
 function previewProdImages(input) {
   const preview = document.getElementById('prodImagePreviews');
   const files = Array.from(input.files);
-  if (!files.length) return;
-
   files.forEach(file => {
-    const fileIndex = window._newProdFiles.length;
-    window._newProdFiles.push(file);  // ← store File object
-
     const reader = new FileReader();
     reader.onload = e => {
       const div = document.createElement('div');
-      div.className = 'img-thumb-wrap';
-      div.dataset.fileIndex = fileIndex;  // reference to File in array
-      div.innerHTML = `
-        <img src="${e.target.result}" class="img-thumb">
-        <div class="img-thumb-overlay">
-          <button type="button" class="img-star-btn" onclick="setCoverNew(this)" title="Set as cover">⭐</button>
-          <button type="button" class="img-del-btn" onclick="removeNewImg(this)" title="Remove">✕</button>
-        </div>
-        <div class="img-cover-badge" style="display:none">COVER</div>`;
+      div.style.cssText = 'position:relative;display:inline-block';
+      div.innerHTML = `<img src="${e.target.result}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--pp)">
+        <div style="position:absolute;top:-4px;right:-4px;background:var(--er);color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;font-weight:900" onclick="this.parentElement.remove()">×</div>`;
       preview.appendChild(div);
     };
     reader.readAsDataURL(file);
   });
-
-  // Reset input so same file can be selected again
-  input.value = '';
-}
-
-function removeNewImg(btn) {
-  const wrap = btn.closest('.img-thumb-wrap');
-  const idx = parseInt(wrap.dataset.fileIndex);
-  // Null out the file in array (keep indices stable)
-  if (!isNaN(idx)) window._newProdFiles[idx] = null;
-  wrap.remove();
-}
-
-function setCoverNew(btn) {
-  // Clear all cover marks everywhere
-  document.querySelectorAll('.img-thumb-wrap').forEach(w => {
-    w.dataset.isCover = '';
-    const sb = w.querySelector('.img-star-btn');
-    if (sb) sb.style.background = 'rgba(0,0,0,.5)';
-    const cb = w.querySelector('.img-cover-badge');
-    if (cb) cb.style.display = 'none';
-  });
-  // Mark this one
-  const wrap = btn.closest('.img-thumb-wrap');
-  wrap.dataset.isCover = 'yes';
-  btn.style.background = '#f7c600';
-  const cb = wrap.querySelector('.img-cover-badge');
-  if (cb) cb.style.display = 'block';
-  // Clear existing cover selection
-  document.getElementById('coverImageUrl').value = '';
-}
-
-function setCoverExisting(url, btn) {
-  // Clear all cover marks everywhere
-  document.querySelectorAll('.img-thumb-wrap').forEach(w => {
-    w.dataset.isCover = '';
-    const sb = w.querySelector('.img-star-btn');
-    if (sb) sb.style.background = 'rgba(0,0,0,.5)';
-    const cb = w.querySelector('.img-cover-badge');
-    if (cb) cb.style.display = 'none';
-  });
-  // Mark this one
-  const wrap = btn.closest('.img-thumb-wrap');
-  wrap.dataset.isCover = 'yes';
-  btn.style.background = '#f7c600';
-  const cb = wrap.querySelector('.img-cover-badge');
-  if (cb) cb.style.display = 'block';
-  document.getElementById('coverImageUrl').value = url;
-}
-
-function removeExistingImg(url, btn) {
-  btn.closest('.img-thumb-wrap').remove();
-  // Remove from hidden JSON list
-  try {
-    const raw = document.getElementById('existingImages').value;
-    const arr = raw ? JSON.parse(raw) : [];
-    const filtered = arr.filter(u => u !== url && fixImgSrc(u) !== url);
-    document.getElementById('existingImages').value = JSON.stringify(filtered);
-  } catch(e) {}
-  // If this was the cover, clear coverImageUrl
-  if (document.getElementById('coverImageUrl').value === url) {
-    document.getElementById('coverImageUrl').value = '';
-  }
-}
-
-function renderExistingImages(images, thumbnail) {
-  const row = document.getElementById('existingImgRow');
-  const preview = document.getElementById('existingImgPreviews');
-  if (!images || !images.length) { row.style.display = 'none'; return; }
-  row.style.display = 'block';
-  preview.innerHTML = '';
-
-  const thumbNorm = fixImgSrc(thumbnail) || '';
-
-  images.forEach(img => {
-    const url = fixImgSrc(img) || img;
-    const isCover = url === thumbNorm || img === thumbnail;
-    const div = document.createElement('div');
-    div.className = 'img-thumb-wrap';
-    div.dataset.url = url;
-    if (isCover) {
-      div.dataset.isCover = 'yes';
-    }
-    div.innerHTML = `
-      <img src="${url}" class="img-thumb" onerror="this.style.opacity='.3'">
-      <div class="img-thumb-overlay">
-        <button type="button" class="img-star-btn" 
-          style="background:${isCover ? '#f7c600' : 'rgba(0,0,0,.5)'}"
-          onclick="setCoverExisting('${url.replace(/'/g,"\'")}',this)" 
-          title="Set as cover">⭐</button>
-        <button type="button" class="img-del-btn" 
-          onclick="removeExistingImg('${url.replace(/'/g,"\'")}',this)" 
-          title="Delete">✕</button>
-      </div>
-      <div class="img-cover-badge" style="display:${isCover ? 'block' : 'none'}">COVER</div>`;
-    preview.appendChild(div);
-  });
-
-  // Store as JSON for saveProduct to read
-  document.getElementById('existingImages').value = JSON.stringify(images);
-  document.getElementById('coverImageUrl').value = thumbNorm || fixImgSrc(images[0]) || images[0];
 }
 
 async function uploadProdImages() {
-  // Upload from our stored File array (not input.files which may be cleared)
-  const validFiles = (window._newProdFiles || []).filter(Boolean);
-  if (!validFiles.length) return [];
-
+  const input = document.getElementById('prodImageInput');
+  if (!input.files.length) return [];
   const fd = new FormData();
-  validFiles.forEach(f => fd.append('images', f));
-
-  const r = await fetch(
-    API.replace('/api','') + '/api/admin/upload',
-    { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd }
-  );
+  Array.from(input.files).forEach(f => fd.append('images', f));
+  const r = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
   const d = await r.json();
   if (!r.ok) throw new Error(d.error || 'Upload failed');
+  // Return absolute URLs so images always load correctly
   return (d.urls || []).map(url => fixImgSrc(url));
 }
-
-function resetImageForm() {
-  window._newProdFiles = [];
-  document.getElementById('prodImagePreviews').innerHTML = '';
-  document.getElementById('existingImgPreviews').innerHTML = '';
-  document.getElementById('existingImgRow').style.display = 'none';
-  document.getElementById('existingImages').value = '';
-  document.getElementById('coverImageUrl').value = '';
-  document.getElementById('prodThumbUrl').value = '';
-}
-
 
 function editProduct(id) {
   const p = prodsData.find(x => x._id === id);
@@ -1377,25 +1149,29 @@ function editProduct(id) {
     form.badge.value = p.badge || '';
     form.description.value = p.description || '';
     form.brand.value = p.brand || '';
-    if(form.order) form.order.value = p.order || 0;
     form.tags.value = (p.tags || []).join(', ');
     if (form.seoTitle) form.seoTitle.value = p.seoTitle || '';
     if (form.seoDesc) form.seoDesc.value = p.seoDesc || '';
     form.isFeatured.value = p.isFeatured ? 'true' : 'false';
     form.isActive.value = p.isActive !== false ? 'true' : 'false';
     form.codEnabled.value = p.codEnabled !== false ? 'true' : 'false';
-    // Reset image state for this edit session
-    resetImageForm();
-    renderExistingImages(p.images || (p.thumbnail ? [p.thumbnail] : []), p.thumbnail);
+    // Show existing thumbnail
+    const thumbInput = document.getElementById('prodThumbUrl');
+    if (thumbInput) thumbInput.value = p.thumbnail || '';
+    // Show existing images
+    const preview = document.getElementById('prodImagePreviews');
+    if (preview) {
+      preview.innerHTML = (p.images || []).map(img => `<img src="${fixImgSrc(img)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--lt2)" onerror="this.style.opacity='.3'">`).join('');
+    }
     // sizes
     const sizeMap = {};
-    (p.sizes||[]).forEach(s=>sizeMap[s.size]=s.stock||0);
-    ['0-3M','3-6M','6-12M','1-2Y','2-3Y','3-4Y','4-5Y','5-6Y','6-8Y','8-10Y','10-12Y','12-15Y'].forEach(sz=>{
-      const k='s_'+sz.replace('-','_').replace('M','M').replace('Y','Y');
-      const el=form[k]; if(el) el.value=sizeMap[sz]||0;
-    });
-    const ci=document.getElementById('colorsInput'); if(ci) ci.value=(p.colors||[]).join(', ');
-    renderColorTags();
+    (p.sizes || []).forEach(s => sizeMap[s.size] = s.stock || 0);
+    if (form.stockXS) form.stockXS.value = sizeMap['XS/0-3M'] || 0;
+    if (form.stockS)  form.stockS.value  = sizeMap['S/3-6M']  || 0;
+    if (form.stockM)  form.stockM.value  = sizeMap['M/6-12M'] || 0;
+    if (form.stockL)  form.stockL.value  = sizeMap['L/1-2Y']  || 0;
+    if (form.stockXL) form.stockXL.value = sizeMap['XL/2-4Y'] || 0;
+    if (form.stockXXL)form.stockXXL.value= sizeMap['XXL/4-6Y']|| 0;
     document.getElementById('prodEditId').value = id;
     document.getElementById('addprodTitle').textContent = '✏️ Edit Product: ' + p.name;
   }, 120);
@@ -1423,16 +1199,14 @@ async function saveProduct(e) {
   // Parse tags
   data.tags = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
   data.sizes = [
-    {size:'0-3M',  stock:+data.s_0_3M||0},{size:'3-6M',  stock:+data.s_3_6M||0},
-    {size:'6-12M', stock:+data.s_6_12M||0},{size:'1-2Y', stock:+data.s_1_2Y||0},
-    {size:'2-3Y',  stock:+data.s_2_3Y||0},{size:'3-4Y',  stock:+data.s_3_4Y||0},
-    {size:'4-5Y',  stock:+data.s_4_5Y||0},{size:'5-6Y',  stock:+data.s_5_6Y||0},
-    {size:'6-8Y',  stock:+data.s_6_8Y||0},{size:'8-10Y', stock:+data.s_8_10Y||0},
-    {size:'10-12Y',stock:+data.s_10_12Y||0},{size:'12-15Y',stock:+data.s_12_15Y||0},
-  ].filter(s => s.stock > 0);
-  data.colors = (document.getElementById('colorsInput')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
-  data.order = +(data.order || 0);
-  Object.keys(data).filter(k=>k.startsWith('s_')).forEach(k=>delete data[k]);
+    { size:'XS/0-3M', stock: +data.stockXS || 0 },
+    { size:'S/3-6M',  stock: +data.stockS  || 0 },
+    { size:'M/6-12M', stock: +data.stockM  || 0 },
+    { size:'L/1-2Y',  stock: +data.stockL  || 0 },
+    { size:'XL/2-4Y', stock: +data.stockXL || 0 },
+    { size:'XXL/4-6Y',stock: +data.stockXXL|| 0 },
+  ];
+  ['stockXS','stockS','stockM','stockL','stockXL','stockXXL'].forEach(k => delete data[k]);
 
   // Upload images if any selected
   const submitBtn = e.target.querySelector('button[type=submit]');
@@ -1440,64 +1214,14 @@ async function saveProduct(e) {
     submitBtn.textContent = '⏳ Uploading...';
     submitBtn.disabled = true;
     
-    // ── STEP 1: Upload new files (stored in window._newProdFiles)
-    submitBtn.textContent = '⏳ Uploading images...';
-    const newUrls = await uploadProdImages().catch(err => { console.warn('Upload err:', err); return []; });
-
-    // ── STEP 2: Get surviving existing images (after user deletes)
-    let existingImgs = [];
-    try {
-      const raw = document.getElementById('existingImages')?.value || '';
-      existingImgs = raw ? JSON.parse(raw) : [];
-    } catch(e) {}
-
-    // ── STEP 3: Combine existing + new
-    const allImages = [...existingImgs, ...newUrls].filter(Boolean);
-
-    // ── STEP 4: Determine cover/thumbnail
-    // Priority: a) explicit cover button clicked, b) typed URL, c) first image
-    let cover = '';
-    
-    // a) User clicked ⭐ on existing image
-    const markedExisting = document.querySelector('#existingImgPreviews .img-thumb-wrap[data-is-cover="yes"]');
-    if (markedExisting) cover = markedExisting.dataset.url || '';
-
-    // b) User clicked ⭐ on a new image
-    if (!cover) {
-      const markedNew = document.querySelector('#prodImagePreviews .img-thumb-wrap[data-is-cover="yes"]');
-      if (markedNew) {
-        const fileIdx = parseInt(markedNew.dataset.fileIndex);
-        // The uploaded URL at same position in newUrls array
-        // Count how many valid files came before this index
-        const validBefore = (window._newProdFiles || [])
-          .slice(0, fileIdx).filter(Boolean).length;
-        if (newUrls[validBefore]) cover = newUrls[validBefore];
-      }
+    const uploadedUrls = await uploadProdImages().catch(() => []);
+    if (uploadedUrls.length > 0) {
+      data.images = uploadedUrls;
+      data.thumbnail = uploadedUrls[0];
+    } else if (data.thumbnail) {
+      // URL was typed
+      data.images = [data.thumbnail];
     }
-
-    // c) coverImageUrl hidden field (set by setCoverExisting)
-    if (!cover) {
-      const storedCover = document.getElementById('coverImageUrl')?.value;
-      if (storedCover) cover = storedCover;
-    }
-
-    // d) typed URL fallback
-    const typedUrl = data.thumbnail?.trim();
-    if (!cover && typedUrl) cover = typedUrl;
-
-    // e) just use first image
-    if (!cover && allImages.length) cover = allImages[0];
-
-    // ── STEP 5: Apply to data
-    if (allImages.length > 0) {
-      data.images = allImages;
-      data.thumbnail = cover;
-    } else if (typedUrl) {
-      data.images = [typedUrl];
-      data.thumbnail = typedUrl;
-    }
-    // Remove thumbnail from form data (we set it above)
-    delete data.thumbnail_url;
     
     const editId = document.getElementById('prodEditId').value;
     if (editId) {
@@ -1510,8 +1234,7 @@ async function saveProduct(e) {
     }
     e.target.reset();
     document.getElementById('addprodTitle').textContent = '➕ Add New Product';
-    document.getElementById('prodEditId').value = '';
-    resetImageForm();
+    document.getElementById('prodImagePreviews').innerHTML = '';
     show('products', document.querySelector('[onclick*=products]'));
   } catch(err) { toast('❌ ' + err.message); }
   finally { submitBtn.textContent = '💾 Save Product'; submitBtn.disabled = false; }
@@ -1529,14 +1252,14 @@ function cancelEditProd() {
 // ── STOCK ───────────────────────────────────
 async function loadStock() {
   try {
-    const r = await apiFetch('/admin/products?limit=500');
+    const r = await apiFetch('/products?limit=200');
     renderStock(r.products || []);
   } catch(e) {}
 }
 
 function renderStock(prods) {
   const el = document.getElementById('stockTableBody');
-  const sizeKeys = ['0-3M','3-6M','6-12M','1-2Y','2-3Y','3-4Y','4-5Y','5-6Y','6-8Y','8-10Y','10-12Y','12-15Y'];
+  const sizeKeys = ['XS/0-3M','S/3-6M','M/6-12M','L/1-2Y','XL/2-4Y','XXL/4-6Y'];
   el.innerHTML = prods.map(p => {
     const sizeMap = {};
     (p.sizes || []).forEach(s => sizeMap[s.size] = s.stock || 0);
@@ -1757,7 +1480,7 @@ async function previewBannerImage(input) {
   try {
     const fd = new FormData();
     fd.append('image', input.files[0]);
-    const r = await fetch(API.replace('/api','') + '/api/admin/upload-banner', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+    const r = await fetch('/api/admin/upload-banner', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
     const d = await r.json();
     if (d.url) {
       // Save as absolute URL so it works on all pages
@@ -1766,43 +1489,6 @@ async function previewBannerImage(input) {
       toast('✅ Image uploaded!');
     }
   } catch(e) { toast('❌ Image upload failed: ' + e.message); }
-  if(input.files&&input.files[0])showBannerDragger(URL.createObjectURL(input.files[0]));
-}
-
-async function loadAnnouncement() {
-  try {
-    const d = await apiFetch('/admin/announcement');
-    if (d) {
-      document.getElementById('announceText').value = d.text || '';
-      document.getElementById('announceLink').value = d.link || '';
-      document.getElementById('announceLinkText').value = d.linkText || '';
-      document.getElementById('announceHidden').checked = !!d.hidden;
-      updateAnnouncePreview();
-    }
-  } catch(e) {}
-}
-
-function updateAnnouncePreview() {
-  const text = document.getElementById('announceText').value;
-  const preview = document.getElementById('announcePreview');
-  if (text) {
-    preview.style.display = 'block';
-    preview.textContent = text;
-  } else {
-    preview.style.display = 'none';
-  }
-}
-
-async function saveAnnouncement() {
-  const text = document.getElementById('announceText').value.trim();
-  const link = document.getElementById('announceLink').value.trim();
-  const linkText = document.getElementById('announceLinkText').value.trim();
-  const hidden = document.getElementById('announceHidden').checked;
-  try {
-    await apiFetch('/admin/announcement', 'PUT', { text, link, linkText, hidden });
-    toast('✅ Announcement bar updated!');
-    updateAnnouncePreview();
-  } catch(e) { toast('❌ ' + e.message); }
 }
 
 async function loadBanners() {
@@ -1810,7 +1496,7 @@ async function loadBanners() {
     const r = await apiFetch('/admin/banners');
     renderAdminBanners(r.banners || []);
   } catch(e) {
-    try { const r2 = await fetch(API + '/banners'); const d = await r2.json(); renderAdminBanners(d.banners || []); } catch {}
+    try { const r2 = await fetch('/api/banners'); const d = await r2.json(); renderAdminBanners(d.banners || []); } catch {}
   }
 }
 
@@ -1908,14 +1594,6 @@ async function deleteBanner(id) {
   try { await apiFetch(`/admin/banners/${id}`, 'DELETE'); toast('🗑️ Banner deleted'); loadBanners(); }
   catch(e) { toast('❌ ' + e.message); }
 }
-
-// Live preview of announcement
-document.addEventListener('DOMContentLoaded', () => {
-  ['announceText','announceLink','announceLinkText'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', updateAnnouncePreview);
-  });
-});
 
 // ── CHAT ────────────────────────────────────
 let chatSessions = [];
@@ -2085,971 +1763,169 @@ document.addEventListener('keydown', e => {
 document.getElementById('orderModal').addEventListener('click', function(e) {
   if (e.target === this) closeOrderModal();
 });
-
-// ── FORGOT PASSWORD ──
-function showForgot(){
-  document.getElementById('screenLogin').style.display='none';
-  document.getElementById('screenForgot').style.display='block';
-  document.getElementById('screenReset').style.display='none';
-}
-function showLoginScr(){
-  document.getElementById('screenLogin').style.display='block';
-  document.getElementById('screenForgot').style.display='none';
-  document.getElementById('screenReset').style.display='none';
-}
-function showResetScr(){
-  document.getElementById('screenLogin').style.display='none';
-  document.getElementById('screenForgot').style.display='none';
-  document.getElementById('screenReset').style.display='block';
-}
-async function sendResetLink(){
-  const email=document.getElementById('forgotEmail').value.trim();
-  const m=document.getElementById('forgotMsg'); m.style.display='none';
-  if(!email){m.style.color='var(--er)';m.textContent='Enter your email';m.style.display='block';return;}
-  try{
-    await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
-    m.style.color='green';m.textContent='✅ Reset link sent! Check your email.';m.style.display='block';
-  }catch(e){m.style.color='var(--er)';m.textContent='❌ Failed. Try again.';m.style.display='block';}
-}
-async function doReset(){
-  const p1=document.getElementById('newPass1').value;
-  const p2=document.getElementById('newPass2').value;
-  const m=document.getElementById('resetMsg'); m.style.display='none';
-  if(!p1||p1.length<8){m.style.color='var(--er)';m.textContent='Min 8 characters';m.style.display='block';return;}
-  if(p1!==p2){m.style.color='var(--er)';m.textContent='Passwords do not match';m.style.display='block';return;}
-  const pr=new URLSearchParams(window.location.search);
-  const tok=pr.get('resetToken'),uid=pr.get('userId');
-  if(!tok||!uid){m.style.color='var(--er)';m.textContent='Invalid reset link';m.style.display='block';return;}
-  try{
-    const r=await fetch(API+'/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok,userId:uid,newPassword:p1})});
-    const d=await r.json(); if(!r.ok) throw new Error(d.error||'Failed');
-    m.style.color='green';m.textContent='✅ Password updated! Redirecting...';m.style.display='block';
-    setTimeout(()=>{window.location.href=window.location.pathname;},2000);
-  }catch(e){m.style.color='var(--er)';m.textContent='❌ '+e.message;m.style.display='block';}
-}
-(function(){const p=new URLSearchParams(window.location.search);if(p.get('resetToken')&&p.get('userId'))showResetScr();})();
-
-// ── COLOR TAGS ──
-function renderColorTags(){
-  const inp=document.getElementById('colorsInput');
-  const tags=document.getElementById('colorTags');
-  if(!inp||!tags)return;
-  const colorMap={'red':'#e53935','blue':'#1e88e5','pink':'#e91e8c','white':'#f5f5f5','black':'#212121','green':'#43a047','yellow':'#fdd835','orange':'#fb8c00','purple':'#8e24aa','grey':'#757575','gray':'#757575','cream':'#fff8e1','brown':'#6d4c41','navy':'#1a237e','maroon':'#880e4f','teal':'#00897b'};
-  const colors=inp.value.split(',').map(s=>s.trim()).filter(Boolean);
-  tags.innerHTML=colors.map(col=>{
-    const bg=colorMap[col.toLowerCase()]||'#ccc';
-    return '<span style="display:inline-flex;align-items:center;gap:4px;background:#f0e6f8;border-radius:20px;padding:3px 10px;font-size:.75rem;font-weight:700"><span style="width:12px;height:12px;border-radius:50%;background:'+bg+';border:1px solid rgba(0,0,0,.15);display:inline-block"></span>'+col+'</span>';
-  }).join('');
-}
-
-// ── BANNER DRAG TO REPOSITION ──
-function initBannerDrag(){
-  const box=document.getElementById('bannerDragBox');
-  if(!box||box._dragInit)return;
-  box._dragInit=true;
-  let dragging=false,startX,startY,px=50,py=50;
-  function updatePos(x,y){
-    px=Math.max(0,Math.min(100,x));py=Math.max(0,Math.min(100,y));
-    const img=document.getElementById('bannerDragImg');
-    if(img)img.style.objectPosition=px+'% '+py+'%';
-    document.getElementById('bannerImgPosX').value=px;
-    document.getElementById('bannerImgPosY').value=py;
-  }
-  box.addEventListener('mousedown',e=>{dragging=true;startX=e.clientX;startY=e.clientY;box.style.cursor='grabbing';e.preventDefault();});
-  document.addEventListener('mousemove',e=>{
-    if(!dragging)return;
-    const rect=box.getBoundingClientRect();
-    updatePos(px+((e.clientX-startX)/rect.width)*-100,py+((e.clientY-startY)/rect.height)*-100);
-    startX=e.clientX;startY=e.clientY;
-  });
-  document.addEventListener('mouseup',()=>{dragging=false;box.style.cursor='grab';});
-  box.addEventListener('touchstart',e=>{dragging=true;startX=e.touches[0].clientX;startY=e.touches[0].clientY;e.preventDefault();},{passive:false});
-  document.addEventListener('touchmove',e=>{
-    if(!dragging)return;
-    const rect=box.getBoundingClientRect();
-    updatePos(px+((e.touches[0].clientX-startX)/rect.width)*-100,py+((e.touches[0].clientY-startY)/rect.height)*-100);
-    startX=e.touches[0].clientX;startY=e.touches[0].clientY;
-  },{passive:false});
-  document.addEventListener('touchend',()=>{dragging=false;});
-}
-function showBannerDragger(src){
-  const dragger=document.getElementById('bannerPosDragger');
-  const img=document.getElementById('bannerDragImg');
-  if(!dragger||!img)return;
-  img.src=src;dragger.style.display='block';
-  document.getElementById('bannerImgPosX').value=50;
-  document.getElementById('bannerImgPosY').value=50;
-  img.style.objectPosition='50% 50%';
-  setTimeout(initBannerDrag,100);
-}
-
-
-// ══════════════════════════════════════════════════════════
-// WHATSAPP INBOX
-// ══════════════════════════════════════════════════════════
-let activePhone = null;
-let allConvs = [];
-let convFilter = 'all';
-let waTemplates = [];
-let crmStages = [];
-let crmTags = [];
-let allLeads = [];
-let currentLeadId = null;
-let crmTab = 'kanban';
-let dragLeadId = null;
-
-async function loadInbox() {
-  await loadWaTemplates();
-  await refreshConvList();
-  // Connect socket for real-time
-  loadSocketIO(() => {
-    if (typeof io === 'undefined') return;
-    const s = io(API.replace('/api',''), { auth: { token: localStorage.getItem('kc_admin_token') } });
-    s.emit('join_admin');
-    s.on('wa_message', d => {
-      if (d.phone === activePhone) appendMsg({ direction:'inbound', body:d.body, timestamp:d.timestamp, status:'received' });
-      refreshConvList();
-      updateInboxBadge();
-    });
-    s.on('inbox_update', () => { refreshConvList(); updateInboxBadge(); });
-    s.on('wa_message_sent', d => {
-      if (d.phone === activePhone) appendMsg({ direction:'outbound', body:d.body, timestamp:new Date(), status:'sent' });
-    });
-  });
-}
-
-async function refreshConvList() {
-  try {
-    const params = convFilter === 'unread' ? '?filter=unread' : '';
-    const d = await api('/admin/whatsapp/inbox' + params);
-    allConvs = d.conversations || [];
-    renderConvList(allConvs);
-    updateInboxBadge();
-  } catch(e) {}
-}
-
-function updateInboxBadge() {
-  const total = allConvs.reduce((s,c) => s + (c.unreadCount||0), 0);
-  const badge = document.getElementById('inboxBadge');
-  if (badge) { badge.textContent = total; badge.style.display = total > 0 ? 'inline-flex' : 'none'; }
-}
-
-function setConvFilter(f, btn) {
-  convFilter = f;
-  document.querySelectorAll('.conv-filter button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  refreshConvList();
-}
-
-function filterConvs(q) {
-  const filtered = q ? allConvs.filter(c =>
-    (c.contactName||'').toLowerCase().includes(q.toLowerCase()) ||
-    c.phone.includes(q)
-  ) : allConvs;
-  renderConvList(filtered);
-}
-
-function renderConvList(convs) {
-  const el = document.getElementById('convList');
-  if (!convs.length) { el.innerHTML = '<div style="padding:24px;text-align:center;color:#aaa;font-size:.82rem;">No conversations yet</div>'; return; }
-  el.innerHTML = convs.map(c => {
-    const name = c.contactName || c.phone;
-    const initial = name.charAt(0).toUpperCase();
-    const time = c.lastMessageAt ? fmtConvTime(new Date(c.lastMessageAt)) : '';
-    const unread = c.unreadCount > 0;
-    return `<div class="conv-item ${unread?'unread':''} ${c.phone===activePhone?'active':''}" onclick="openConv('${c.phone}','${name.replace(/'/g,"\'")}')">
-      <div class="conv-avi">${initial}</div>
-      <div class="conv-info">
-        <div class="conv-name">${name}</div>
-        <div class="conv-last">${c.lastMessage||'No messages yet'}</div>
-      </div>
-      <div class="conv-meta">
-        <div class="conv-time">${time}</div>
-        ${unread ? `<div class="unread-dot">${c.unreadCount}</div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function openConv(phone, name) {
-  activePhone = phone;
-  // Mark read
-  await api('/admin/whatsapp/read/' + encodeURIComponent(phone), 'PUT');
-  // Update unread in local array
-  const conv = allConvs.find(c => c.phone === phone);
-  if (conv) conv.unreadCount = 0;
-  updateInboxBadge();
-
-  // Show chat, hide empty state
-  document.getElementById('chatEmpty').style.display = 'none';
-  const chatActive = document.getElementById('chatActive');
-  chatActive.style.display = 'flex';
-
-  // Mobile: show chat panel, hide conv list
-  const isMobile = window.innerWidth <= 768;
-  if (isMobile) {
-    document.getElementById('convListPanel').classList.add('hidden');
-    document.getElementById('chatWin').classList.add('open');
-  }
-
-  // Render header with back button
-  const initial = (name||phone).charAt(0).toUpperCase();
-  document.getElementById('chatHeader').innerHTML = `
-    <button class="chat-back-btn" onclick="closeMobileChat()">←</button>
-    <div class="chat-header-avi">${initial}</div>
-    <div class="chat-header-info">
-      <div class="chat-header-name">${name||phone}</div>
-      <div class="chat-header-sub">${phone}</div>
-    </div>
-    <div class="chat-header-actions">
-      <button class="chat-action-btn green" onclick="openCrmForPhone('${phone}')">📊 CRM</button>
-      <button class="chat-action-btn" onclick="refreshMsgs()">↻</button>
-    </div>`;
-
-  await loadMsgs(phone);
-  loadContactPanel(phone);
-  renderConvList(allConvs);
-}
-
-function closeMobileChat() {
-  activePhone = null;
-  document.getElementById('convListPanel').classList.remove('hidden');
-  document.getElementById('chatWin').classList.remove('open');
-  document.getElementById('chatActive').style.display = 'none';
-  document.getElementById('chatEmpty').style.display = 'flex';
-  renderConvList(allConvs);
-}
-
-async function loadMsgs(phone) {
-  try {
-    const d = await api('/admin/whatsapp/messages/' + encodeURIComponent(phone));
-    const msgs = d.messages || [];
-    const el = document.getElementById('chatMsgs');
-    el.innerHTML = '';
-    let lastDate = '';
-    msgs.forEach(m => {
-      const d = new Date(m.timestamp);
-      const dateStr = d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
-      if (dateStr !== lastDate) {
-        el.innerHTML += `<div class="msg-date-div">${dateStr}</div>`;
-        lastDate = dateStr;
-      }
-      el.innerHTML += renderBubble(m);
-    });
-    el.scrollTop = el.scrollHeight;
-  } catch(e) {}
-}
-
-function renderBubble(m) {
-  const dir = m.direction === 'outbound' ? 'out' : 'in';
-  const time = new Date(m.timestamp).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
-  let statusIcon = '';
-  if (dir === 'out') {
-    if (m.status === 'read')      statusIcon = '<span style="color:#4fc3f7">✓✓</span>';
-    else if (m.status === 'delivered') statusIcon = '<span style="color:#aaa">✓✓</span>';
-    else statusIcon = '<span style="color:#aaa">✓</span>';
-  }
-  const body = m.type !== 'text' ? `<em style="color:#aaa;font-size:.78rem;">${m.body||m.type}</em>` : (m.body||'');
-  return `<div class="msg-wrap ${dir}">
-    <div class="msg-bubble ${dir}">
-      ${body}
-      <div class="msg-time">${time} ${statusIcon}</div>
-    </div>
-  </div>`;
-}
-
-function appendMsg(m) {
-  const el = document.getElementById('chatMsgs');
-  if (!el) return;
-  el.innerHTML += renderBubble(m);
-  el.scrollTop = el.scrollHeight;
-}
-
-async function refreshMsgs() { if (activePhone) await loadMsgs(activePhone); }
-
-async function sendWaMsg() {
-  const inp = document.getElementById('msgInput');
-  const text = inp.value.trim();
-  if (!text || !activePhone) return;
-  inp.value = ''; inp.style.height = 'auto';
-  try {
-    appendMsg({ direction:'outbound', body:text, timestamp:new Date(), status:'sent' });
-    await api('/admin/whatsapp/send', 'POST', { phone: activePhone, text });
-    refreshConvList();
-  } catch(e) { toast('❌ Send failed: ' + e.message); }
-}
-
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-}
-
-// Quick reply templates
-async function loadWaTemplates() {
-  try {
-    const d = await api('/admin/whatsapp/templates');
-    waTemplates = d.templates || [];
-  } catch(e) {}
-}
-
-function toggleTemplates() {
-  const dd = document.getElementById('tmplDropdown');
-  if (!dd) return;
-  dd.classList.toggle('show');
-  if (dd.classList.contains('show')) renderTemplateDropdown();
-}
-
-function renderTemplateDropdown() {
-  const dd = document.getElementById('tmplDropdown');
-  dd.innerHTML = waTemplates.length ? waTemplates.map(t =>
-    `<div class="tmpl-item" onclick="useTemplate('${t.body.replace(/'/g,"\'").replace(/\n/g,' ')}')">
-      <div class="tmpl-item-name">⚡ ${t.name}</div>
-      <div class="tmpl-item-body">${t.body}</div>
-    </div>`
-  ).join('') : '<div style="padding:12px;color:#aaa;font-size:.82rem;">No templates yet</div>';
-}
-
-function useTemplate(body) {
-  document.getElementById('msgInput').value = body;
-  document.getElementById('tmplDropdown').classList.remove('show');
-  document.getElementById('msgInput').focus();
-}
-
-// Contact info panel
-async function loadContactPanel(phone) {
-  const panel = document.getElementById('contactPanel');
-  panel.innerHTML = '<div style="color:#aaa;font-size:.82rem;text-align:center;padding:20px;">Loading...</div>';
-  try {
-    // Find lead for this phone
-    const d = await api('/admin/crm/leads?search=' + encodeURIComponent(phone));
-    const lead = d.leads?.[0];
-    if (!lead) {
-      panel.innerHTML = `<h4>Contact</h4>
-        <div class="cp-field"><span class="cp-label">Phone</span>${phone}</div>
-        <button onclick="createLeadFromPhone('${phone}')" style="width:100%;padding:8px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;margin-top:8px;">+ Add to CRM</button>`;
-      return;
-    }
-    const stageDot = lead.stage ? `<span style="background:${lead.stage.color};border-radius:50%;width:10px;height:10px;display:inline-block;margin-right:4px;"></span>` : '';
-    const tags = (lead.tags||[]).map(t => `<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');
-    panel.innerHTML = `
-      <h4>Contact</h4>
-      <div class="cp-field"><span class="cp-label">Name</span>${lead.name||phone}</div>
-      <div class="cp-field"><span class="cp-label">Phone</span>${phone}</div>
-      ${lead.email ? `<div class="cp-field"><span class="cp-label">Email</span>${lead.email}</div>` : ''}
-      <div class="cp-field"><span class="cp-label">Stage</span>${stageDot}${lead.stage?.name||'No stage'}</div>
-      <div class="cp-field"><span class="cp-label">Status</span>
-        ${lead.status==='won'?'<span class="won-badge">Won ✅</span>':lead.status==='lost'?'<span class="lost-badge">Lost ❌</span>':'Open'}
-      </div>
-      ${tags ? `<div><span class="cp-label">Tags</span><div style="margin-top:4px;">${tags}</div></div>` : ''}
-      <button onclick="openLeadById('${lead._id}')" style="width:100%;padding:8px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">View Full Lead →</button>
-    `;
-  } catch(e) {}
-}
-
-async function createLeadFromPhone(phone) {
-  try {
-    await api('/admin/crm/leads', 'POST', { phone, name: phone, source: 'whatsapp' });
-    loadContactPanel(phone);
-    toast('✅ Lead created in CRM!');
-  } catch(e) { toast('❌ ' + e.message); }
-}
-
-function openCrmForPhone(phone) { show('crm'); loadCrm(); }
-
-function fmtConvTime(d) {
-  const now = new Date();
-  const diff = now - d;
-  if (diff < 86400000) return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-  if (diff < 604800000) return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
-  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
-}
-
-// ══════════════════════════════════════════════════════════
-// CRM
-// ══════════════════════════════════════════════════════════
-async function loadCrm() {
-  await Promise.all([loadCrmStages(), loadCrmTags(), loadCrmStats()]);
-  if (crmTab === 'kanban') await loadKanban();
-  else await loadCrmList();
-  populateCrmFilters();
-}
-
-async function loadCrmStats() {
-  try {
-    const d = await api('/admin/crm/stats');
-    document.getElementById('crmTotal').textContent   = d.total || 0;
-    document.getElementById('crmOpen').textContent    = d.open  || 0;
-    document.getElementById('crmWon').textContent     = d.won   || 0;
-    document.getElementById('crmLost').textContent    = d.lost  || 0;
-    document.getElementById('crmRevenue').textContent = '₹' + (d.wonRevenue||0).toLocaleString('en-IN');
-  } catch(e) {}
-}
-
-async function loadCrmStages() {
-  try { const d = await api('/admin/crm/stages'); crmStages = d.stages||[]; } catch(e) {}
-}
-async function loadCrmTags() {
-  try { const d = await api('/admin/crm/tags'); crmTags = d.tags||[]; } catch(e) {}
-}
-
-function populateCrmFilters() {
-  const sf = document.getElementById('crmStageFilter');
-  const tf = document.getElementById('crmTagFilter');
-  if (sf) sf.innerHTML = '<option value="">All Stages</option>' + crmStages.map(s=>`<option value="${s._id}">${s.name}</option>`).join('');
-  if (tf) tf.innerHTML = '<option value="">All Tags</option>' + crmTags.map(t=>`<option value="${t._id}">${t.name}</option>`).join('');
-}
-
-async function loadKanban() {
-  const board = document.getElementById('kanbanBoard');
-  board.innerHTML = '<div style="color:#aaa;padding:24px;">Loading...</div>';
-  try {
-    const stageFilter = document.getElementById('crmStageFilter')?.value||'';
-    const tagFilter   = document.getElementById('crmTagFilter')?.value||'';
-    const search      = document.getElementById('crmSearch')?.value||'';
-    let url = '/admin/crm/leads?view=kanban';
-    if (search) url += '&search='+encodeURIComponent(search);
-    if (tagFilter) url += '&tag='+tagFilter;
-    const d = await api(url);
-    const kanban = d.kanban || [];
-    board.innerHTML = kanban.map(col => {
-      const cards = col.leads.map(lead => renderKanbanCard(lead)).join('');
-      const headBg = col.stage.color || '#888';
-      return `<div class="kanban-col">
-        <div class="kanban-col-head" style="background:${headBg};">
-          <h4>${col.stage.name}</h4>
-          <span>${col.leads.length}</span>
-        </div>
-        <div class="kanban-col-body" id="col_${col.stage._id}"
-          ondragover="event.preventDefault();this.classList.add('drag-over')"
-          ondragleave="this.classList.remove('drag-over')"
-          ondrop="dropLead(event,'${col.stage._id}')">
-          ${cards || '<div style="padding:12px;color:#ccc;font-size:.78rem;text-align:center;">Drop leads here</div>'}
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) { board.innerHTML = '<div style="color:red;padding:16px;">Error: '+e.message+'</div>'; }
-}
-
-function renderKanbanCard(lead) {
-  const tags = (lead.tags||[]).map(t=>`<span class="kc-tag" style="background:${t.color}">${t.name}</span>`).join('');
-  const src = {whatsapp:'📱',instagram:'📸',website:'🌐',manual:'✍️'}[lead.source]||'👤';
-  const time = lead.lastSeen ? fmtConvTime(new Date(lead.lastSeen)) : '';
-  return `<div class="kanban-card" draggable="true"
-    style="border-left-color:${lead.stage?.color||'#ddd'}"
-    ondragstart="dragLead(event,'${lead._id}')"
-    ondragend="document.querySelectorAll('.kanban-col-body').forEach(c=>c.classList.remove('drag-over'))">
-    <div class="kc-name">${lead.name||lead.phone}</div>
-    <div class="kc-phone">📱 ${lead.phone}</div>
-    ${tags ? `<div class="kc-tags">${tags}</div>` : ''}
-    <div class="kc-footer">
-      <span class="kc-source">${src} ${lead.source}</span>
-      <span class="kc-time">${time}</span>
-    </div>
-    <div style="display:flex;gap:4px;margin-top:8px;">
-      <button class="kc-btn" onclick="openLeadById('${lead._id}')" title="View">👁️</button>
-      <button class="kc-btn" onclick="quickChat('${lead.phone}')" title="Chat" style="background:#e8f5e9;color:#25D366;">💬</button>
-      <button class="kc-btn" onclick="deleteLead('${lead._id}')" title="Delete" style="background:#ffebee;color:#e74c3c;">🗑️</button>
-    </div>
-  </div>`;
-}
-
-function dragLead(e, leadId) { dragLeadId = leadId; e.dataTransfer.effectAllowed = 'move'; }
-
-async function dropLead(e, stageId) {
-  e.preventDefault();
-  document.querySelectorAll('.kanban-col-body').forEach(c=>c.classList.remove('drag-over'));
-  if (!dragLeadId) return;
-  try {
-    await api('/admin/crm/leads/'+dragLeadId, 'PUT', { stage: stageId === 'unassigned' ? null : stageId });
-    await loadKanban();
-    loadCrmStats();
-  } catch(err) { toast('❌ ' + err.message); }
-}
-
-async function loadCrmList() {
-  const tbody = document.getElementById('crmTableBody');
-  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px;">Loading...</td></tr>';
-  try {
-    const search = document.getElementById('crmSearch')?.value||'';
-    const stage  = document.getElementById('crmStageFilter')?.value||'';
-    const tag    = document.getElementById('crmTagFilter')?.value||'';
-    let url = '/admin/crm/leads?';
-    if (search) url += 'search='+encodeURIComponent(search)+'&';
-    if (stage)  url += 'stage='+stage+'&';
-    if (tag)    url += 'tag='+tag+'&';
-    const d = await api(url);
-    allLeads = d.leads||[];
-    tbody.innerHTML = allLeads.length ? allLeads.map(lead => {
-      const stagePill = lead.stage ? `<span style="background:${lead.stage.color};color:#fff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">${lead.stage.name}</span>` : '—';
-      const tags = (lead.tags||[]).map(t=>`<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');
-      const src = {whatsapp:'📱',instagram:'📸',website:'🌐',manual:'✍️'}[lead.source]||'👤';
-      const status = lead.status==='won'?'<span class="won-badge">Won ✅</span>':lead.status==='lost'?'<span class="lost-badge">Lost ❌</span>':'<span style="color:#666;">Open</span>';
-      const time = lead.lastSeen ? new Date(lead.lastSeen).toLocaleDateString('en-IN') : '—';
-      return `<tr>
-        <td><strong>${lead.name||'—'}</strong><br><small style="color:#888">${lead.phone}</small></td>
-        <td>${stagePill}</td>
-        <td>${tags||'—'}</td>
-        <td>${src} ${lead.source}</td>
-        <td>${time}</td>
-        <td>${status}</td>
-        <td>
-          <button class="kc-btn" onclick="openLeadById('${lead._id}')" title="View">👁️</button>
-          <button class="kc-btn" onclick="quickChat('${lead.phone}')" style="background:#e8f5e9;color:#25D366;" title="Chat">💬</button>
-          <button class="kc-btn" onclick="deleteLead('${lead._id}')" style="background:#ffebee;color:#e74c3c;" title="Delete">🗑️</button>
-        </td>
-      </tr>`;
-    }).join('') : '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px;">No leads found</td></tr>';
-  } catch(e) { tbody.innerHTML = '<tr><td colspan="7" style="color:red;padding:16px;">Error: '+e.message+'</td></tr>'; }
-}
-
-async function filterLeads() {
-  if (crmTab === 'kanban') await loadKanban(); else await loadCrmList();
-}
-
-function setCrmTab(tab, btn) {
-  crmTab = tab;
-  document.querySelectorAll('.crm-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('kanbanView').style.display = tab==='kanban' ? 'block' : 'none';
-  document.getElementById('listView').style.display   = tab==='list'   ? 'block' : 'none';
-  if (tab==='kanban') loadKanban(); else loadCrmList();
-}
-
-// Lead detail modal
-async function openLeadById(id) {
-  currentLeadId = id;
-  const modal = document.getElementById('leadModal');
-  modal.style.display = 'flex';
-  const body = document.getElementById('leadModalBody');
-  body.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;">Loading...</div>';
-  try {
-    const d = await api('/admin/crm/leads/'+id);
-    const lead = d.lead; const msgs = d.messages||[]; const orders = d.orders||[];
-    const stageSel = crmStages.map(s=>`<option value="${s._id}" ${lead.stage?._id===s._id?'selected':''}>${s.name}</option>`).join('');
-    const tagChecks = crmTags.map(t=>{
-      const has = (lead.tags||[]).some(lt=>lt._id===t._id);
-      return `<label style="display:inline-flex;align-items:center;gap:4px;margin:3px;cursor:pointer;">
-        <input type="checkbox" value="${t._id}" ${has?'checked':''} onchange="toggleLeadTag('${id}','${t._id}',this.checked)">
-        <span class="tag-chip" style="background:${t.color}">${t.name}</span>
-      </label>`;
-    }).join('');
-    const notesList = (lead.notes||[]).map(n=>`
-      <div class="note-item">${n.text}
-        <div><small>${n.createdBy} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</small></div>
-      </div>`).join('');
-    const ordersList = orders.length ? orders.map(o=>`
-      <div class="cp-order-row"><span>#${o.orderId}</span><span>₹${o.total?.toLocaleString('en-IN')}</span><span>${o.status}</span></div>
-    `).join('') : '<div style="color:#aaa;font-size:.78rem;">No orders found</div>';
-    const recentMsgs = msgs.slice(-5).map(m=>`
-      <div style="margin-bottom:6px;"><span style="font-size:.7rem;color:${m.direction==='inbound'?'#25D366':'#7B2D8B'}">${m.direction==='inbound'?'👤':'👨‍💼'}</span>
-      <span style="font-size:.8rem;color:#444;"> ${m.body}</span>
-      <span style="font-size:.68rem;color:#aaa;"> ${new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('');
-    body.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-        <div>
-          <div class="lead-section">
-            <h4>Contact Info</h4>
-            <input value="${lead.name||''}" placeholder="Name" class="linp" style="margin-bottom:8px;" onchange="updateLeadField('${id}','name',this.value)">
-            <div class="cp-field"><span class="cp-label">Phone</span>${lead.phone}</div>
-            <div class="cp-field"><span class="cp-label">Email</span><input value="${lead.email||''}" placeholder="Email" style="border:1px solid #ddd;border-radius:6px;padding:4px 8px;font-size:.8rem;font-family:'Nunito',sans-serif;outline:none;width:100%;" onchange="updateLeadField('${id}','email',this.value)"></div>
-            <div class="cp-field"><span class="cp-label">Source</span>${lead.source}</div>
-          </div>
-          <div class="lead-section">
-            <h4>Pipeline Stage</h4>
-            <select class="linp" style="margin:0;" onchange="updateLeadField('${id}','stage',this.value)">${stageSel}</select>
-          </div>
-          <div class="lead-section">
-            <h4>Tags</h4>
-            <div>${tagChecks}</div>
-          </div>
-          <div class="lead-section">
-            <h4>Value</h4>
-            <input type="number" value="${lead.value||0}" placeholder="Expected ₹" class="linp" style="margin:0;" onchange="updateLeadField('${id}','value',this.value)">
-          </div>
-        </div>
-        <div>
-          <div class="lead-section">
-            <h4>Recent Messages</h4>
-            <div style="max-height:140px;overflow-y:auto;background:var(--lt);border-radius:8px;padding:10px;">
-              ${recentMsgs||'<div style="color:#aaa;font-size:.78rem;">No messages yet</div>'}
-            </div>
-          </div>
-          <div class="lead-section">
-            <h4>Orders</h4>
-            ${ordersList}
-          </div>
-          <div class="lead-section">
-            <h4>Notes</h4>
-            <div id="notesList_${id}">${notesList||'<div style="color:#aaa;font-size:.78rem;">No notes yet</div>'}</div>
-            <div class="note-add">
-              <textarea id="noteInput_${id}" placeholder="Add a note..." rows="2"></textarea>
-              <button onclick="addNote('${id}')" style="padding:8px 14px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;align-self:flex-end;">Add</button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-  } catch(e) { body.innerHTML = '<div style="color:red;padding:16px;">Error: '+e.message+'</div>'; }
-}
-
-function closeLead() { document.getElementById('leadModal').style.display='none'; currentLeadId=null; }
-
-function openInboxForLead() {
-  closeLead();
-  show('inbox');
-}
-
-async function updateLeadField(id, field, value) {
-  try {
-    await api('/admin/crm/leads/'+id, 'PUT', { [field]: value });
-    if (crmTab==='kanban') loadKanban(); else loadCrmList();
-    loadCrmStats();
-  } catch(e) { toast('❌ '+e.message); }
-}
-
-async function toggleLeadTag(leadId, tagId, checked) {
-  try {
-    const d = await api('/admin/crm/leads/'+leadId);
-    const currentTags = (d.lead.tags||[]).map(t=>t._id||t);
-    const newTags = checked ? [...currentTags, tagId] : currentTags.filter(t=>t!==tagId);
-    await api('/admin/crm/leads/'+leadId, 'PUT', { tags: newTags });
-  } catch(e) { toast('❌ '+e.message); }
-}
-
-async function addNote(leadId) {
-  const inp = document.getElementById('noteInput_'+leadId);
-  const text = inp?.value?.trim();
-  if (!text) return;
-  try {
-    const d = await api('/admin/crm/leads/'+leadId+'/notes', 'POST', { text });
-    inp.value = '';
-    const nl = document.getElementById('notesList_'+leadId);
-    if (nl) nl.innerHTML = d.notes.map(n=>`<div class="note-item">${n.text}<div><small>${n.createdBy} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</small></div></div>`).join('');
-    toast('✅ Note added');
-  } catch(e) { toast('❌ '+e.message); }
-}
-
-async function deleteLead(id) {
-  if (!confirm('Delete this lead?')) return;
-  try {
-    await api('/admin/crm/leads/'+id, 'DELETE');
-    toast('✅ Lead deleted');
-    if (crmTab==='kanban') loadKanban(); else loadCrmList();
-    loadCrmStats();
-  } catch(e) { toast('❌ '+e.message); }
-}
-
-function quickChat(phone) { show('inbox'); setTimeout(()=>{ openConv(phone,phone); },300); }
-
-// Add lead
-function openAddLead() {
-  const modal = document.getElementById('addLeadModal');
-  modal.style.display = 'flex';
-  const stageEl = document.getElementById('leadStage');
-  stageEl.innerHTML = '<option value="">No Stage</option>' + crmStages.map(s=>`<option value="${s._id}">${s.name}</option>`).join('');
-}
-function closeAddLead() { document.getElementById('addLeadModal').style.display='none'; }
-
-async function saveNewLead() {
-  const name=document.getElementById('leadName').value.trim();
-  const phone=document.getElementById('leadPhone').value.trim();
-  if (!phone) { toast('⚠️ Phone is required'); return; }
-  try {
-    await api('/admin/crm/leads','POST',{
-      name,phone,
-      email:document.getElementById('leadEmail').value.trim(),
-      stage:document.getElementById('leadStage').value||null,
-      source:document.getElementById('leadSource').value,
-      value:parseFloat(document.getElementById('leadValue').value)||0,
-      assignedTo:document.getElementById('leadAssigned').value.trim()
-    });
-    closeAddLead();
-    toast('✅ Lead added to CRM!');
-    loadCrm();
-  } catch(e) { toast('❌ '+e.message); }
-}
-
-// ── CRM Settings (stages, tags, templates) ──
-async function loadCrmSettings() {
-  await loadCrmStages(); await loadCrmTags(); await loadWaTemplates();
-  renderStagesList(); renderTagsList(); renderTemplatesList();
-}
-
-function renderStagesList() {
-  const el = document.getElementById('stagesList');
-  el.innerHTML = crmStages.map(s=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--lt2);">
-      <span style="width:16px;height:16px;border-radius:50%;background:${s.color};display:inline-block;"></span>
-      <span style="flex:1;font-weight:700;font-size:.85rem;">${s.name}</span>
-      <span style="font-size:.72rem;color:#aaa;">${s.isWon?'✅ Won':s.isLost?'❌ Lost':'Active'}</span>
-      <button onclick="deleteStage('${s._id}')" style="background:#ffebee;color:#e74c3c;border:none;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;">Delete</button>
-    </div>`).join('') || '<div style="color:#aaa;padding:12px;">No stages yet</div>';
-}
-
-function renderTagsList() {
-  const el = document.getElementById('tagsList');
-  el.innerHTML = crmTags.map(t=>`
-    <div style="display:inline-flex;align-items:center;gap:6px;margin:4px;">
-      <span class="tag-chip" style="background:${t.color}">${t.name}</span>
-      <button onclick="deleteTag('${t._id}')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:.8rem;">✕</button>
-    </div>`).join('') || '<div style="color:#aaa;padding:12px;">No tags yet</div>';
-}
-
-function renderTemplatesList() {
-  const el = document.getElementById('templatesList');
-  el.innerHTML = waTemplates.map(t=>`
-    <div style="padding:12px;border-bottom:1px solid var(--lt2);">
-      <div style="font-weight:700;font-size:.85rem;color:var(--pp);">⚡ ${t.name}</div>
-      <div style="font-size:.8rem;color:#555;margin:4px 0;">${t.body}</div>
-      <button onclick="deleteWaTemplate('${t._id}')" style="background:#ffebee;color:#e74c3c;border:none;border-radius:6px;padding:3px 10px;font-size:.72rem;cursor:pointer;">Delete</button>
-    </div>`).join('') || '<div style="color:#aaa;padding:12px;">No templates yet</div>';
-}
-
-function openAddStage() {
-  const name = prompt('Stage name:'); if (!name) return;
-  const color = prompt('Color (hex):', '#7B2D8B'); if (!color) return;
-  const isWon  = confirm('Is this a "Won" stage?');
-  const isLost = !isWon && confirm('Is this a "Lost" stage?');
-  api('/admin/crm/stages','POST',{name,color,isWon,isLost}).then(()=>{ loadCrmSettings(); toast('✅ Stage added'); }).catch(e=>toast('❌'+e.message));
-}
-
-function openAddTag() {
-  const name = prompt('Tag name:'); if (!name) return;
-  const color = prompt('Tag color (hex):', '#F7941D'); if (!color) return;
-  api('/admin/crm/tags','POST',{name,color}).then(()=>{ loadCrmSettings(); toast('✅ Tag added'); }).catch(e=>toast('❌'+e.message));
-}
-
-function openAddTemplate() {
-  const name = prompt('Template name:'); if (!name) return;
-  const body = prompt('Template message:'); if (!body) return;
-  api('/admin/whatsapp/templates','POST',{name,body}).then(()=>{ loadCrmSettings(); toast('✅ Template added'); }).catch(e=>toast('❌'+e.message));
-}
-
-async function deleteStage(id) {
-  if (!confirm('Delete this stage? All leads in it will become unassigned.')) return;
-  await api('/admin/crm/stages/'+id,'DELETE');
-  loadCrmSettings(); loadCrm(); toast('✅ Stage deleted');
-}
-async function deleteTag(id) {
-  await api('/admin/crm/tags/'+id,'DELETE');
-  loadCrmSettings(); toast('✅ Tag deleted');
-}
-async function deleteWaTemplate(id) {
-  await api('/admin/whatsapp/templates/'+id,'DELETE');
-  loadCrmSettings(); toast('✅ Template deleted');
-}
-
-// Close modals on outside click
-document.addEventListener('click', e => {
-  if (e.target.id==='leadModal') closeLead();
-  if (e.target.id==='addLeadModal') closeAddLead();
-  if (!e.target.closest('#tmplDropdown') && !e.target.closest('.tmpl-btn'))
-    document.getElementById('tmplDropdown')?.classList.remove('show');
-});
-
-// ── MOBILE NAVIGATION ─────────────────────
-function mobShow(id, btn) {
-  document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  const titles = {
-    dashboard:'Dashboard', orders:'Orders', products:'Products', addprod:'Add Product',
-    stock:'Stock', customers:'Customers', coupons:'Coupons', banners:'Banners',
-    reports:'Reports', chat:'Live Chat', adminusers:'Admin Users', inbox:'WhatsApp Inbox', crm:'CRM', crmstages:'CRM Settings'
-  };
-  const t = document.getElementById('mobTitle');
-  if (t) t.textContent = titles[id] || id;
-  show(id);
-}
 </script>
 
-
-<!-- ══════════════════════════════════
-     WHATSAPP INBOX PANEL
-══════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════════════
+// WHATSAPP INBOX + CRM  (KidsCart Admin v5)
+// ═══════════════════════════════════════════════
+const api = apiFetch;
+let activePhone=null,allConvs=[],convFilter='all',waTmpls=[],crmStages=[],crmTags=[],crmTab='kanban',dragLeadId=null;
+async function loadInbox(){await loadWaTmpls();await refreshConvs();loadSocketIO(()=>{if(typeof io==='undefined')return;const s=io(API.replace('/api',''),{auth:{token:localStorage.getItem('kc_admin_token')}});s.emit('join_admin');s.on('wa_message',d=>{if(d.phone===activePhone)appendMsg({direction:'inbound',body:d.body,timestamp:d.timestamp,status:'received'});refreshConvs();});s.on('inbox_update',()=>refreshConvs());});}
+async function refreshConvs(){try{const d=await api('/admin/whatsapp/inbox'+(convFilter==='unread'?'?filter=unread':''));allConvs=d.conversations||[];renderConvs(allConvs);updateBadge();}catch(e){console.error('inbox:',e.message);}}
+function updateBadge(){const n=allConvs.reduce((s,cv)=>s+(cv.unreadCount||0),0);const b=document.getElementById('inboxBadge');if(b){b.textContent=n;b.style.display=n>0?'inline-flex':'none';}}
+function setConvFilter(f,btn){convFilter=f;document.querySelectorAll('.conv-filter button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');refreshConvs();}
+function filterConvs(q){renderConvs(q?allConvs.filter(cv=>(cv.contactName||'').toLowerCase().includes(q.toLowerCase())||cv.phone.includes(q)):allConvs);}
+function renderConvs(list){const el=document.getElementById('convList');if(!el)return;if(!list.length){el.innerHTML='<div style="padding:30px;text-align:center;color:#bbb;"><div style="font-size:2rem;margin-bottom:8px;">💬</div><div style="font-size:.85rem;font-weight:700;">No conversations yet</div><div style="font-size:.75rem;margin-top:6px;color:#ccc;">Send a WhatsApp to your business number to start</div></div>';return;}el.innerHTML=list.map(cv=>{const nm=cv.contactName||cv.phone;const t=cv.lastMessageAt?fmtT(new Date(cv.lastMessageAt)):'';const u=(cv.unreadCount||0)>0;return `<div class="conv-item ${u?'unread':''} ${cv.phone===activePhone?'active':''}" onclick="openConv('${cv.phone}','${nm.replace(/'/g,"\'")}')"><div class="conv-avi">${nm.charAt(0).toUpperCase()}</div><div class="conv-info"><div class="conv-name">${nm}</div><div class="conv-last">${cv.lastMessage||''}</div></div><div class="conv-meta"><div class="conv-time">${t}</div>${u?`<div class="unread-dot">${cv.unreadCount}</div>`:''}</div></div>`;}).join('');}
+async function openConv(phone,name){activePhone=phone;await api('/admin/whatsapp/read/'+encodeURIComponent(phone),'PUT');const cv=allConvs.find(c=>c.phone===phone);if(cv)cv.unreadCount=0;updateBadge();document.getElementById('chatEmpty').style.display='none';const ca=document.getElementById('chatActive');ca.style.display='flex';if(window.innerWidth<=768){document.getElementById('convListPanel').classList.add('hidden');document.getElementById('chatWin').classList.add('mob-open');}const init=(name||phone).charAt(0).toUpperCase();document.getElementById('chatHeader').innerHTML=`<button class="chat-back-btn" onclick="closeMobileChat()">←</button><div class="chat-header-avi">${init}</div><div class="chat-header-info"><div class="chat-header-name">${name||phone}</div><div class="chat-header-sub">${phone}</div></div><div style="display:flex;gap:6px;margin-left:auto;"><button class="chat-act-btn green" onclick="openCrmForPhone('${phone}')">📊 CRM</button><button class="chat-act-btn" onclick="loadMsgs('${phone}')">↻</button></div>`;await loadMsgs(phone);loadContactPanel(phone);renderConvs(allConvs);}
+function closeMobileChat(){activePhone=null;document.getElementById('convListPanel').classList.remove('hidden');document.getElementById('chatWin').classList.remove('mob-open');document.getElementById('chatActive').style.display='none';document.getElementById('chatEmpty').style.display='flex';renderConvs(allConvs);}
+async function loadMsgs(phone){const el=document.getElementById('chatMsgs');if(!el)return;try{const d=await api('/admin/whatsapp/messages/'+encodeURIComponent(phone));const msgs=d.messages||[];el.innerHTML='';let lastD='';msgs.forEach(m=>{const ds=new Date(m.timestamp).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});if(ds!==lastD){el.innerHTML+=`<div class="msg-date-div">${ds}</div>`;lastD=ds;}el.innerHTML+=mkBubble(m);});el.scrollTop=el.scrollHeight;}catch(e){console.error('msgs:',e);}}
+function mkBubble(m){const dir=m.direction==='outbound'?'out':'in';const t=new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});const tick=dir==='out'?(m.status==='read'?'<span style="color:#4fc3f7">✓✓</span>':m.status==='delivered'?'<span style="color:#aaa">✓✓</span>':'<span style="color:#aaa">✓</span>'):'';const body=(m.type&&m.type!=='text')?`<em style="color:#aaa;font-size:.78rem;">[${m.type}] ${m.body||''}</em>`:(m.body||'');return `<div class="msg-wrap ${dir}"><div class="msg-bubble ${dir}">${body}<div class="msg-time">${t} ${tick}</div></div></div>`;}
+function appendMsg(m){const el=document.getElementById('chatMsgs');if(!el)return;el.innerHTML+=mkBubble(m);el.scrollTop=el.scrollHeight;}
+async function sendWaMsg(){const inp=document.getElementById('msgInput');const txt=inp?.value?.trim();if(!txt||!activePhone)return;inp.value='';inp.style.height='auto';appendMsg({direction:'outbound',body:txt,timestamp:new Date(),status:'sent'});try{await api('/admin/whatsapp/send','POST',{phone:activePhone,text:txt});refreshConvs();}catch(e){toast('❌ Send failed: '+e.message);}}
+function autoResizeTA(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+async function loadWaTmpls(){try{const d=await api('/admin/whatsapp/templates');waTmpls=d.templates||[];}catch(e){}}
+function toggleTmpls(){const dd=document.getElementById('tmplDD');if(!dd)return;dd.classList.toggle('open');if(dd.classList.contains('open')){dd.innerHTML=waTmpls.length?waTmpls.map(t=>`<div class="tmpl-item" onclick="useTmpl(${JSON.stringify(t.body)})"><div class="tmpl-item-name">⚡ ${t.name}</div><div class="tmpl-item-body">${t.body}</div></div>`).join(''):'<div style="padding:12px;color:#aaa;font-size:.82rem;">No templates. Add in CRM Settings.</div>';}}
+function useTmpl(body){document.getElementById('msgInput').value=body;document.getElementById('tmplDD').classList.remove('open');document.getElementById('msgInput').focus();}
+async function loadContactPanel(phone){const el=document.getElementById('contactPanel');if(!el)return;el.innerHTML='<div style="color:#ccc;padding:20px;text-align:center;font-size:.82rem;">Loading...</div>';try{const d=await api('/admin/crm/leads?search='+encodeURIComponent(phone));const lead=d.leads?.[0];if(!lead){el.innerHTML=`<h4>Contact</h4><div class="cp-field"><span class="cp-lbl">Phone</span>${phone}</div><button onclick="createLeadFromPhone('${phone}')" style="width:100%;padding:8px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;margin-top:8px;">+ Add to CRM</button>`;return;}const sd=lead.stage?`<span style="background:${lead.stage.color};border-radius:50%;width:10px;height:10px;display:inline-block;margin-right:4px;vertical-align:middle;"></span>`:'';const tags=(lead.tags||[]).map(t=>`<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');el.innerHTML=`<h4>Contact</h4><div class="cp-field"><span class="cp-lbl">Name</span>${lead.name||phone}</div><div class="cp-field"><span class="cp-lbl">Phone</span>${phone}</div>${lead.email?`<div class="cp-field"><span class="cp-lbl">Email</span>${lead.email}</div>`:''}<div class="cp-field"><span class="cp-lbl">Stage</span>${sd}${lead.stage?.name||'No stage'}</div><div class="cp-field"><span class="cp-lbl">Status</span>${lead.status==='won'?'<span class="won-b">Won ✅</span>':lead.status==='lost'?'<span class="lost-b">Lost ❌</span>':'Open'}</div>${tags?`<div><span class="cp-lbl">Tags</span><div style="margin-top:4px;">${tags}</div></div>`:''}<button onclick="openLeadById('${lead._id}')" style="width:100%;padding:8px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;margin-top:8px;">View Full Lead →</button>`;}catch(e){}}
+async function createLeadFromPhone(phone){try{await api('/admin/crm/leads','POST',{phone,name:phone,source:'whatsapp'});loadContactPanel(phone);toast('✅ Lead created!');}catch(e){toast('❌'+e.message);}}
+function openCrmForPhone(phone){show('crm');loadCrm();}
+function fmtT(d){const diff=Date.now()-d;if(diff<86400000)return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});if(diff<604800000)return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});}
+async function loadCrm(){await Promise.all([loadCrmStages(),loadCrmTags()]);await loadCrmStats();populateCrmFilters();crmTab==='kanban'?loadKanban():loadCrmList();}
+async function loadCrmStats(){try{const d=await api('/admin/crm/stats');document.getElementById('crmTotal').textContent=d.total||0;document.getElementById('crmOpen').textContent=d.open||0;document.getElementById('crmWon').textContent=d.won||0;document.getElementById('crmLost').textContent=d.lost||0;document.getElementById('crmRevenue').textContent='₹'+(d.wonRevenue||0).toLocaleString('en-IN');}catch(e){}}
+async function loadCrmStages(){try{const d=await api('/admin/crm/stages');crmStages=d.stages||[];}catch(e){}}
+async function loadCrmTags(){try{const d=await api('/admin/crm/tags');crmTags=d.tags||[];}catch(e){}}
+function populateCrmFilters(){const sf=document.getElementById('crmStageFilter');const tf=document.getElementById('crmTagFilter');if(sf)sf.innerHTML='<option value="">All Stages</option>'+crmStages.map(s=>`<option value="${s._id}">${s.name}</option>`).join('');if(tf)tf.innerHTML='<option value="">All Tags</option>'+crmTags.map(t=>`<option value="${t._id}">${t.name}</option>`).join('');}
+async function loadKanban(){const board=document.getElementById('kanbanBoard');if(!board)return;board.innerHTML='<div style="color:#aaa;padding:24px;">Loading...</div>';try{const search=document.getElementById('crmSearch')?.value||'';const tag=document.getElementById('crmTagFilter')?.value||'';let url='/admin/crm/leads?view=kanban';if(search)url+='&search='+encodeURIComponent(search);if(tag)url+='&tag='+tag;const d=await api(url);board.innerHTML=(d.kanban||[]).map(col=>`<div class="kanban-col"><div class="kanban-col-head" style="background:${col.stage.color||'#888'}"><h4>${col.stage.name}</h4><span class="k-count">${col.leads.length}</span></div><div class="kanban-col-body" id="col_${col.stage._id}" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="dropLead(event,'${col.stage._id}')">${col.leads.map(mkKCard).join('')||'<div style="padding:12px;color:#ccc;font-size:.78rem;text-align:center;">Drop leads here</div>'}</div></div>`).join('');}catch(e){board.innerHTML='<div style="color:red;padding:16px;">'+e.message+'</div>';}}
+function mkKCard(lead){const tags=(lead.tags||[]).map(t=>`<span class="kc-tag" style="background:${t.color}">${t.name}</span>`).join('');const src={whatsapp:'📱',instagram:'📸',website:'🌐',manual:'✍️'}[lead.source]||'👤';return `<div class="kanban-card" draggable="true" style="border-left-color:${lead.stage?.color||'#ddd'}" ondragstart="dragLead(event,'${lead._id}')" ondragend="document.querySelectorAll('.kanban-col-body').forEach(c=>c.classList.remove('drag-over'))"><div class="kc-name">${lead.name||lead.phone}</div><div class="kc-phone">📱 ${lead.phone}</div>${tags?`<div class="kc-tags">${tags}</div>`:''}<div class="kc-foot"><span>${src} ${lead.source}</span><span>${lead.lastSeen?fmtT(new Date(lead.lastSeen)):''}</span></div><div class="kc-acts"><button class="kb" onclick="openLeadById('${lead._id}')">👁️ View</button><button class="kb green" onclick="quickChat('${lead.phone}')">💬</button><button class="kb red" onclick="deleteLead('${lead._id}')">🗑️</button></div></div>`;}
+function dragLead(e,id){dragLeadId=id;e.dataTransfer.effectAllowed='move';}
+async function dropLead(e,stageId){e.preventDefault();document.querySelectorAll('.kanban-col-body').forEach(c=>c.classList.remove('drag-over'));if(!dragLeadId)return;try{await api('/admin/crm/leads/'+dragLeadId,'PUT',{stage:stageId==='unassigned'?null:stageId});loadKanban();loadCrmStats();}catch(err){toast('❌'+err.message);}}
+async function loadCrmList(){const tbody=document.getElementById('crmTBody');if(!tbody)return;tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px;">Loading...</td></tr>';try{const search=document.getElementById('crmSearch')?.value||'';const stage=document.getElementById('crmStageFilter')?.value||'';const tag=document.getElementById('crmTagFilter')?.value||'';let url='/admin/crm/leads?';if(search)url+='search='+encodeURIComponent(search)+'&';if(stage)url+='stage='+stage+'&';if(tag)url+='tag='+tag+'&';const d=await api(url);const leads=d.leads||[];tbody.innerHTML=leads.length?leads.map(lead=>{const sp=lead.stage?`<span style="background:${lead.stage.color};color:#fff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">${lead.stage.name}</span>`:'—';const tags=(lead.tags||[]).map(t=>`<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');const src={whatsapp:'📱',instagram:'📸',website:'🌐',manual:'✍️'}[lead.source]||'👤';const st=lead.status==='won'?'<span class="won-b">Won ✅</span>':lead.status==='lost'?'<span class="lost-b">Lost ❌</span>':'<span style="color:#666;">Open</span>';return `<tr><td><strong>${lead.name||'—'}</strong><br><small style="color:#888">${lead.phone}</small></td><td>${sp}</td><td>${tags||'—'}</td><td>${src} ${lead.source}</td><td>${lead.lastSeen?new Date(lead.lastSeen).toLocaleDateString('en-IN'):'—'}</td><td>${st}</td><td><button class="kb" onclick="openLeadById('${lead._id}')">👁️</button> <button class="kb green" onclick="quickChat('${lead.phone}')">💬</button> <button class="kb red" onclick="deleteLead('${lead._id}')">🗑️</button></td></tr>`;}).join(''):'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px;">No leads found</td></tr>';}catch(e){tbody.innerHTML='<tr><td colspan="7" style="color:red;padding:16px;">'+e.message+'</td></tr>';}}
+function filterLeads(){crmTab==='kanban'?loadKanban():loadCrmList();}
+function setCrmTab(tab,btn){crmTab=tab;document.querySelectorAll('.crm-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('kanbanView').style.display=tab==='kanban'?'block':'none';document.getElementById('listView').style.display=tab==='list'?'block':'none';tab==='kanban'?loadKanban():loadCrmList();}
+async function openLeadById(id){document.getElementById('leadModal').style.display='flex';const body=document.getElementById('leadModalBody');body.innerHTML='<div style="text-align:center;padding:40px;color:#aaa;">Loading...</div>';try{const d=await api('/admin/crm/leads/'+id);const lead=d.lead;const msgs=d.messages||[];const orders=d.orders||[];const stageSel='<option value="">No Stage</option>'+crmStages.map(s=>`<option value="${s._id}" ${lead.stage?._id===s._id?'selected':''}>${s.name}</option>`).join('');const tagChecks=crmTags.map(t=>{const has=(lead.tags||[]).some(lt=>(lt._id||lt)===t._id);return `<label style="display:inline-flex;align-items:center;gap:4px;margin:3px;cursor:pointer;"><input type="checkbox" value="${t._id}" ${has?'checked':''} onchange="toggleLeadTag('${id}','${t._id}',this.checked)"><span class="tag-chip" style="background:${t.color}">${t.name}</span></label>`;}).join('');const notes=(lead.notes||[]).map(n=>`<div class="note-item">${n.text}<div><small>${n.createdBy} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</small></div></div>`).join('');const orderRows=orders.length?orders.map(o=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0e4f9;font-size:.78rem;"><span>#${o.orderId}</span><span>₹${o.total?.toLocaleString('en-IN')}</span><span>${o.status}</span></div>`).join(''):'<div style="color:#aaa;font-size:.78rem;">No orders found</div>';const recentMsgs=msgs.slice(-5).map(m=>`<div style="margin-bottom:5px;font-size:.8rem;"><span style="color:${m.direction==='inbound'?'#25D366':'#7B2D8B'}">${m.direction==='inbound'?'👤':'👨‍💼'}</span> ${m.body} <small style="color:#aaa">${new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join('');body.innerHTML=`<div class="lm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;"><div><div style="margin-bottom:14px;"><p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Contact</p><input value="${lead.name||''}" placeholder="Name" class="linp" style="margin-bottom:8px;" onchange="updateLeadField('${id}','name',this.value)"><div style="font-size:.82rem;color:#444;margin-bottom:6px;"><span style="font-size:.68rem;color:#aaa;font-weight:700;display:block;">Phone</span>${lead.phone}</div><input value="${lead.email||''}" placeholder="Email" class="linp" style="margin:0;" onchange="updateLeadField('${id}','email',this.value)"></div><div style="margin-bottom:14px;"><p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Stage</p><select class="linp" style="margin:0;" onchange="updateLeadField('${id}','stage',this.value)">${stageSel}</select></div><div style="margin-bottom:14px;"><p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Tags</p><div>${tagChecks}</div></div><div><p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Expected Value</p><input type="number" value="${lead.value||0}" placeholder="₹" class="linp" style="margin:0;" onchange="updateLeadField('${id}','value',this.value)"></div></div><div><div style="margin-bottom:14px;"><p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Recent Messages</p><div style="background:var(--lt);border-radius:8px;padding:10px;max-height:130px;overflow-y:auto;">${recentMsgs||'<div style="color:#aaa;font-size:.78rem;">No messages yet</div>'}</div></div><div style="margin-bottom:14px;"><p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Orders</p>${orderRows}</div><div><p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Notes</p><div id="nlst_${id}">${notes||'<div style="color:#aaa;font-size:.78rem;">No notes yet</div>'}</div><div style="display:flex;gap:8px;margin-top:8px;"><textarea id="nInp_${id}" placeholder="Add a note..." rows="2" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;resize:none;outline:none;"></textarea><button onclick="addNote('${id}')" style="padding:8px 12px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;align-self:flex-end;">Add</button></div></div></div></div>`;}catch(e){body.innerHTML='<div style="color:red;padding:16px;">'+e.message+'</div>';}}
+function closeLead(){document.getElementById('leadModal').style.display='none';}
+function openInboxForLead(){closeLead();show('inbox');}
+async function updateLeadField(id,field,value){try{await api('/admin/crm/leads/'+id,'PUT',{[field]:value});crmTab==='kanban'?loadKanban():loadCrmList();loadCrmStats();}catch(e){toast('❌'+e.message);}}
+async function toggleLeadTag(lid,tid,checked){try{const d=await api('/admin/crm/leads/'+lid);const cur=(d.lead.tags||[]).map(t=>t._id||t);await api('/admin/crm/leads/'+lid,'PUT',{tags:checked?[...cur,tid]:cur.filter(t=>t!==tid)});}catch(e){toast('❌'+e.message);}}
+async function addNote(lid){const inp=document.getElementById('nInp_'+lid);const txt=inp?.value?.trim();if(!txt)return;try{const d=await api('/admin/crm/leads/'+lid+'/notes','POST',{text:txt});inp.value='';const nl=document.getElementById('nlst_'+lid);if(nl)nl.innerHTML=(d.notes||[]).map(n=>`<div class="note-item">${n.text}<div><small>${n.createdBy} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</small></div></div>`).join('');toast('✅ Note added');}catch(e){toast('❌'+e.message);}}
+async function deleteLead(id){if(!confirm('Delete this lead?'))return;try{await api('/admin/crm/leads/'+id,'DELETE');toast('✅ Deleted');crmTab==='kanban'?loadKanban():loadCrmList();loadCrmStats();}catch(e){toast('❌'+e.message);}}
+function openAddLead(){document.getElementById('addLeadModal').style.display='flex';document.getElementById('alStage').innerHTML='<option value="">No Stage</option>'+crmStages.map(s=>`<option value="${s._id}">${s.name}</option>`).join('');}
+function closeAddLead(){document.getElementById('addLeadModal').style.display='none';}
+async function saveNewLead(){const phone=document.getElementById('alPhone').value.trim();if(!phone){toast('⚠️ Phone required');return;}try{await api('/admin/crm/leads','POST',{name:document.getElementById('alName').value.trim(),phone,email:document.getElementById('alEmail').value.trim(),stage:document.getElementById('alStage').value||null,source:document.getElementById('alSource').value,value:parseFloat(document.getElementById('alValue').value)||0});closeAddLead();toast('✅ Lead added!');loadCrm();}catch(e){toast('❌'+e.message);}}
+function quickChat(phone){show('inbox');setTimeout(()=>openConv(phone,phone),300);}
+async function loadCrmSettings(){await loadCrmStages();await loadCrmTags();await loadWaTmpls();const sl=document.getElementById('stagesList');const tl=document.getElementById('tagsList');const tml=document.getElementById('tmplsList');if(sl)sl.innerHTML=crmStages.map(s=>`<div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--lt2);"><span style="width:14px;height:14px;border-radius:50%;background:${s.color};display:inline-block;flex-shrink:0;"></span><span style="flex:1;font-weight:700;font-size:.85rem;">${s.name}</span><span style="font-size:.72rem;color:#aaa;">${s.isWon?'✅ Won':s.isLost?'❌ Lost':'Active'}</span><button onclick="deleteStage('${s._id}')" style="background:#ffebee;color:#e74c3c;border:none;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;">Delete</button></div>`).join('')||'<div style="color:#aaa;padding:12px;">No stages</div>';if(tl)tl.innerHTML=crmTags.map(t=>`<span style="display:inline-flex;align-items:center;gap:5px;margin:4px;"><span class="tag-chip" style="background:${t.color}">${t.name}</span><button onclick="deleteTag('${t._id}')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:.8rem;">✕</button></span>`).join('')||'<div style="color:#aaa;padding:12px;">No tags</div>';if(tml)tml.innerHTML=waTmpls.map(t=>`<div style="padding:12px;border-bottom:1px solid var(--lt2);"><div style="font-weight:700;font-size:.85rem;color:var(--pp);">⚡ ${t.name}</div><div style="font-size:.8rem;color:#555;margin:4px 0;">${t.body}</div><button onclick="deleteTmpl('${t._id}')" style="background:#ffebee;color:#e74c3c;border:none;border-radius:6px;padding:3px 10px;font-size:.72rem;cursor:pointer;">Delete</button></div>`).join('')||'<div style="color:#aaa;padding:12px;">No templates</div>';}
+function openAddStage(){const name=prompt('Stage name:');if(!name)return;const color=prompt('Color (hex):','#7B2D8B');if(!color)return;const isWon=confirm('Is this a Won stage?');const isLost=!isWon&&confirm('Is this a Lost stage?');api('/admin/crm/stages','POST',{name,color,isWon,isLost}).then(()=>{loadCrmSettings();toast('✅ Stage added');}).catch(e=>toast('❌'+e.message));}
+function openAddTag(){const name=prompt('Tag name:');if(!name)return;const color=prompt('Color (hex):','#F7941D');if(!color)return;api('/admin/crm/tags','POST',{name,color}).then(()=>{loadCrmSettings();toast('✅ Tag added');}).catch(e=>toast('❌'+e.message));}
+function openAddTmpl(){const name=prompt('Template name:');if(!name)return;const body=prompt('Message:');if(!body)return;api('/admin/whatsapp/templates','POST',{name,body}).then(()=>{loadCrmSettings();toast('✅ Template added');}).catch(e=>toast('❌'+e.message));}
+async function deleteStage(id){if(!confirm('Delete stage?'))return;await api('/admin/crm/stages/'+id,'DELETE');loadCrmSettings();loadCrm();toast('✅ Deleted');}
+async function deleteTag(id){await api('/admin/crm/tags/'+id,'DELETE');loadCrmSettings();toast('✅ Deleted');}
+async function deleteTmpl(id){await api('/admin/whatsapp/templates/'+id,'DELETE');loadCrmSettings();toast('✅ Deleted');}
+document.addEventListener('click',e=>{if(e.target.id==='leadModal')closeLead();if(e.target.id==='addLeadModal')closeAddLead();if(!e.target.closest('#tmplDD')&&!e.target.closest('.wa-tmpl-btn'))document.getElementById('tmplDD')?.classList.remove('open');});
+</script>
+<!-- ═══ WHATSAPP INBOX PANEL ═══ -->
 <div class="panel" id="inboxPanel">
-  <div class="inbox-wrap" id="inboxWrap">
-
-    <!-- LEFT: Conversation List -->
+  <div class="inbox-wrap">
     <div class="conv-list" id="convListPanel">
-      <div class="conv-search">
-        <input type="text" id="convSearch" placeholder="🔍 Search..." oninput="filterConvs(this.value)">
-      </div>
+      <div class="conv-search"><input type="text" id="convSearch" placeholder="🔍 Search..." oninput="filterConvs(this.value)"></div>
       <div class="conv-filter">
         <button class="active" onclick="setConvFilter('all',this)">All</button>
         <button onclick="setConvFilter('unread',this)">🟢 Unread</button>
       </div>
-      <div class="conv-items" id="convList">
-        <div style="padding:30px;text-align:center;color:#bbb;">
-          <div style="font-size:2rem;margin-bottom:8px;">💬</div>
-          <div style="font-size:.85rem;font-weight:700;">Loading conversations...</div>
-        </div>
-      </div>
+      <div class="conv-items" id="convList"><div style="padding:30px;text-align:center;color:#bbb;"><div style="font-size:2rem;margin-bottom:8px;">💬</div><div style="font-size:.85rem;font-weight:700;">Loading conversations...</div></div></div>
     </div>
-
-    <!-- MIDDLE: Chat Window (hidden on mobile until conv selected) -->
     <div class="chat-win" id="chatWin">
-      <!-- Default empty state (desktop) -->
       <div class="chat-empty-state" id="chatEmpty">
-        <span>💬</span>
-        <p style="font-weight:700;font-size:.95rem;">Select a conversation</p>
-        <small>Choose a chat from the list</small>
+        <span style="font-size:3rem">💬</span>
+        <p style="font-weight:700">Select a conversation</p>
+        <small>Choose a chat from the left</small>
       </div>
-      <!-- Active chat -->
       <div id="chatActive" style="display:none;flex-direction:column;height:100%;flex:1;">
-        <div class="chat-header" id="chatHeader">
-          <button class="chat-back-btn" onclick="closeMobileChat()">←</button>
-        </div>
+        <div class="chat-header" id="chatHeader"><button class="chat-back-btn" onclick="closeMobileChat()">←</button></div>
         <div class="chat-msgs" id="chatMsgs"></div>
         <div style="position:relative;">
-          <div class="tmpl-dropdown" id="tmplDropdown"></div>
+          <div class="tmpl-dd" id="tmplDD"></div>
           <div class="chat-input-area">
-            <button class="wa-tmpl-btn" onclick="toggleTemplates()" title="Quick replies">⚡</button>
+            <button class="wa-tmpl-btn" onclick="toggleTmpls()" title="Quick replies">⚡</button>
             <textarea id="msgInput" rows="1" placeholder="Type a message..."
               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}"
-              oninput="autoResize(this)"></textarea>
+              oninput="autoResizeTA(this)"></textarea>
             <button class="wa-send-btn" onclick="sendWaMsg()">➤</button>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- RIGHT: Contact Info (desktop only) -->
     <div class="contact-panel" id="contactPanel">
-      <div style="text-align:center;color:#ccc;padding:30px 10px;">
-        <div style="font-size:2rem;margin-bottom:8px;">👤</div>
-        <div style="font-size:.8rem;">Select a conversation</div>
-      </div>
+      <div style="text-align:center;color:#ccc;padding:30px 10px;"><div style="font-size:2rem;margin-bottom:8px;">👤</div><div style="font-size:.8rem;">Select a conversation</div></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════
-     CRM PANEL
-══════════════════════════════════ -->
+<!-- ═══ CRM PANEL ═══ -->
 <div class="panel" id="crmPanel">
-  <!-- Stats row -->
-  <div class="crm-stats" id="crmStats">
+  <div class="crm-stats">
     <div class="crm-stat"><p>Total Leads</p><h3 id="crmTotal">—</h3></div>
     <div class="crm-stat"><p>Open</p><h3 id="crmOpen" style="color:var(--pp)">—</h3></div>
     <div class="crm-stat"><p>Won ✅</p><h3 id="crmWon" style="color:#27ae60">—</h3></div>
     <div class="crm-stat"><p>Lost ❌</p><h3 id="crmLost" style="color:#e74c3c">—</h3></div>
-    <div class="crm-stat"><p>Revenue Won</p><h3 id="crmRevenue" style="color:var(--or)">—</h3><small>from won leads</small></div>
+    <div class="crm-stat"><p>Revenue Won</p><h3 id="crmRevenue" style="color:var(--or)">—</h3></div>
   </div>
-
-  <!-- Top bar -->
   <div class="crm-top">
     <div class="crm-tabs">
       <button class="crm-tab active" onclick="setCrmTab('kanban',this)">🗂️ Kanban</button>
       <button class="crm-tab" onclick="setCrmTab('list',this)">📋 List</button>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <input type="text" id="crmSearch" placeholder="🔍 Search leads..." oninput="filterLeads(this.value)"
-        style="padding:8px 14px;border:1px solid #ddd;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;width:200px;">
-      <select id="crmStageFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;">
-        <option value="">All Stages</option>
-      </select>
-      <select id="crmTagFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;">
-        <option value="">All Tags</option>
-      </select>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="text" id="crmSearch" placeholder="🔍 Search leads..." oninput="filterLeads()" style="padding:8px 14px;border:1px solid #ddd;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;width:180px;">
+      <select id="crmStageFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;"><option value="">All Stages</option></select>
+      <select id="crmTagFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;"><option value="">All Tags</option></select>
       <button onclick="openAddLead()" style="padding:8px 18px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Lead</button>
-      <button onclick="show('crmstages')" style="padding:8px 14px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">⚙️ Stages</button>
+      <button onclick="show('crmstages')" style="padding:8px 14px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">⚙️ Settings</button>
     </div>
   </div>
-
-  <!-- Kanban view -->
-  <div id="kanbanView">
-    <div class="kanban-board" id="kanbanBoard">
-      <div style="color:#aaa;padding:24px;">Loading pipeline...</div>
-    </div>
-  </div>
-
-  <!-- List view -->
-  <div id="listView" style="display:none;">
-    <div style="overflow-x:auto;">
-      <table class="crm-table">
-        <thead>
-          <tr>
-            <th>Name / Phone</th><th>Stage</th><th>Tags</th><th>Source</th><th>Last Seen</th><th>Status</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="crmTableBody"></tbody>
-      </table>
-    </div>
-  </div>
+  <div id="kanbanView"><div class="kanban-board" id="kanbanBoard"><div style="color:#aaa;padding:24px;">Loading pipeline...</div></div></div>
+  <div id="listView" style="display:none;"><div class="crm-tbl-wrap"><table class="crm-tbl"><thead><tr><th>Name / Phone</th><th>Stage</th><th>Tags</th><th>Source</th><th>Last Seen</th><th>Status</th><th>Actions</th></tr></thead><tbody id="crmTBody"></tbody></table></div></div>
 </div>
 
-<!-- ══════════════════════════════════
-     CRM STAGES MANAGEMENT PANEL
-══════════════════════════════════ -->
+<!-- ═══ CRM SETTINGS PANEL ═══ -->
 <div class="panel" id="crmstagesPanel">
-  <div class="card">
-    <div class="card-head">
-      <h3>⚙️ Pipeline Stages</h3>
-      <button onclick="openAddStage()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Stage</button>
-    </div>
-    <div id="stagesList"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><h3>🏷️ Tags</h3>
-      <button onclick="openAddTag()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Tag</button>
-    </div>
-    <div id="tagsList"></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><h3>⚡ Quick Reply Templates</h3>
-      <button onclick="openAddTemplate()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Template</button>
-    </div>
-    <div id="templatesList"></div>
-  </div>
+  <div class="card"><div class="card-head"><h3>⚙️ Pipeline Stages</h3><button onclick="openAddStage()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Stage</button></div><div id="stagesList"></div></div>
+  <div class="card"><div class="card-head"><h3>🏷️ Tags</h3><button onclick="openAddTag()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Tag</button></div><div id="tagsList"></div></div>
+  <div class="card"><div class="card-head"><h3>⚡ Quick Reply Templates</h3><button onclick="openAddTmpl()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add</button></div><div id="tmplsList"></div></div>
 </div>
 
-<!-- ══ LEAD DETAIL MODAL ══ -->
-<div id="leadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
-  <div class="lead-modal">
-    <div class="lead-modal-head">
+<!-- ═══ LEAD MODAL ═══ -->
+<div id="leadModal" class="lm-wrap" style="display:none;">
+  <div class="lm-box">
+    <div class="lm-head">
       <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">👤 Lead Details</h2>
       <div style="display:flex;gap:8px;">
-        <button onclick="openInboxForLead()" style="padding:6px 14px;background:#e8f5e9;color:#25D366;border:1px solid #25D366;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">💬 Open Chat</button>
-        <button onclick="closeLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;color:var(--pp);">✕</button>
+        <button onclick="openInboxForLead()" style="padding:6px 14px;background:#e8f5e9;color:#25D366;border:1px solid #25D366;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">💬 Chat</button>
+        <button onclick="closeLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);font-size:1rem;">✕</button>
       </div>
     </div>
     <div id="leadModalBody" style="padding:20px;"></div>
   </div>
 </div>
 
-<!-- ══ ADD/EDIT LEAD MODAL ══ -->
+<!-- ═══ ADD LEAD MODAL ═══ -->
 <div id="addLeadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#fff;border-radius:20px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
     <div style="padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;">
-      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)" id="addLeadTitle">➕ Add Lead</h2>
-      <button onclick="closeAddLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);">✕</button>
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">➕ Add Lead</h2>
+      <button onclick="closeAddLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);font-size:1rem;">✕</button>
     </div>
-    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;" id="addLeadForm">
-      <input id="leadName" placeholder="Name" class="linp" style="margin:0">
-      <input id="leadPhone" placeholder="Phone (e.g. 919747867853)" class="linp" style="margin:0">
-      <input id="leadEmail" placeholder="Email (optional)" class="linp" style="margin:0">
-      <select id="leadStage" class="linp" style="margin:0"></select>
-      <select id="leadSource" class="linp" style="margin:0">
-        <option value="whatsapp">WhatsApp</option>
-        <option value="instagram">Instagram</option>
-        <option value="website">Website</option>
-        <option value="manual">Manual</option>
-      </select>
-      <input id="leadValue" placeholder="Expected value ₹ (optional)" class="linp" type="number" style="margin:0">
-      <input id="leadAssigned" placeholder="Assigned to" class="linp" style="margin:0">
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+      <input id="alName" placeholder="Name" class="linp" style="margin:0">
+      <input id="alPhone" placeholder="Phone (e.g. 919747867853)" class="linp" style="margin:0">
+      <input id="alEmail" placeholder="Email (optional)" class="linp" style="margin:0">
+      <select id="alStage" class="linp" style="margin:0"></select>
+      <select id="alSource" class="linp" style="margin:0"><option value="whatsapp">📱 WhatsApp</option><option value="instagram">📸 Instagram</option><option value="website">🌐 Website</option><option value="manual">✍️ Manual</option></select>
+      <input id="alValue" placeholder="Expected value ₹ (optional)" class="linp" type="number" style="margin:0">
       <button onclick="saveNewLead()" class="lbtn">Save Lead</button>
     </div>
   </div>
 </div>
 
-<!-- ORDER DETAIL MODAL -->
-<div id="orderDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;border-radius:20px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">
-    <div style="position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;z-index:1">
-      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">📦 Order Details</h2>
-      <button onclick="closeOrderDetail()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;color:var(--pp)">✕</button>
-    </div>
-    <div id="ordDetailBody" style="padding:20px"></div>
-  </div>
-</div>
 </body>
 </html>

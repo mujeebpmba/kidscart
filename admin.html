@@ -765,7 +765,7 @@ tr:hover td{background:#FAF7FC;}
 
 <script>
 // ── CONFIG ──────────────────────────────────
-const API = '/api';
+const API = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://kidscart-production.up.railway.app/api';
 let token = localStorage.getItem('kc_admin_token') || '';
 let adminUser = null;
 let ordersData = [];

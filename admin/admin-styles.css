@@ -38,6 +38,7 @@ body{
 ══════════════════════════════════════════ */
 .panel{display:none!important;}
 .panel.active{display:block!important;}
+.super-only{display:none!important;} /* shown only for super_admin via JS */
 
 /* ══════════════════════════════════════════
    SIDEBAR

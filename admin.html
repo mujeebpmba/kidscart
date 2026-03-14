@@ -9,7 +9,15 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/admin/admin-styles.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<script>(function(){var s=document.createElement('style');if(localStorage.getItem('kc_admin_token')){s.textContent='#loginScreen{display:none!important}#adminApp{display:flex!important}';}else{s.textContent='#adminApp{display:none!important}';}document.head.appendChild(s);})()</script>
+<script>(function(){
+  var s=document.createElement('style');
+  if(localStorage.getItem('kc_admin_token')){
+    s.textContent='#loginScreen{display:none!important}#adminApp{display:flex!important}.panel{display:none!important}.super-only{display:none!important}';
+  } else {
+    s.textContent='#adminApp{display:none!important}';
+  }
+  document.head.appendChild(s);
+})()</script>
 <script src="/admin/shared.js"></script>
 </head>
 <body>
@@ -451,10 +459,21 @@ function onPageReady(user) {
   setText('sbUserRole', user.role==='super_admin'?'Super Admin':'Admin');
   setText('adminName', '👤 '+(user.name||'Admin'));
   setText('mobUser', user.name||'');
-  if (user.role==='super_admin') document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});
+  // Show super-only nav items for super_admin (before app is visible — no flicker)
+  if (user.role==='super_admin') {
+    document.querySelectorAll('.super-only').forEach(function(el){
+      el.style.display=''; // override the CSS display:none
+    });
+  }
+  // Switch to correct panel BEFORE revealing the app
   checkHash();
   if (!window.location.hash) loadDash();
-  showAdminApp(); initSidebarState();
+  // Now reveal — correct panel already active, no flash
+  showAdminApp();
+  initSidebarState();
+  // Remove the zero-flash panel-hiding style so panels can show normally
+  var zf = document.querySelector('style');
+  if (zf && zf.textContent.indexOf('panel') !== -1) zf.remove();
   setTimeout(pollWaBadge, 8000);
 }
 window._kcAfterLogin = onPageReady;

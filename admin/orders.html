@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orders — KidsCart Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};</script>
+<script src="/admin/shared.js"></script>
+</head>
+<body>
+
+<div id="loginScreen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#7B2D8B,#5C1F7A);">
+  <div class="login-box">
+    <div class="login-logo"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart"></div>
+    <h2>Admin Panel</h2><p>Sign in to manage your store</p>
+    <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
+    <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
+    <p style="text-align:center;margin-top:12px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#9b60bf;font-weight:700;">Forgot password?</a></p>
+    <div id="forgotBox" style="display:none;margin-top:8px;">
+      <input class="linp" type="email" id="forgotEmail" placeholder="admin@kidscart.kids">
+      <button class="lbtn" style="margin-top:8px;" onclick="adminForgot()">Send Reset Link 📧</button>
+    </div>
+    <div id="loginErr" style="color:#c62828;font-size:.83rem;text-align:center;margin-top:10px;display:none;"></div>
+  </div>
+</div>
+
+<div id="adminApp" style="display:none;">
+  <div class="mob-header">
+    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
+    <span class="mob-hdr-title">📦 Orders</span>
+    <div class="mob-hdr-right" id="mobUser"></div>
+  </div>
+  <div id="sidebarMount"></div>
+  <div class="main">
+    <div class="topbar">
+      <h2>📦 Orders</h2>
+      <div class="topbar-right">
+        <span class="admin-badge" id="adminName">Admin</span>
+        <a href="/" target="_blank" style="font-size:.78rem;color:var(--pp);font-weight:800;text-decoration:none;">🛍️ View Shop</a>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-head"><h3>📦 All Orders</h3>
+          <button class="btn btn-pp btn-sm" onclick="loadOrders()">↻ Refresh</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="orderSearch" placeholder="Search by Order ID or customer name…" oninput="filterOrders()">
+          <select id="orderStatusFilter" onchange="filterOrders()">
+            <option value="">All Status</option>
+            <option value="placed">Placed</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="out_for_delivery">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="ordersTable"><tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">Loading orders…</td></tr></tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:14px;" id="orderPagination"></div>
+      </div>
+    </div>
+  </div>
+  <div id="mobBarMount"></div>
+</div>
+
+<!-- UPDATE STATUS MODAL -->
+<div id="orderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:420px;max-width:94vw;position:relative;">
+    <button onclick="closeOrderModal()" style="position:absolute;top:12px;right:14px;border:none;background:none;font-size:1.2rem;cursor:pointer;color:#888;">✕</button>
+    <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);margin-bottom:18px;">📦 Update Order #<span id="modalOrderId"></span></h3>
+    <div class="fgroup">
+      <label>Order Status</label>
+      <select id="modalStatus">
+        <option value="placed">Placed</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="processing">Processing</option>
+        <option value="shipped">Shipped</option>
+        <option value="out_for_delivery">Out for Delivery</option>
+        <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
+        <option value="returned">Returned</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="fgroup">
+        <label>Payment Method</label>
+        <select id="modalPayMethod">
+          <option value="cod">COD (Cash)</option>
+          <option value="upi">UPI</option>
+          <option value="card">Card</option>
+          <option value="netbanking">Net Banking</option>
+        </select>
+      </div>
+      <div class="fgroup">
+        <label>Payment Status</label>
+        <select id="modalPayStatus">
+          <option value="pending">Pending</option>
+          <option value="paid">Paid ✅</option>
+          <option value="failed">Failed</option>
+          <option value="refunded">Refunded</option>
+        </select>
+      </div>
+    </div>
+    <div class="fgroup">
+      <label>Message to Customer (optional)</label>
+      <textarea id="modalMsg" placeholder="e.g. Your order is on the way! Tracking: XYZ123"></textarea>
+    </div>
+    <input type="hidden" id="modalOrderDbId">
+    <button class="btn-full" onclick="updateOrderStatus()">✅ Save Changes</button>
+  </div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div id="orderDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;z-index:1;border-radius:20px 20px 0 0;">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp);">📦 Order Details</h2>
+      <button onclick="closeOrderDetail()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;color:var(--pp);">✕</button>
+    </div>
+    <div id="ordDetailBody" style="padding:20px;"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let ordersData = [];
+
+window._kcAfterLogin = function(user) {
+  document.getElementById('sidebarMount').innerHTML = renderSidebar('orders');
+  document.getElementById('mobBarMount').innerHTML  = renderMobBar('orders');
+  showAdminApp();
+  loadOrders();
+};
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginScreen').style.display = 'flex';
+  KC.init(window._kcAfterLogin);
+});
+
+// ── LOAD & RENDER ────────────────────────────────────────────
+async function loadOrders() {
+  try {
+    const r = await apiFetch('/admin/orders?limit=200');
+    ordersData = r.orders || [];
+    renderOrders(ordersData);
+  } catch(e) {
+    document.getElementById('ordersTable').innerHTML =
+      `<tr><td colspan="8" style="text-align:center;color:var(--er);padding:24px;">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderOrders(orders) {
+  const el = document.getElementById('ordersTable');
+  const isSA = KC.getUser()?.role === 'super_admin';
+  if (!orders.length) {
+    el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">No orders found</td></tr>';
+    return;
+  }
+  el.innerHTML = orders.map(o => `
+    <tr>
+      <td><b>#${o.orderId}</b></td>
+      <td>${o.user?.name||'—'}<br><small style="color:var(--gy);">${o.user?.email||''}</small></td>
+      <td>${o.items?.length||0} item(s)</td>
+      <td><b>₹${(o.total||0).toLocaleString('en-IN')}</b></td>
+      <td>
+        <span style="font-weight:700;">${(o.payment?.method||'COD').toUpperCase()}</span><br>
+        <small style="color:${o.payment?.status==='paid'?'var(--ok)':'var(--or)'};">${o.payment?.status||'pending'}</small>
+      </td>
+      <td>${fmtDate(o.createdAt)}</td>
+      <td><span class="badge b-${o.status}">${o.status}</span></td>
+      <td>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}','${o.payment?.method||'cod'}','${o.payment?.status||'pending'}')">✏️ Update</button>
+          <button class="btn btn-ghost btn-sm" onclick="viewOrderDetail('${o._id}')">👁 View</button>
+          ${isSA ? `<button class="btn btn-sm" style="background:var(--er);color:#fff;" onclick="deleteOrder('${o._id}','${o.orderId}')">🗑</button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterOrders() {
+  const search = document.getElementById('orderSearch').value.toLowerCase();
+  const status = document.getElementById('orderStatusFilter').value;
+  let filtered = ordersData;
+  if (search) filtered = filtered.filter(o =>
+    o.orderId?.toLowerCase().includes(search) || o.user?.name?.toLowerCase().includes(search));
+  if (status) filtered = filtered.filter(o => o.status === status);
+  renderOrders(filtered);
+}
+
+// ── STATUS MODAL ─────────────────────────────────────────────
+function openOrderModal(dbId, orderId, status, payMethod='cod', payStatus='pending') {
+  document.getElementById('modalOrderDbId').value   = dbId;
+  document.getElementById('modalOrderId').textContent = orderId;
+  document.getElementById('modalStatus').value      = status;
+  document.getElementById('modalPayMethod').value   = payMethod.toLowerCase();
+  document.getElementById('modalPayStatus').value   = payStatus;
+  document.getElementById('modalMsg').value         = '';
+  document.getElementById('orderModal').style.display = 'flex';
+}
+function closeOrderModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+async function updateOrderStatus() {
+  const id        = document.getElementById('modalOrderDbId').value;
+  const status    = document.getElementById('modalStatus').value;
+  const message   = document.getElementById('modalMsg').value.trim();
+  const payMethod = document.getElementById('modalPayMethod').value;
+  const payStatus = document.getElementById('modalPayStatus').value;
+  try {
+    await apiFetch(`/admin/orders/${id}/status`, 'PUT', { status, message });
+    await apiFetch(`/admin/orders/${id}/payment`, 'PUT', { method: payMethod, status: payStatus });
+    toast('✅ Order updated!');
+    closeOrderModal();
+    loadOrders();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function deleteOrder(id, orderId) {
+  if (!confirm(`Delete order #${orderId}? This cannot be undone.`)) return;
+  try {
+    await apiFetch(`/admin/orders/${id}`, 'DELETE');
+    toast('🗑 Order deleted');
+    loadOrders();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── ORDER DETAIL MODAL ────────────────────────────────────────
+async function viewOrderDetail(id) {
+  const modal = document.getElementById('orderDetailModal');
+  const body  = document.getElementById('ordDetailBody');
+  modal.style.display = 'flex';
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;">Loading…</div>';
+  try {
+    const o     = await apiFetch('/admin/orders/' + id);
+    const order = o.order || o;
+    const items = (order.items||[]).map(i =>
+      `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--lt2);font-size:.85rem;">
+        <span>${i.emoji||'🛍️'} ${i.name} (${i.size||'—'}) ×${i.qty}</span>
+        <span style="font-weight:700;">₹${((i.price||0)*i.qty).toLocaleString('en-IN')}</span>
+      </div>`).join('');
+    const tracking = (order.tracking||[]).map(t =>
+      `<div style="display:flex;gap:10px;padding:8px 0;font-size:.82rem;">
+        <span style="color:var(--ok);font-size:1rem;">●</span>
+        <div><strong>${t.status}</strong> — ${t.message||''}<br>
+        <small style="color:var(--gy);">${t.time?new Date(t.time).toLocaleString('en-IN'):''}</small></div>
+      </div>`).join('');
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div>
+          <div style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;">Customer</div>
+          <div style="font-size:.88rem;font-weight:700;">${order.user?.name||'—'}</div>
+          <div style="font-size:.82rem;color:var(--gy);">${order.user?.email||''}</div>
+          <div style="font-size:.82rem;color:var(--gy);">${order.user?.phone||''}</div>
+        </div>
+        <div>
+          <div style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;">Shipping Address</div>
+          <div style="font-size:.82rem;line-height:1.6;">
+            ${order.shippingAddress?.name||''}, ${order.shippingAddress?.phone||''}<br>
+            ${order.shippingAddress?.line1||''}${order.shippingAddress?.line2?', '+order.shippingAddress.line2:''}<br>
+            ${order.shippingAddress?.city||''}, ${order.shippingAddress?.state||''} — ${order.shippingAddress?.pincode||''}
+          </div>
+        </div>
+      </div>
+      <div style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:8px;">Items</div>
+      ${items}
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:.88rem;"><span>Subtotal</span><span>₹${(order.subtotal||0).toLocaleString('en-IN')}</span></div>
+      ${order.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;color:var(--ok);"><span>Discount (${order.couponCode||''})</span><span>−₹${order.discount.toLocaleString('en-IN')}</span></div>`:''}
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;"><span>Delivery</span><span>${order.deliveryFee===0?'FREE':'₹'+order.deliveryFee}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:1rem;font-weight:900;border-top:2px solid var(--lt2);">
+        <span>Total</span><span style="color:var(--pp);">₹${(order.total||0).toLocaleString('en-IN')}</span>
+      </div>
+      <div style="margin-top:16px;">
+        <div style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:8px;">Tracking Timeline</div>
+        ${tracking||'<div style="color:var(--gy);font-size:.82rem;">No tracking info yet</div>'}
+      </div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:var(--lt);border-radius:10px;padding:12px;font-size:.82rem;">
+          <div style="color:var(--gy);font-size:.72rem;font-weight:700;text-transform:uppercase;">Payment</div>
+          <div style="font-weight:700;margin-top:4px;">${(order.payment?.method||'COD').toUpperCase()}</div>
+          <div style="color:${order.payment?.status==='paid'?'var(--ok)':'var(--or)'};">${order.payment?.status||'pending'}</div>
+          ${order.payment?.transactionId?`<div style="font-size:.72rem;color:var(--gy);margin-top:4px;">ID: ${order.payment.transactionId}</div>`:''}
+        </div>
+        <div style="background:var(--lt);border-radius:10px;padding:12px;font-size:.82rem;">
+          <div style="color:var(--gy);font-size:.72rem;font-weight:700;text-transform:uppercase;">Status</div>
+          <div style="font-weight:700;margin-top:4px;"><span class="badge b-${order.status}">${order.status}</span></div>
+          ${order.estimatedDelivery?`<div style="font-size:.72rem;color:var(--gy);margin-top:4px;">Est. delivery: ${new Date(order.estimatedDelivery).toLocaleDateString('en-IN')}</div>`:''}
+        </div>
+      </div>
+      <div style="margin-top:16px;text-align:right;">
+        <button onclick="openOrderModal('${order._id}','${order.orderId}','${order.status}','${order.payment?.method||'cod'}','${order.payment?.status||'pending'}')" style="background:var(--pp);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;">✏️ Update Status</button>
+      </div>`;
+  } catch(e) { body.innerHTML = '<div style="color:var(--er);padding:16px;">Error: ' + e.message + '</div>'; }
+}
+
+function closeOrderDetail() { document.getElementById('orderDetailModal').style.display = 'none'; }
+
+// Close modals on outside click
+document.addEventListener('click', e => {
+  if (e.target === document.getElementById('orderModal'))       closeOrderModal();
+  if (e.target === document.getElementById('orderDetailModal')) closeOrderDetail();
+});
+</script>
+</body>
+</html>

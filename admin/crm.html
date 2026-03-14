@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CRM — KidsCart Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};</script>
+<script src="/admin/shared.js"></script>
+<style>
+/* ── CRM Styles ── */
+.crm-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;}
+.crm-stat{background:#fff;border-radius:12px;padding:14px 12px;box-shadow:var(--shadow);text-align:center;}
+.crm-stat p{font-size:.68rem;color:#999;font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+.crm-stat h3{font-size:1.5rem;font-weight:900;font-family:'Poppins',sans-serif;margin:0;}
+.crm-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.crm-tabs{display:flex;gap:4px;background:#fff;border-radius:10px;padding:4px;box-shadow:var(--shadow);}
+.crm-tab{padding:7px 16px;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
+.crm-tab.active{background:var(--pp);color:#fff;}
+.kanban-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;min-height:420px;}
+.kanban-board::-webkit-scrollbar{height:4px;}
+.kanban-board::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px;}
+.kanban-col{flex-shrink:0;width:220px;display:flex;flex-direction:column;}
+.kanban-col-head{padding:10px 12px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between;}
+.kanban-col-head h4{font-size:.8rem;font-weight:800;color:#fff;margin:0;}
+.k-count{background:rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:1px 8px;font-size:.72rem;font-weight:800;}
+.kanban-col-body{flex:1;background:#f5f5f7;border-radius:0 0 10px 10px;padding:8px;min-height:350px;transition:.15s;}
+.kanban-col-body.drag-over{background:#e8d5f5;border:2px dashed var(--pp);}
+.kanban-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.07);cursor:grab;border-left:3px solid #ddd;transition:.15s;}
+.kanban-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.12);transform:translateY(-1px);}
+.kc-name{font-size:.85rem;font-weight:800;color:#111;margin-bottom:3px;}
+.kc-phone{font-size:.74rem;color:#888;margin-bottom:6px;}
+.kc-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;}
+.kc-tag{padding:2px 7px;border-radius:20px;font-size:.64rem;font-weight:700;color:#fff;}
+.kc-foot{display:flex;justify-content:space-between;font-size:.68rem;color:#bbb;margin-bottom:8px;}
+.kc-acts{display:flex;gap:4px;}
+.kb{height:28px;padding:0 8px;border-radius:6px;border:none;background:var(--lt);color:var(--pp);font-size:.75rem;cursor:pointer;display:inline-flex;align-items:center;gap:3px;font-family:'Nunito',sans-serif;font-weight:700;}
+.kb.red{background:#ffebee;color:#e74c3c;}
+.kb.green{background:#e8f5e9;color:#25D366;}
+.crm-tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+.crm-tbl th{background:var(--lt);padding:10px 12px;font-size:.75rem;font-weight:800;color:var(--pp);text-align:left;white-space:nowrap;}
+.crm-tbl td{padding:10px 12px;font-size:.8rem;border-bottom:1px solid #f5f0f8;color:#333;vertical-align:middle;}
+.crm-tbl tr:hover td{background:#faf7fd;}
+.won-b{background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:800;}
+.lost-b{background:#ffebee;color:#c62828;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:800;}
+.lm-wrap{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}
+.lm-box{background:#fff;border-radius:20px;width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.lm-head{position:sticky;top:0;background:#fff;padding:14px 18px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;z-index:1;border-radius:20px 20px 0 0;}
+.note-item{background:var(--lt);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:.82rem;color:#444;line-height:1.5;}
+.note-item small{color:#aaa;font-size:.7rem;}
+.tag-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;color:#fff;margin:2px;}
+@media(max-width:768px){
+  .crm-stats{grid-template-columns:1fr 1fr!important;}
+  .crm-stats .crm-stat:last-child{grid-column:1/-1;}
+  .crm-top{flex-direction:column;}
+  .crm-tbl-wrap{overflow-x:auto;}
+  .lm-wrap{padding:0;align-items:flex-end;}
+  .lm-box{border-radius:20px 20px 0 0;max-height:95vh;}
+  .lm-grid{grid-template-columns:1fr!important;}
+  .kanban-col{width:200px;}
+}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#7B2D8B,#5C1F7A);">
+  <div class="login-box">
+    <div class="login-logo"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart"></div>
+    <h2>Admin Panel</h2><p>Sign in to manage your store</p>
+    <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
+    <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
+    <p style="text-align:center;margin-top:12px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#9b60bf;font-weight:700;">Forgot password?</a></p>
+    <div id="forgotBox" style="display:none;margin-top:8px;">
+      <input class="linp" type="email" id="forgotEmail" placeholder="admin@kidscart.kids">
+      <button class="lbtn" style="margin-top:8px;" onclick="adminForgot()">Send Reset Link 📧</button>
+    </div>
+    <div id="loginErr" style="color:#c62828;font-size:.83rem;text-align:center;margin-top:10px;display:none;"></div>
+  </div>
+</div>
+
+<div id="adminApp" style="display:none;">
+  <div class="mob-header">
+    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
+    <span class="mob-hdr-title" id="mobTitle">📊 CRM</span>
+    <div class="mob-hdr-right" id="mobUser"></div>
+  </div>
+  <div id="sidebarMount"></div>
+  <div class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">📊 CRM</h2>
+      <div class="topbar-right">
+        <span class="admin-badge" id="adminName">Admin</span>
+        <a href="/" target="_blank" style="font-size:.78rem;color:var(--pp);font-weight:800;text-decoration:none;">🛍️ View Shop</a>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- CRM VIEW -->
+      <div class="panel active" id="crmPanel">
+        <div class="crm-stats">
+          <div class="crm-stat"><p>Total Leads</p><h3 id="crmTotal">—</h3></div>
+          <div class="crm-stat"><p>Open</p><h3 id="crmOpen" style="color:var(--pp)">—</h3></div>
+          <div class="crm-stat"><p>Won ✅</p><h3 id="crmWon" style="color:#27ae60">—</h3></div>
+          <div class="crm-stat"><p>Lost ❌</p><h3 id="crmLost" style="color:#e74c3c">—</h3></div>
+          <div class="crm-stat"><p>Revenue Won</p><h3 id="crmRevenue" style="color:var(--or)">—</h3></div>
+        </div>
+        <div class="crm-top">
+          <div class="crm-tabs">
+            <button class="crm-tab active" onclick="setCrmTab('kanban',this)">🗂️ Kanban</button>
+            <button class="crm-tab" onclick="setCrmTab('list',this)">📋 List</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="crmSearch" placeholder="🔍 Search leads..." oninput="filterLeads()" style="padding:8px 14px;border:1px solid #ddd;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;width:180px;">
+            <select id="crmStageFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;">
+              <option value="">All Stages</option>
+            </select>
+            <select id="crmTagFilter" onchange="filterLeads()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;">
+              <option value="">All Tags</option>
+            </select>
+            <button onclick="openAddLead()" style="padding:8px 18px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Lead</button>
+            <button onclick="show('crmstages')" style="padding:8px 14px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">⚙️ Settings</button>
+          </div>
+        </div>
+        <div id="kanbanView"><div class="kanban-board" id="kanbanBoard"><div style="color:#aaa;padding:24px;">Loading pipeline...</div></div></div>
+        <div id="listView" style="display:none;">
+          <div class="crm-tbl-wrap"><table class="crm-tbl">
+            <thead><tr><th>Name / Phone</th><th>Stage</th><th>Tags</th><th>Source</th><th>Last Seen</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="crmTBody"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- CRM SETTINGS -->
+      <div class="panel" id="crmstagesPanel">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <button onclick="show('crm')" style="padding:7px 16px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">← Back to CRM</button>
+          <h3 style="font-family:'Poppins',sans-serif;color:var(--pp);font-size:1rem;">⚙️ CRM Settings</h3>
+        </div>
+        <div class="card"><div class="card-head"><h3>⚙️ Pipeline Stages</h3><button onclick="openAddStage()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Stage</button></div><div id="stagesList"></div></div>
+        <div class="card"><div class="card-head"><h3>🏷️ Tags</h3><button onclick="openAddTag()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add Tag</button></div><div id="tagsList"></div></div>
+        <div class="card"><div class="card-head"><h3>⚡ Quick Reply Templates</h3><button onclick="openAddTmpl()" style="padding:8px 16px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;">+ Add</button></div><div id="tmplsList"></div></div>
+      </div>
+
+    </div>
+  </div>
+  <div id="mobBarMount"></div>
+</div>
+
+<!-- LEAD DETAIL MODAL -->
+<div id="leadModal" class="lm-wrap" style="display:none;">
+  <div class="lm-box">
+    <div class="lm-head">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">👤 Lead Details</h2>
+      <div style="display:flex;gap:8px;">
+        <button onclick="goToChat()" style="padding:6px 14px;background:#e8f5e9;color:#25D366;border:1px solid #25D366;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">💬 Chat</button>
+        <button onclick="closeLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);font-size:1rem;">✕</button>
+      </div>
+    </div>
+    <div id="leadModalBody" style="padding:20px;"></div>
+  </div>
+</div>
+
+<!-- ADD LEAD MODAL -->
+<div id="addLeadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp)">➕ Add Lead</h2>
+      <button onclick="closeAddLead()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--pp);font-size:1rem;">✕</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+      <input id="alName"  placeholder="Name" class="linp" style="margin:0">
+      <input id="alPhone" placeholder="Phone (e.g. 919747867853)" class="linp" style="margin:0">
+      <input id="alEmail" placeholder="Email (optional)" class="linp" style="margin:0">
+      <select id="alStage" class="linp" style="margin:0"></select>
+      <select id="alSource" class="linp" style="margin:0">
+        <option value="whatsapp">📱 WhatsApp</option>
+        <option value="instagram">📸 Instagram</option>
+        <option value="website">🌐 Website</option>
+        <option value="manual">✍️ Manual</option>
+      </select>
+      <input id="alValue" placeholder="Expected value ₹ (optional)" class="linp" type="number" style="margin:0">
+      <button onclick="saveNewLead()" class="lbtn">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── PAGE STATE ───────────────────────────────────────────────
+let crmStages  = [];
+let crmTags    = [];
+let crmTab     = 'kanban';
+let dragLeadId = null;
+let waTmpls    = [];
+
+// ── BOOT ────────────────────────────────────────────────────
+window._kcAfterLogin = function(user) {
+  document.getElementById('sidebarMount').innerHTML = renderSidebar('crm');
+  document.getElementById('mobBarMount').innerHTML  = renderMobBar('crm');
+  showAdminApp();
+  loadCrm();
+};
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginScreen').style.display = 'flex';
+  KC.init(window._kcAfterLogin);
+});
+
+// ── CRM LOAD ─────────────────────────────────────────────────
+async function loadCrm() {
+  await Promise.all([loadCrmStages(), loadCrmTags()]);
+  await loadCrmStats();
+  populateCrmFilters();
+  crmTab === 'kanban' ? loadKanban() : loadCrmList();
+}
+
+async function loadCrmStats() {
+  try {
+    const d = await apiFetch('/admin/crm/stats');
+    setText('crmTotal',   d.total   || 0);
+    setText('crmOpen',    d.open    || 0);
+    setText('crmWon',     d.won     || 0);
+    setText('crmLost',    d.lost    || 0);
+    setText('crmRevenue', '₹' + (d.wonRevenue || 0).toLocaleString('en-IN'));
+  } catch(e) {}
+}
+
+async function loadCrmStages() {
+  try { const d = await apiFetch('/admin/crm/stages');  crmStages = d.stages || []; } catch(e) {}
+}
+async function loadCrmTags() {
+  try { const d = await apiFetch('/admin/crm/tags');    crmTags   = d.tags   || []; } catch(e) {}
+}
+
+function populateCrmFilters() {
+  const sf = document.getElementById('crmStageFilter');
+  const tf = document.getElementById('crmTagFilter');
+  if (sf) sf.innerHTML = '<option value="">All Stages</option>' + crmStages.map(s => `<option value="${s._id}">${s.name}</option>`).join('');
+  if (tf) tf.innerHTML = '<option value="">All Tags</option>'   + crmTags.map(t   => `<option value="${t._id}">${t.name}</option>`).join('');
+}
+
+// ── KANBAN ───────────────────────────────────────────────────
+async function loadKanban() {
+  const board = document.getElementById('kanbanBoard');
+  if (!board) return;
+  board.innerHTML = '<div style="color:#aaa;padding:24px;">Loading...</div>';
+  try {
+    const search = document.getElementById('crmSearch')?.value || '';
+    const tag    = document.getElementById('crmTagFilter')?.value || '';
+    let url = '/admin/crm/leads?view=kanban';
+    if (search) url += '&search=' + encodeURIComponent(search);
+    if (tag)    url += '&tag=' + tag;
+    const d = await apiFetch(url);
+    board.innerHTML = (d.kanban || []).map(col => `
+      <div class="kanban-col">
+        <div class="kanban-col-head" style="background:${col.stage.color||'#888'}">
+          <h4>${col.stage.name}</h4><span class="k-count">${col.leads.length}</span>
+        </div>
+        <div class="kanban-col-body" id="col_${col.stage._id}"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="dropLead(event,'${col.stage._id}')">
+          ${col.leads.map(mkKCard).join('') || '<div style="padding:12px;color:#ccc;font-size:.78rem;text-align:center;">Drop leads here</div>'}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    board.innerHTML = '<div style="color:red;padding:16px;">' + e.message + '</div>';
+  }
+}
+
+function mkKCard(lead) {
+  const tags = (lead.tags||[]).map(t => `<span class="kc-tag" style="background:${t.color}">${t.name}</span>`).join('');
+  const src  = {whatsapp:'📱',instagram:'📸',website:'🌐',manual:'✍️'}[lead.source]||'👤';
+  return `<div class="kanban-card" draggable="true" style="border-left-color:${lead.stage?.color||'#ddd'}"
+    ondragstart="dragLead(event,'${lead._id}')"
+    ondragend="document.querySelectorAll('.kanban-col-body').forEach(c=>c.classList.remove('drag-over'))">
+    <div class="kc-name">${lead.name||lead.phone}</div>
+    <div class="kc-phone">📱 ${lead.phone}</div>
+    ${tags ? `<div class="kc-tags">${tags}</div>` : ''}
+    <div class="kc-foot">
+      <span>${src} ${lead.source}</span>
+      <span>${lead.lastSeen ? fmtT(new Date(lead.lastSeen)) : ''}</span>
+    </div>
+    <div class="kc-acts">
+      <button class="kb" onclick="openLeadById('${lead._id}')">👁️ View</button>
+      <button class="kb green" onclick="quickChat('${lead.phone}')">💬</button>
+      <button class="kb red" onclick="deleteLead('${lead._id}')">🗑️</button>
+    </div>
+  </div>`;
+}
+
+function dragLead(e, id) { dragLeadId = id; e.dataTransfer.effectAllowed = 'move'; }
+
+async function dropLead(e, stageId) {
+  e.preventDefault();
+  document.querySelectorAll('.kanban-col-body').forEach(c => c.classList.remove('drag-over'));
+  if (!dragLeadId) return;
+  try {
+    await apiFetch('/admin/crm/leads/' + dragLeadId, 'PUT', { stage: stageId === 'unassigned' ? null : stageId });
+    loadKanban(); loadCrmStats();
+  } catch(err) { toast('❌ ' + err.message); }
+}
+
+// ── CRM LIST VIEW ─────────────────────────────────────────────
+async function loadCrmList() {
+  const tbody = document.getElementById('crmTBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px;">Loading...</td></tr>';
+  try {
+    const search = document.getElementById('crmSearch')?.value   || '';
+    const stage  = document.getElementById('crmStageFilter')?.value || '';
+    const tag    = document.getElementById('crmTagFilter')?.value   || '';
+    let url = '/admin/crm/leads?';
+    if (search) url += 'search=' + encodeURIComponent(search) + '&';
+    if (stage)  url += 'stage=' + stage + '&';
+    if (tag)    url += 'tag=' + tag + '&';
+    const d = await apiFetch(url);
+    const leads = d.leads || [];
+    tbody.innerHTML = leads.length ? leads.map(lead => {
+      const sp   = lead.stage ? `<span style="background:${lead.stage.color};color:#fff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;">${lead.stage.name}</span>` : '—';
+      const tags = (lead.tags||[]).map(t => `<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');
+      const src  = {whatsapp:'📱',instagram:'📸',website:'🌐',manual:'✍️'}[lead.source]||'👤';
+      const st   = lead.status==='won' ? '<span class="won-b">Won ✅</span>' : lead.status==='lost' ? '<span class="lost-b">Lost ❌</span>' : '<span style="color:#666;">Open</span>';
+      return `<tr>
+        <td><strong>${lead.name||'—'}</strong><br><small style="color:#888">${lead.phone}</small></td>
+        <td>${sp}</td><td>${tags||'—'}</td><td>${src} ${lead.source}</td>
+        <td>${lead.lastSeen ? new Date(lead.lastSeen).toLocaleDateString('en-IN') : '—'}</td>
+        <td>${st}</td>
+        <td><button class="kb" onclick="openLeadById('${lead._id}')">👁️</button> <button class="kb green" onclick="quickChat('${lead.phone}')">💬</button> <button class="kb red" onclick="deleteLead('${lead._id}')">🗑️</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:24px;">No leads found</td></tr>';
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="7" style="color:red;padding:16px;">' + e.message + '</td></tr>'; }
+}
+
+function filterLeads() { crmTab === 'kanban' ? loadKanban() : loadCrmList(); }
+
+function setCrmTab(tab, btn) {
+  crmTab = tab;
+  document.querySelectorAll('.crm-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('kanbanView').style.display = tab === 'kanban' ? 'block' : 'none';
+  document.getElementById('listView').style.display   = tab === 'list'   ? 'block' : 'none';
+  tab === 'kanban' ? loadKanban() : loadCrmList();
+}
+
+// ── LEAD MODAL ───────────────────────────────────────────────
+async function openLeadById(id) {
+  document.getElementById('leadModal').style.display = 'flex';
+  const body = document.getElementById('leadModalBody');
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;">Loading...</div>';
+  try {
+    const d    = await apiFetch('/admin/crm/leads/' + id);
+    const lead = d.lead;
+    const msgs = d.messages || [];
+    const orders = d.orders || [];
+
+    const stageSel = '<option value="">No Stage</option>' + crmStages.map(s =>
+      `<option value="${s._id}" ${lead.stage?._id===s._id?'selected':''}>${s.name}</option>`).join('');
+
+    const tagChecks = crmTags.map(t => {
+      const has = (lead.tags||[]).some(lt => (lt._id||lt) === t._id);
+      return `<label style="display:inline-flex;align-items:center;gap:4px;margin:3px;cursor:pointer;">
+        <input type="checkbox" value="${t._id}" ${has?'checked':''} onchange="toggleLeadTag('${id}','${t._id}',this.checked)">
+        <span class="tag-chip" style="background:${t.color}">${t.name}</span>
+      </label>`;
+    }).join('');
+
+    const notes = (lead.notes||[]).map(n =>
+      `<div class="note-item">${n.text}<div><small>${n.createdBy} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</small></div></div>`).join('');
+
+    const orderRows = orders.length ? orders.map(o =>
+      `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0e4f9;font-size:.78rem;">
+        <span>#${o.orderId}</span><span>₹${o.total?.toLocaleString('en-IN')}</span><span>${o.status}</span>
+      </div>`).join('') : '<div style="color:#aaa;font-size:.78rem;">No orders found</div>';
+
+    const recentMsgs = msgs.slice(-5).map(m =>
+      `<div style="margin-bottom:5px;font-size:.8rem;">
+        <span style="color:${m.direction==='inbound'?'#25D366':'#7B2D8B'}">${m.direction==='inbound'?'👤':'👨‍💼'}</span>
+        ${m.body} <small style="color:#aaa">${new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</small>
+      </div>`).join('');
+
+    body.innerHTML = `
+      <div class="lm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="margin-bottom:14px;">
+            <p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Contact</p>
+            <input value="${lead.name||''}" placeholder="Name" class="linp" style="margin-bottom:8px;" onchange="updateLeadField('${id}','name',this.value)">
+            <div style="font-size:.82rem;color:#444;margin-bottom:6px;"><span style="font-size:.68rem;color:#aaa;font-weight:700;display:block;">Phone</span>${lead.phone}</div>
+            <input value="${lead.email||''}" placeholder="Email" class="linp" style="margin:0;" onchange="updateLeadField('${id}','email',this.value)">
+          </div>
+          <div style="margin-bottom:14px;">
+            <p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Stage</p>
+            <select class="linp" style="margin:0;" onchange="updateLeadField('${id}','stage',this.value)">${stageSel}</select>
+          </div>
+          <div style="margin-bottom:14px;">
+            <p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Tags</p>
+            <div>${tagChecks}</div>
+          </div>
+          <div>
+            <p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Expected Value</p>
+            <input type="number" value="${lead.value||0}" placeholder="₹" class="linp" style="margin:0;" onchange="updateLeadField('${id}','value',this.value)">
+          </div>
+        </div>
+        <div>
+          <div style="margin-bottom:14px;">
+            <p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Recent Messages</p>
+            <div style="background:var(--lt);border-radius:8px;padding:10px;max-height:130px;overflow-y:auto;">${recentMsgs||'<div style="color:#aaa;font-size:.78rem;">No messages yet</div>'}</div>
+          </div>
+          <div style="margin-bottom:14px;">
+            <p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Orders</p>
+            ${orderRows}
+          </div>
+          <div>
+            <p style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;border-bottom:1px solid var(--lt2);padding-bottom:4px;">Notes</p>
+            <div id="nlst_${id}">${notes||'<div style="color:#aaa;font-size:.78rem;">No notes yet</div>'}</div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <textarea id="nInp_${id}" placeholder="Add a note..." rows="2" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.82rem;resize:none;outline:none;"></textarea>
+              <button onclick="addNote('${id}')" style="padding:8px 12px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;align-self:flex-end;">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  } catch(e) { body.innerHTML = '<div style="color:red;padding:16px;">' + e.message + '</div>'; }
+}
+
+function closeLead() { document.getElementById('leadModal').style.display = 'none'; }
+function goToChat()  { closeLead(); adminNav('inbox'); }
+
+async function updateLeadField(id, field, value) {
+  try { await apiFetch('/admin/crm/leads/'+id,'PUT',{[field]:value}); crmTab==='kanban'?loadKanban():loadCrmList(); loadCrmStats(); }
+  catch(e) { toast('❌ ' + e.message); }
+}
+
+async function toggleLeadTag(lid, tid, checked) {
+  try {
+    const d   = await apiFetch('/admin/crm/leads/' + lid);
+    const cur = (d.lead.tags||[]).map(t => t._id||t);
+    await apiFetch('/admin/crm/leads/'+lid,'PUT',{tags: checked?[...cur,tid]:cur.filter(t=>t!==tid)});
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function addNote(lid) {
+  const inp = document.getElementById('nInp_' + lid);
+  const txt = inp?.value?.trim();
+  if (!txt) return;
+  try {
+    const d = await apiFetch('/admin/crm/leads/'+lid+'/notes','POST',{text:txt});
+    inp.value = '';
+    const nl = document.getElementById('nlst_' + lid);
+    if (nl) nl.innerHTML = (d.notes||[]).map(n =>
+      `<div class="note-item">${n.text}<div><small>${n.createdBy} · ${new Date(n.createdAt).toLocaleDateString('en-IN')}</small></div></div>`
+    ).join('');
+    toast('✅ Note added');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+async function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  try { await apiFetch('/admin/crm/leads/'+id,'DELETE'); toast('✅ Deleted'); loadKanban(); loadCrmStats(); }
+  catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── ADD LEAD ─────────────────────────────────────────────────
+function openAddLead() {
+  document.getElementById('addLeadModal').style.display = 'flex';
+  document.getElementById('alStage').innerHTML = '<option value="">No Stage</option>' + crmStages.map(s => `<option value="${s._id}">${s.name}</option>`).join('');
+}
+function closeAddLead() { document.getElementById('addLeadModal').style.display = 'none'; }
+
+async function saveNewLead() {
+  const phone = document.getElementById('alPhone').value.trim();
+  if (!phone) { toast('⚠️ Phone required'); return; }
+  try {
+    await apiFetch('/admin/crm/leads','POST',{
+      name:   document.getElementById('alName').value.trim(),
+      phone,
+      email:  document.getElementById('alEmail').value.trim(),
+      stage:  document.getElementById('alStage').value || null,
+      source: document.getElementById('alSource').value,
+      value:  parseFloat(document.getElementById('alValue').value)||0
+    });
+    closeAddLead(); toast('✅ Lead added!'); loadCrm();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+function quickChat(phone) { adminNav('inbox'); }
+
+// ── CRM SETTINGS ─────────────────────────────────────────────
+async function loadCrmSettings() {
+  await loadCrmStages(); await loadCrmTags();
+  try { const d = await apiFetch('/admin/whatsapp/templates'); waTmpls = d.templates||[]; } catch(e){}
+
+  const sl = document.getElementById('stagesList');
+  const tl = document.getElementById('tagsList');
+  const tml= document.getElementById('tmplsList');
+
+  if (sl) sl.innerHTML = crmStages.map(s => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--lt2);">
+      <span style="width:14px;height:14px;border-radius:50%;background:${s.color};display:inline-block;flex-shrink:0;"></span>
+      <span style="flex:1;font-weight:700;font-size:.85rem;">${s.name}</span>
+      <span style="font-size:.72rem;color:#aaa;">${s.isWon?'✅ Won':s.isLost?'❌ Lost':'Active'}</span>
+      <button onclick="deleteStage('${s._id}')" style="background:#ffebee;color:#e74c3c;border:none;border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;">Delete</button>
+    </div>`).join('') || '<div style="color:#aaa;padding:12px;">No stages yet</div>';
+
+  if (tl) tl.innerHTML = crmTags.map(t => `
+    <span style="display:inline-flex;align-items:center;gap:5px;margin:4px;">
+      <span class="tag-chip" style="background:${t.color}">${t.name}</span>
+      <button onclick="deleteTag('${t._id}')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:.8rem;">✕</button>
+    </span>`).join('') || '<div style="color:#aaa;padding:12px;">No tags yet</div>';
+
+  if (tml) tml.innerHTML = waTmpls.map(t => `
+    <div style="padding:12px;border-bottom:1px solid var(--lt2);">
+      <div style="font-weight:700;font-size:.85rem;color:var(--pp);">⚡ ${t.name}</div>
+      <div style="font-size:.8rem;color:#555;margin:4px 0;">${t.body}</div>
+      <button onclick="deleteTmpl('${t._id}')" style="background:#ffebee;color:#e74c3c;border:none;border-radius:6px;padding:3px 10px;font-size:.72rem;cursor:pointer;">Delete</button>
+    </div>`).join('') || '<div style="color:#aaa;padding:12px;">No templates yet</div>';
+}
+
+function openAddStage() {
+  const name = prompt('Stage name:'); if (!name) return;
+  const color= prompt('Color (hex):', '#7B2D8B'); if (!color) return;
+  const isWon  = confirm('Is this a Won stage?');
+  const isLost = !isWon && confirm('Is this a Lost stage?');
+  apiFetch('/admin/crm/stages','POST',{name,color,isWon,isLost})
+    .then(()=>{loadCrmSettings();toast('✅ Stage added');}).catch(e=>toast('❌'+e.message));
+}
+function openAddTag() {
+  const name = prompt('Tag name:'); if (!name) return;
+  const color= prompt('Color (hex):', '#F7941D'); if (!color) return;
+  apiFetch('/admin/crm/tags','POST',{name,color})
+    .then(()=>{loadCrmSettings();toast('✅ Tag added');}).catch(e=>toast('❌'+e.message));
+}
+function openAddTmpl() {
+  const name = prompt('Template name:'); if (!name) return;
+  const body = prompt('Message:'); if (!body) return;
+  apiFetch('/admin/whatsapp/templates','POST',{name,body})
+    .then(()=>{loadCrmSettings();toast('✅ Template added');}).catch(e=>toast('❌'+e.message));
+}
+async function deleteStage(id) { if(!confirm('Delete stage?'))return; await apiFetch('/admin/crm/stages/'+id,'DELETE'); loadCrmSettings(); loadCrm(); toast('✅ Deleted'); }
+async function deleteTag(id)   { await apiFetch('/admin/crm/tags/'+id,'DELETE'); loadCrmSettings(); toast('✅ Deleted'); }
+async function deleteTmpl(id)  { await apiFetch('/admin/whatsapp/templates/'+id,'DELETE'); loadCrmSettings(); toast('✅ Deleted'); }
+
+// ── PANEL SWITCH with settings loader ────────────────────────
+const _origShow = show;
+function show(id, navEl) {
+  _origShow(id, navEl);
+  if (id === 'crmstages') loadCrmSettings();
+  if (id === 'crm') { loadCrm(); document.getElementById('pageTitle').textContent = '📊 CRM'; }
+}
+
+// ── CLOSE MODALS ON OUTSIDE CLICK ────────────────────────────
+document.addEventListener('click', e => {
+  if (e.target.id === 'leadModal')    closeLead();
+  if (e.target.id === 'addLeadModal') closeAddLead();
+});
+</script>
+</body>
+</html>

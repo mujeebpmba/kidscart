@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Products — KidsCart Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};</script>
+<script src="/admin/shared.js"></script>
+<style>
+.banner-card{border:2px solid #f0e5f8;border-radius:12px;padding:14px;margin-bottom:10px;}
+.banner-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#7B2D8B,#5C1F7A);">
+  <div class="login-box">
+    <div class="login-logo"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart"></div>
+    <h2>Admin Panel</h2><p>Sign in to manage your store</p>
+    <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
+    <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
+    <p style="text-align:center;margin-top:12px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#9b60bf;font-weight:700;">Forgot password?</a></p>
+    <div id="forgotBox" style="display:none;margin-top:8px;">
+      <input class="linp" type="email" id="forgotEmail" placeholder="admin@kidscart.kids">
+      <button class="lbtn" style="margin-top:8px;" onclick="adminForgot()">Send Reset Link 📧</button>
+    </div>
+    <div id="loginErr" style="color:#c62828;font-size:.83rem;text-align:center;margin-top:10px;display:none;"></div>
+  </div>
+</div>
+
+<div id="adminApp" style="display:none;">
+  <div class="mob-header">
+    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
+    <span class="mob-hdr-title" id="mobTitle">Products</span>
+    <div class="mob-hdr-right" id="mobUser"></div>
+  </div>
+  <div id="sidebarMount"></div>
+  <div class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">👗 Product Catalog</h2>
+      <div class="topbar-right">
+        <span class="admin-badge" id="adminName">Admin</span>
+        <a href="/" target="_blank" style="font-size:.78rem;color:var(--pp);font-weight:800;text-decoration:none;">🛍️ View Shop</a>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- ── PRODUCTS LIST ── -->
+      <div class="panel active" id="productsPanel">
+        <div class="card">
+          <div class="card-head">
+            <h3>👗 Product Catalog</h3>
+            <button class="btn btn-pp btn-sm" onclick="show('addprod')">➕ Add Product</button>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="prodSearch" placeholder="Search products…" oninput="filterProductList()">
+            <select id="prodCatFilter" onchange="filterProductList()">
+              <option value="">All Categories</option>
+              <option>Girls</option><option>Boys</option><option>Baby</option>
+              <option>Party</option><option>Ethnic</option><option>Winter</option><option>School</option>
+            </select>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Product</th><th>Price</th><th>MRP</th><th>Cost/Margin</th><th>Stock</th><th>Rating</th><th>Status</th><th>COD</th><th>Actions</th></tr></thead>
+              <tbody id="productsTable"><tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">Loading products…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ADD/EDIT PRODUCT ── -->
+      <div class="panel" id="addprodPanel">
+        <div class="card">
+          <div class="card-head">
+            <h3 id="addprodTitle">➕ Add New Product</h3>
+            <button class="btn btn-ghost btn-sm" onclick="cancelEditProd()">✕ Cancel</button>
+          </div>
+          <form onsubmit="saveProduct(event)" id="prodForm">
+            <input type="hidden" id="prodEditId">
+            <div class="grid2">
+              <div class="fgroup"><label>Product Name *</label><input type="text" name="name" placeholder="e.g. Floral Frock Dress" required></div>
+              <div class="fgroup"><label>Category *</label>
+                <select name="category" required>
+                  <option value="">Select…</option>
+                  <option>Girls</option><option>Boys</option><option>Baby</option>
+                  <option>Party Wear</option><option>Ethnic</option><option>Western</option>
+                  <option>Festive</option><option>Winter</option><option>School</option><option>Accessories</option>
+                </select>
+              </div>
+              <div class="fgroup"><label>Selling Price (₹) *</label><input type="number" name="price" placeholder="599" required min="1"></div>
+              <div class="fgroup"><label>MRP / Original Price (₹) *</label><input type="number" name="mrp" placeholder="999" required min="1"></div>
+              <div class="fgroup"><label>Cost Price (₹)</label><input type="number" name="costPrice" placeholder="350" min="0" value="0"></div>
+              <div class="fgroup"><label>Age Group</label><input type="text" name="ageGroup" placeholder="e.g. 2-10Y"></div>
+              <div class="fgroup"><label>Gender</label>
+                <select name="gender"><option>Girls</option><option>Boys</option><option>Unisex</option><option>Baby</option></select>
+              </div>
+              <div class="fgroup"><label>Emoji Icon</label><input type="text" name="emoji" placeholder="👗" maxlength="5"></div>
+              <div class="fgroup"><label>Badge</label><input type="text" name="badge" placeholder="e.g. Best Seller, New, Sale"></div>
+              <div class="fgroup"><label>Brand / Material</label><input type="text" name="brand" placeholder="e.g. KidsCart Premium Cotton"></div>
+            </div>
+            <div class="fgroup"><label>Description</label><textarea name="description" rows="3" placeholder="Describe the product — fabric, style, occasions, care instructions…"></textarea></div>
+            <div class="fgroup"><label>Search Tags <small style="color:var(--gy)">(comma separated)</small></label><input type="text" name="tags" placeholder="e.g. frock, cotton dress, birthday, princess"></div>
+
+            <!-- Images -->
+            <div style="margin-bottom:16px;background:var(--lt);border-radius:12px;padding:16px;">
+              <div style="font-weight:800;font-size:.88rem;color:var(--pp);margin-bottom:10px;">🖼️ Product Images</div>
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+                <label style="background:var(--pp);color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:800;font-size:.82rem;">
+                  📁 Choose Images
+                  <input type="file" id="prodImageInput" accept="image/*" multiple style="display:none" onchange="previewProdImages(this)">
+                </label>
+                <span style="font-size:.78rem;color:var(--gy)">Or paste URL below • Max 5MB each • JPG/PNG/WebP</span>
+              </div>
+              <div id="prodImagePreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;min-height:20px"></div>
+              <input type="text" id="prodThumbUrl" name="thumbnail" placeholder="Paste image URL (optional if uploading)" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;margin-bottom:6px">
+            </div>
+
+            <!-- Stock by size -->
+            <div style="margin-bottom:16px;">
+              <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:10px;">📦 Initial Stock by Size</div>
+              <div id="prodSizes" class="grid3">
+                <div class="fgroup"><label>0-3M</label><input type="number" name="s_0-3M" data-size="0-3M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>3-6M</label><input type="number" name="s_3-6M" data-size="3-6M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>6-12M</label><input type="number" name="s_6-12M" data-size="6-12M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>1-2Y</label><input type="number" name="s_1-2Y" data-size="1-2Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>2-3Y</label><input type="number" name="s_2-3Y" data-size="2-3Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>3-4Y</label><input type="number" name="s_3-4Y" data-size="3-4Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>4-5Y</label><input type="number" name="s_4-5Y" data-size="4-5Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>5-6Y</label><input type="number" name="s_5-6Y" data-size="5-6Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>6-8Y</label><input type="number" name="s_6-8Y" data-size="6-8Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>8-10Y</label><input type="number" name="s_8-10Y" data-size="8-10Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>10-12Y</label><input type="number" name="s_10-12Y" data-size="10-12Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>12-15Y</label><input type="number" name="s_12-15Y" data-size="12-15Y" placeholder="0" min="0" value="0"></div>
+              </div>
+            </div>
+
+            <!-- Colors -->
+            <div class="fgroup" style="margin-bottom:16px;">
+              <label>🎨 Available Colors <small style="color:var(--gy)">(type and press Enter)</small></label>
+              <div id="prodColorTags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:32px;padding:6px;border:1.5px solid #ddd;border-radius:8px;background:#fff;margin-bottom:6px;"></div>
+              <input type="text" id="prodColorInput" placeholder="e.g. Red, Blue, Pink..."
+                style="width:100%;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addColorTag(this.value);this.value='';}">
+              <input type="hidden" id="prodColors" name="colors" value="">
+            </div>
+
+            <!-- Display order -->
+            <div class="fgroup" style="margin-bottom:16px;">
+              <label>🔢 Display Order <small style="color:var(--gy)">(lower = shows first)</small></label>
+              <input type="number" id="prodOrder" name="order" placeholder="0" min="0" value="0" style="width:120px;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;">
+            </div>
+
+            <div class="grid2">
+              <div class="fgroup"><label>Featured on Homepage?</label>
+                <select name="isFeatured"><option value="false">No</option><option value="true">Yes</option></select>
+              </div>
+              <div class="fgroup"><label>Visible in Shop?</label>
+                <select name="isActive"><option value="true">Yes — Active</option><option value="false">No — Hidden</option></select>
+              </div>
+              <div class="fgroup"><label>COD Available?</label>
+                <select name="codEnabled"><option value="true">Yes — COD allowed</option><option value="false">No — Prepaid only</option></select>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:8px;">
+              <button type="submit" class="btn-full" id="prodSaveBtn">💾 Save Product</button>
+              <button type="button" class="btn btn-ghost" onclick="cancelEditProd()" style="width:120px;">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── STOCK ── -->
+      <div class="panel" id="stockPanel">
+        <div class="card">
+          <div class="card-head">
+            <h3>📋 Stock Management</h3>
+            <span style="font-size:.8rem;color:var(--gy);">Click a stock value to edit inline</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Product</th><th>0-3M</th><th>3-6M</th><th>6-12M</th><th>1-2Y</th><th>2-3Y</th><th>3-4Y</th><th>4-5Y</th><th>5-6Y</th><th>6-8Y</th><th>8-10Y</th><th>10-12Y</th><th>12-15Y</th><th>Total</th><th>Save</th></tr></thead>
+              <tbody id="stockTableBody"><tr><td colspan="15" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COUPONS ── -->
+      <div class="panel" id="couponsPanel">
+        <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;">
+          <div class="card">
+            <div class="card-head"><h3 id="couponFormTitle">🎟️ Create Coupon</h3></div>
+            <form onsubmit="saveCoupon(event)" id="couponForm">
+              <input type="hidden" id="couponEditId">
+              <div class="fgroup"><label>Coupon Code *</label><input type="text" id="couponCode" placeholder="WELCOME10" style="text-transform:uppercase" required></div>
+              <div class="grid2">
+                <div class="fgroup"><label>Type</label>
+                  <select id="couponType"><option value="percent">Percent %</option><option value="flat">Flat ₹</option></select>
+                </div>
+                <div class="fgroup"><label>Value</label><input type="number" id="couponValue" placeholder="10" required></div>
+                <div class="fgroup"><label>Min Order ₹</label><input type="number" id="couponMin" placeholder="0" value="0"></div>
+                <div class="fgroup"><label>Max Discount ₹</label><input type="number" id="couponMax" placeholder="0" value="0"></div>
+                <div class="fgroup"><label>Per User Limit</label><input type="number" id="couponPerUser" placeholder="1" value="1"></div>
+                <div class="fgroup"><label>Total Usage Limit</label><input type="number" id="couponTotal" placeholder="0" value="0"></div>
+                <div class="fgroup"><label>Valid From</label><input type="date" id="couponFrom"></div>
+                <div class="fgroup"><label>Valid Till</label><input type="date" id="couponTill"></div>
+              </div>
+              <div class="fgroup"><label>Active</label>
+                <select id="couponActive"><option value="true">Yes — Active</option><option value="false">No — Inactive</option></select>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="btn-full" style="flex:2;">💾 Save Coupon</button>
+                <button type="button" class="btn btn-ghost" onclick="cancelCoupon()">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>All Coupons</h3></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Min Order</th><th>Used</th><th>Valid Till</th><th>Active</th><th>Actions</th></tr></thead>
+                <tbody id="couponsTable"><tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BANNERS ── -->
+      <div class="panel" id="bannersPanel">
+        <div style="display:grid;grid-template-columns:380px 1fr;gap:16px;">
+          <div>
+            <div class="card">
+              <div class="card-head"><h3 id="bannerFormTitle">🎨 Add Banner</h3></div>
+              <form onsubmit="saveBanner(event)" id="bannerForm">
+                <input type="hidden" id="bannerEditId">
+                <div class="fgroup"><label>Title *</label><input type="text" id="bannerTitle" placeholder="New AW25 Collection!" required></div>
+                <div class="fgroup"><label>Subtitle</label><input type="text" id="bannerSub" placeholder="Premium kids fashion"></div>
+                <div class="fgroup"><label>Badge Text</label><input type="text" id="bannerBadge" placeholder="✨ New Arrivals"></div>
+                <div class="fgroup"><label>Discount Label</label><input type="text" id="bannerDiscount" placeholder="Up to 50% OFF"></div>
+                <div class="fgroup"><label>Button Text</label><input type="text" id="bannerBtn" placeholder="Shop Now"></div>
+                <div class="grid2">
+                  <div class="fgroup"><label>Background Color</label><input type="color" id="bannerColor" value="#7B2D8B" style="height:40px;cursor:pointer;"></div>
+                  <div class="fgroup"><label>Countdown (hours)</label><input type="number" id="bannerTimer" value="0" min="0" max="720"></div>
+                </div>
+                <div class="fgroup" style="background:var(--lt);border-radius:10px;padding:12px;">
+                  <label style="font-weight:800;font-size:.82rem;color:var(--pp);display:block;margin-bottom:8px">🖼️ Banner Image</label>
+                  <label style="background:var(--pp);color:#fff;padding:8px 14px;border-radius:7px;cursor:pointer;font-weight:800;font-size:.78rem;display:inline-block;">
+                    📁 Upload Image
+                    <input type="file" id="bannerImageInput" accept="image/*" style="display:none" onchange="previewBannerImage(this)">
+                  </label>
+                  <span style="font-size:.75rem;color:var(--gy);margin-left:8px">1200×400px ideal</span>
+                  <div id="bannerImagePreview" style="margin-top:10px"></div>
+                  <input type="hidden" id="bannerImageUrl">
+                  <div style="margin-top:8px"><input type="text" id="bannerImageLink" placeholder="Or paste image URL" style="width:100%;padding:8px;border:1.5px solid #ddd;border-radius:7px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none" oninput="setBannerImageFromUrl(this.value)"></div>
+                </div>
+                <div class="grid2">
+                  <div class="fgroup"><label>Display Order (1=first)</label><input type="number" id="bannerOrder" value="1" min="1"></div>
+                  <div class="fgroup"><label>Active</label>
+                    <select id="bannerActive"><option value="true">Yes — show on shop</option><option value="false">No — hidden</option></select>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                  <button type="submit" class="btn-full" style="flex:2;">💾 Save Banner</button>
+                  <button type="button" class="btn btn-ghost" onclick="cancelBanner()">Clear</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div>
+            <!-- Announcement bar -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-head"><h3>📢 Announcement Bar</h3><span style="font-size:.78rem;color:var(--gy);">Purple strip at top of shop</span></div>
+              <div class="fgroup"><label>Bar Text</label>
+                <input type="text" id="announceText" placeholder="🎉 Sale is Live! Use WELCOME10 for 10% off" oninput="updateAnnouncePreview()">
+              </div>
+              <div class="grid2">
+                <div class="fgroup"><label>Link URL (optional)</label><input type="text" id="announceLink" placeholder="#products"></div>
+                <div class="fgroup"><label>Link Text</label><input type="text" id="announceLinkText" placeholder="Shop Now →"></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;margin-top:8px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;font-weight:700;">
+                  <input type="checkbox" id="announceHidden" style="width:16px;height:16px;"> Hide bar
+                </label>
+                <button onclick="saveAnnouncement()" style="background:var(--pp);color:#fff;border:none;padding:9px 22px;border-radius:8px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.85rem;">💾 Save</button>
+              </div>
+              <div id="announcePreview" style="margin-top:10px;background:linear-gradient(135deg,#7B2D8B,#9b3db5);color:#fff;text-align:center;padding:8px 16px;border-radius:8px;font-size:.8rem;font-weight:700;display:none;"></div>
+            </div>
+            <!-- Banner list -->
+            <div class="card">
+              <div class="card-head"><h3>All Banners</h3></div>
+              <div id="bannersList"><p style="color:var(--gy);text-align:center;padding:24px;">Loading…</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+  <div id="mobBarMount"></div>
+</div><!-- /adminApp -->
+
+<div id="toast"></div>
+
+<script>
+let prodsData    = [];
+let prodColorList = [];
+
+// ── BOOT ────────────────────────────────────────────────────
+window._kcAfterLogin = function(user) {
+  document.getElementById('sidebarMount').innerHTML = renderSidebar('products');
+  document.getElementById('mobBarMount').innerHTML  = renderMobBar('products');
+  showAdminApp();
+  // Check URL hash for deep-linking
+  const hash = window.location.hash.replace('#','');
+  const validPanels = ['products','addprod','stock','coupons','banners'];
+  if (validPanels.includes(hash)) show(hash);
+  else loadProducts();
+};
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginScreen').style.display = 'flex';
+  KC.init(window._kcAfterLogin);
+});
+
+// ── PRODUCTS ─────────────────────────────────────────────────
+async function loadProducts() {
+  try {
+    const r = await apiFetch('/products?limit=200');
+    prodsData = r.products || [];
+    renderProducts(prodsData);
+  } catch(e) {
+    document.getElementById('productsTable').innerHTML = `<tr><td colspan="9" style="color:var(--er);text-align:center;padding:20px;">${e.message}</td></tr>`;
+  }
+}
+
+function renderProducts(prods) {
+  const el = document.getElementById('productsTable');
+  if (!prods.length) { el.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">No products found</td></tr>'; return; }
+  el.innerHTML = prods.map(p => {
+    const off    = p.mrp > p.price ? Math.round((1 - p.price/p.mrp)*100) : 0;
+    const profit = p.costPrice > 0 ? Math.round(((p.price - p.costPrice)/p.price)*100) : null;
+    const thumb  = p.thumbnail
+      ? `<img src="${fixImgSrc(p.thumbnail)}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle" onerror="this.style.display='none'">`
+      : `<span style="font-size:1.4rem;margin-right:8px">${p.emoji||'📦'}</span>`;
+    return `<tr>
+      <td>${thumb}<b>${p.name}</b><br><small style="color:var(--gy);">${p.ageGroup||''} ${p.category}</small></td>
+      <td><b>₹${p.price.toLocaleString('en-IN')}</b>${off>0?`<br><small style="color:var(--ok);">${off}% off</small>`:''}</td>
+      <td style="color:var(--gy);text-decoration:line-through;">₹${p.mrp.toLocaleString('en-IN')}</td>
+      <td>${p.costPrice>0?`₹${p.costPrice}<br><small style="color:${profit>=40?'var(--ok)':profit>=20?'var(--or)':'var(--er)'};font-weight:800">${profit}% margin</small>`:'<small style="color:var(--gy)">—</small>'}</td>
+      <td style="font-weight:800;color:${p.totalStock===0?'var(--er)':p.totalStock<=10?'var(--or)':'var(--ok)'};">${p.totalStock}</td>
+      <td>⭐ ${p.rating||0} (${p.reviewCount||0})</td>
+      <td><span class="badge ${p.isActive?'b-confirmed':'b-cancelled'}">${p.isActive?'Active':'Hidden'}</span></td>
+      <td><span style="font-size:.72rem">${p.codEnabled!==false?'✅ COD':'❌ Prepaid'}</span></td>
+      <td>
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-ok-g btn-sm" onclick="editProduct('${p._id}')">✏️</button>
+          <button class="btn btn-er-g btn-sm" onclick="deleteProduct('${p._id}','${p.name.replace(/'/g,'')}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterProductList() {
+  const q   = document.getElementById('prodSearch').value.toLowerCase();
+  const cat = document.getElementById('prodCatFilter').value;
+  let filtered = prodsData;
+  if (q)   filtered = filtered.filter(p => p.name.toLowerCase().includes(q));
+  if (cat) filtered = filtered.filter(p => p.category === cat);
+  renderProducts(filtered);
+}
+
+// ── PRODUCT FORM ─────────────────────────────────────────────
+function previewProdImages(input) {
+  const preview = document.getElementById('prodImagePreviews');
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const div = document.createElement('div');
+      div.style.cssText = 'position:relative;display:inline-block';
+      div.innerHTML = `<img src="${e.target.result}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--pp)">
+        <div style="position:absolute;top:-4px;right:-4px;background:var(--er);color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;font-weight:900" onclick="this.parentElement.remove()">×</div>`;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadProdImages() {
+  const input = document.getElementById('prodImageInput');
+  if (!input.files.length) return [];
+  const fd = new FormData();
+  Array.from(input.files).forEach(f => fd.append('images', f));
+  const r = await fetch(API + '/admin/upload', { method:'POST', headers:{ Authorization:'Bearer '+KC.getToken() }, body:fd });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error||'Upload failed');
+  return (d.urls||[]).map(url => fixImgSrc(url));
+}
+
+function editProduct(id) {
+  const p = prodsData.find(x => x._id === id);
+  if (!p) return;
+  show('addprod');
+  setTimeout(() => {
+    const form = document.getElementById('prodForm');
+    if (!form) return;
+    form.name.value      = p.name        || '';
+    form.category.value  = p.category    || '';
+    form.price.value     = p.price       || '';
+    form.mrp.value       = p.mrp         || '';
+    form.costPrice.value = p.costPrice   || 0;
+    form.ageGroup.value  = p.ageGroup    || '';
+    form.gender.value    = p.gender      || 'Girls';
+    form.emoji.value     = p.emoji       || '';
+    form.badge.value     = p.badge       || '';
+    form.brand.value     = p.brand       || '';
+    form.description.value = p.description || '';
+    form.tags.value      = (p.tags||[]).join(', ');
+    form.isFeatured.value = p.isFeatured ? 'true' : 'false';
+    form.isActive.value   = p.isActive   !== false ? 'true' : 'false';
+    form.codEnabled.value = p.codEnabled !== false ? 'true' : 'false';
+    document.getElementById('prodOrder').value = p.order || 0;
+    // Sizes
+    document.querySelectorAll('#prodSizes input[data-size]').forEach(inp => {
+      const found = (p.sizes||[]).find(s => s.size === inp.dataset.size);
+      inp.value = found ? found.stock : 0;
+    });
+    // Colors
+    setColorTags(p.colors||[]);
+    // Images
+    const preview = document.getElementById('prodImagePreviews');
+    if (preview) preview.innerHTML = (p.images||[]).map(img =>
+      `<img src="${fixImgSrc(img)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--lt2)" onerror="this.style.opacity='.3'">`).join('');
+    document.getElementById('prodThumbUrl').value = p.thumbnail || '';
+    document.getElementById('prodEditId').value  = id;
+    document.getElementById('addprodTitle').textContent = '✏️ Edit Product: ' + p.name;
+  }, 80);
+}
+
+async function saveProduct(e) {
+  e.preventDefault();
+  const fd   = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+  data.price      = +data.price;
+  data.mrp        = +data.mrp;
+  data.costPrice  = +(data.costPrice||0);
+  data.isFeatured = data.isFeatured === 'true';
+  data.isActive   = data.isActive   === 'true';
+  data.codEnabled = data.codEnabled === 'true';
+  data.tags       = (data.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+  data.sizes      = Array.from(document.querySelectorAll('#prodSizes input[data-size]'))
+    .map(inp => ({ size:inp.dataset.size, stock:parseInt(inp.value)||0 }))
+    .filter(s => s.stock > 0);
+  if (!data.sizes.length) data.sizes = [{ size:'Free Size', stock:0 }];
+  Object.keys(data).filter(k => k.startsWith('s_')).forEach(k => delete data[k]);
+  data.colors = [...prodColorList];
+  data.order  = parseInt(document.getElementById('prodOrder')?.value)||0;
+
+  const submitBtn = document.getElementById('prodSaveBtn');
+  try {
+    submitBtn.textContent = '⏳ Uploading...'; submitBtn.disabled = true;
+    const uploadedUrls = await uploadProdImages().catch(()=>[]);
+    if (uploadedUrls.length > 0) {
+      data.images = uploadedUrls; data.thumbnail = uploadedUrls[0];
+    } else if (data.thumbnail) {
+      data.images = [data.thumbnail];
+    }
+    const editId = document.getElementById('prodEditId').value;
+    if (editId) {
+      await apiFetch(`/admin/products/${editId}`,'PUT',data);
+      toast('✅ Product updated!');
+      document.getElementById('prodEditId').value = '';
+    } else {
+      await apiFetch('/admin/products','POST',data);
+      toast('✅ Product added to shop!');
+    }
+    e.target.reset();
+    document.getElementById('addprodTitle').textContent = '➕ Add New Product';
+    document.getElementById('prodImagePreviews').innerHTML = '';
+    prodColorList = []; renderColorTags();
+    show('products'); loadProducts();
+  } catch(err) { toast('❌ ' + err.message); }
+  finally { submitBtn.textContent = '💾 Save Product'; submitBtn.disabled = false; }
+}
+
+function cancelEditProd() {
+  document.getElementById('prodForm').reset();
+  document.getElementById('prodEditId').value = '';
+  document.getElementById('addprodTitle').textContent = '➕ Add New Product';
+  document.getElementById('prodImagePreviews').innerHTML = '';
+  prodColorList = []; renderColorTags();
+  show('products'); loadProducts();
+}
+
+async function deleteProduct(id, name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try { await apiFetch(`/admin/products/${id}`,'DELETE'); toast('🗑️ Product deleted'); loadProducts(); }
+  catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── COLORS ───────────────────────────────────────────────────
+function addColorTag(val) {
+  if (!val.trim()) return;
+  val.split(',').map(v=>v.trim()).filter(Boolean).forEach(v => {
+    if (!prodColorList.includes(v)) { prodColorList.push(v); renderColorTags(); }
+  });
+}
+function removeColorTag(v) { prodColorList = prodColorList.filter(c=>c!==v); renderColorTags(); }
+function renderColorTags() {
+  const wrap = document.getElementById('prodColorTags');
+  const inp  = document.getElementById('prodColors');
+  if (!wrap) return;
+  wrap.innerHTML = prodColorList.map(v =>
+    `<span style="background:var(--lt2);color:var(--pp);padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+      ${v} <span onclick="removeColorTag('${v}')" style="cursor:pointer;color:var(--er);font-size:.9rem;">×</span>
+    </span>`).join('');
+  if (inp) inp.value = JSON.stringify(prodColorList);
+}
+function setColorTags(colors) { prodColorList = Array.isArray(colors)?colors:[]; renderColorTags(); }
+
+// ── STOCK ────────────────────────────────────────────────────
+async function loadStock() {
+  try { const r = await apiFetch('/products?limit=200'); renderStock(r.products||[]); } catch(e){}
+}
+function renderStock(prods) {
+  const el = document.getElementById('stockTableBody');
+  const sizeKeys = ['0-3M','3-6M','6-12M','1-2Y','2-3Y','3-4Y','4-5Y','5-6Y','6-8Y','8-10Y','10-12Y','12-15Y'];
+  const legacyMap = {'XS/0-3M':'0-3M','S/3-6M':'3-6M','M/6-12M':'6-12M','L/1-2Y':'1-2Y','XL/2-4Y':'2-3Y','XXL/4-6Y':'4-5Y'};
+  el.innerHTML = prods.map(p => {
+    const sizeMap = {};
+    (p.sizes||[]).forEach(s => { const k=legacyMap[s.size]||s.size; sizeMap[k]=(sizeMap[k]||0)+(s.stock||0); });
+    const inputs = sizeKeys.map(k => {
+      const v = sizeMap[k]||0;
+      const cls = v===0?'#bbb':v<=3?'var(--er)':v<=10?'var(--or)':'var(--ok)';
+      return `<td><input type="number" value="${v}" min="0" data-size="${k}" style="width:54px;padding:4px 6px;border:2px solid ${v===0?'#eee':v<=3?'#ffcdd2':v<=10?'#ffe0b2':'#c8e6c9'};border-radius:6px;text-align:center;font-family:'Nunito';font-weight:800;font-size:.8rem;color:${cls};" oninput="this.style.color='var(--pp)';this.style.borderColor='var(--lt2)'"></td>`;
+    }).join('');
+    const total = Object.values(sizeMap).reduce((a,b)=>a+b,0);
+    const totClr = total===0?'var(--er)':total<=10?'var(--or)':'var(--ok)';
+    return `<tr>
+      <td style="min-width:140px;"><b>${p.emoji||'📦'} ${p.name}</b><br><small style="color:var(--gy)">${p.category||''}</small></td>
+      ${inputs}
+      <td style="font-weight:900;color:${totClr}">${total}</td>
+      <td><button class="btn btn-ok-g btn-sm" onclick="saveStock('${p._id}',this)">💾 Save</button></td>
+    </tr>`;
+  }).join('');
+}
+async function saveStock(id, btn) {
+  const row    = btn.closest('tr');
+  const inputs = row.querySelectorAll('input[data-size]');
+  const sizes  = Array.from(inputs).map(inp=>({ size:inp.dataset.size, stock:+inp.value||0 }));
+  try { await apiFetch(`/admin/products/${id}/stock`,'PUT',{sizes}); toast('✅ Stock updated!'); loadStock(); }
+  catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── COUPONS ───────────────────────────────────────────────────
+async function loadCoupons() {
+  try { const r = await apiFetch('/admin/coupons'); renderCoupons(r.coupons||[]); } catch(e){}
+}
+function renderCoupons(coupons) {
+  const el = document.getElementById('couponsTable');
+  if (!coupons.length) { el.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--gy);padding:24px;">No coupons yet</td></tr>'; return; }
+  el.innerHTML = coupons.map(c=>`<tr>
+    <td><b>${c.code}</b></td><td>${c.type}</td>
+    <td>${c.type==='percent'?c.value+'%':'₹'+c.value}</td>
+    <td>₹${c.minOrder||0}</td>
+    <td>${c.usedCount||0}${c.usageLimit?'/'+c.usageLimit:''}</td>
+    <td>${fmtDate(c.validTill)}</td>
+    <td><span class="badge ${c.isActive?'b-confirmed':'b-cancelled'}">${c.isActive?'Active':'Inactive'}</span></td>
+    <td><div style="display:flex;gap:5px;">
+      <button class="btn btn-ghost btn-sm" onclick="editCoupon(${JSON.stringify(c).replace(/"/g,'&quot;')})">✏️</button>
+      <button class="btn btn-er-g btn-sm" onclick="deleteCoupon('${c._id}','${c.code}')">🗑️</button>
+    </div></td>
+  </tr>`).join('');
+}
+function editCoupon(c) {
+  document.getElementById('couponEditId').value    = c._id;
+  document.getElementById('couponCode').value      = c.code;
+  document.getElementById('couponType').value      = c.type;
+  document.getElementById('couponValue').value     = c.value;
+  document.getElementById('couponMin').value       = c.minOrder||0;
+  document.getElementById('couponMax').value       = c.maxDiscount||0;
+  document.getElementById('couponPerUser').value   = c.perUserLimit||1;
+  document.getElementById('couponTotal').value     = c.usageLimit||0;
+  if(c.validFrom) document.getElementById('couponFrom').value = c.validFrom.slice(0,10);
+  if(c.validTill) document.getElementById('couponTill').value = c.validTill.slice(0,10);
+  document.getElementById('couponActive').value    = c.isActive?'true':'false';
+  document.getElementById('couponFormTitle').textContent='✏️ Edit Coupon';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelCoupon() {
+  document.getElementById('couponForm').reset();
+  document.getElementById('couponEditId').value = '';
+  document.getElementById('couponFormTitle').textContent = '🎟️ Create Coupon';
+}
+async function saveCoupon(e) {
+  e.preventDefault();
+  const id = document.getElementById('couponEditId').value;
+  const payload = {
+    code: document.getElementById('couponCode').value.trim().toUpperCase(),
+    type: document.getElementById('couponType').value,
+    value: +document.getElementById('couponValue').value,
+    minOrder: +document.getElementById('couponMin').value||0,
+    maxDiscount: +document.getElementById('couponMax').value||0,
+    perUserLimit: +document.getElementById('couponPerUser').value||1,
+    usageLimit: +document.getElementById('couponTotal').value||0,
+    validFrom: document.getElementById('couponFrom').value||new Date().toISOString(),
+    validTill: document.getElementById('couponTill').value||new Date('2026-12-31').toISOString(),
+    isActive: document.getElementById('couponActive').value==='true',
+  };
+  try {
+    if(id){await apiFetch(`/admin/coupons/${id}`,'PUT',payload);toast('✅ Coupon updated!');}
+    else  {await apiFetch('/admin/coupons','POST',payload);toast('✅ Coupon created!');}
+    cancelCoupon(); loadCoupons();
+  } catch(e){toast('❌ '+e.message);}
+}
+async function deleteCoupon(id,code) {
+  if(!confirm(`Delete coupon "${code}"?`))return;
+  try{await apiFetch(`/admin/coupons/${id}`,'DELETE');toast('🗑️ Coupon deleted');loadCoupons();}
+  catch(e){toast('❌ '+e.message);}
+}
+
+// ── BANNERS ───────────────────────────────────────────────────
+function setBannerImageFromUrl(url) {
+  document.getElementById('bannerImageUrl').value = url;
+  const p = document.getElementById('bannerImagePreview');
+  if(url&&p) p.innerHTML=`<img src="${url}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:6px">`;
+}
+async function previewBannerImage(input) {
+  if(!input.files[0])return;
+  const preview = document.getElementById('bannerImagePreview');
+  const reader = new FileReader();
+  reader.onload = e => { if(preview) preview.innerHTML=`<img src="${e.target.result}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:6px">`; };
+  reader.readAsDataURL(input.files[0]);
+  try {
+    const fd = new FormData(); fd.append('image',input.files[0]);
+    const r = await fetch(API+'/admin/upload-banner',{method:'POST',headers:{Authorization:'Bearer '+KC.getToken()},body:fd});
+    const d = await r.json();
+    if(d.url){ document.getElementById('bannerImageUrl').value=fixImgSrc(d.url); toast('✅ Image uploaded!'); }
+  } catch(e){toast('❌ Image upload failed: '+e.message);}
+}
+async function loadBanners() {
+  try {
+    const r = await apiFetch('/admin/banners');
+    renderAdminBanners(r.banners||[]);
+  } catch(e){ try{const r2=await fetch(API+'/banners');const d=await r2.json();renderAdminBanners(d.banners||[]);}catch{} }
+}
+function renderAdminBanners(banners) {
+  const el = document.getElementById('bannersList');
+  if(!banners.length){el.innerHTML='<p style="text-align:center;color:var(--gy);padding:24px;">No banners yet.</p>';return;}
+  el.innerHTML = banners.map(b => {
+    const bgStyle = b.image?`background:url(${fixImgSrc(b.image)}) center/cover;`:`background:${b.color||'#7B2D8B'};`;
+    return `<div style="border:2px solid var(--lt2);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+      <div style="${bgStyle}position:relative;min-height:100px;display:flex;align-items:center;padding:20px 24px;">
+        ${b.image?'<div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.5),transparent)"></div>':''}
+        <div style="position:relative;z-index:1">
+          ${b.badge?`<div style="font-size:.7rem;background:rgba(255,255,255,.25);color:#fff;padding:2px 8px;border-radius:50px;display:inline-block;margin-bottom:4px">${b.badge}</div><br>`:''}
+          <div style="color:#fff;font-weight:900;font-size:1.1rem;">${b.title}</div>
+          ${b.subtitle?`<div style="color:rgba(255,255,255,.85);font-size:.82rem;margin-top:2px">${b.subtitle}</div>`:''}
+        </div>
+      </div>
+      <div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:#fafafa">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="background:${b.isActive?'#e8f5e9':'#ffebee'};color:${b.isActive?'#2e7d32':'#c62828'};font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:50px;">${b.isActive?'● Live':'● Hidden'}</span>
+          ${b.timerHours?`<span style="background:#fff8e1;color:#e65100;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:50px;">⏱ ${b.timerHours}h</span>`:''}
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="editBanner(${JSON.stringify(b).replace(/"/g,'&quot;')})">✏️ Edit</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleBanner('${b._id}',${!b.isActive})">${b.isActive?'🔒 Hide':'✅ Show'}</button>
+          <button class="btn btn-er-g btn-sm" onclick="deleteBanner('${b._id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function editBanner(b) {
+  document.getElementById('bannerEditId').value   = b._id;
+  document.getElementById('bannerTitle').value    = b.title||'';
+  document.getElementById('bannerSub').value      = b.subtitle||'';
+  document.getElementById('bannerBadge').value    = b.badge||'';
+  document.getElementById('bannerDiscount').value = b.discountText||'';
+  document.getElementById('bannerBtn').value      = b.buttonText||'Shop Now';
+  document.getElementById('bannerColor').value    = b.color||'#7B2D8B';
+  document.getElementById('bannerTimer').value    = b.timerHours||0;
+  document.getElementById('bannerOrder').value    = b.order||1;
+  document.getElementById('bannerActive').value   = b.isActive?'true':'false';
+  document.getElementById('bannerFormTitle').textContent='✏️ Edit Banner';
+  if(b.image){
+    document.getElementById('bannerImageUrl').value  = b.image;
+    document.getElementById('bannerImageLink').value = b.image;
+    document.getElementById('bannerImagePreview').innerHTML=`<img src="${fixImgSrc(b.image)}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:6px" onerror="this.style.opacity='.3'">`;
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelBanner() {
+  document.getElementById('bannerForm').reset();
+  document.getElementById('bannerEditId').value = '';
+  document.getElementById('bannerImageUrl').value = '';
+  document.getElementById('bannerImagePreview').innerHTML = '';
+  document.getElementById('bannerFormTitle').textContent = '🎨 Add Banner';
+}
+async function saveBanner(e) {
+  e.preventDefault();
+  const id = document.getElementById('bannerEditId').value;
+  const payload = {
+    title:        document.getElementById('bannerTitle').value.trim(),
+    subtitle:     document.getElementById('bannerSub').value.trim(),
+    badge:        document.getElementById('bannerBadge').value.trim(),
+    discountText: document.getElementById('bannerDiscount').value.trim(),
+    buttonText:   document.getElementById('bannerBtn').value.trim()||'Shop Now',
+    color:        document.getElementById('bannerColor').value,
+    timerHours:   parseInt(document.getElementById('bannerTimer').value)||0,
+    order:        parseInt(document.getElementById('bannerOrder').value)||1,
+    isActive:     document.getElementById('bannerActive').value==='true',
+    image:        document.getElementById('bannerImageUrl').value.trim()||'',
+  };
+  if(!payload.title){toast('⚠️ Banner title is required');return;}
+  try {
+    if(id){await apiFetch(`/admin/banners/${id}`,'PUT',payload);toast('✅ Banner updated!');}
+    else  {await apiFetch('/admin/banners','POST',payload);toast('✅ Banner live on shop!');}
+    cancelBanner(); loadBanners();
+  } catch(e){toast('❌ '+e.message);}
+}
+async function toggleBanner(id,isActive){
+  try{await apiFetch(`/admin/banners/${id}`,'PUT',{isActive});toast(isActive?'✅ Banner live':'🔒 Banner hidden');loadBanners();}
+  catch(e){toast('❌ '+e.message);}
+}
+async function deleteBanner(id){
+  if(!confirm('Delete this banner?'))return;
+  try{await apiFetch(`/admin/banners/${id}`,'DELETE');toast('🗑️ Banner deleted');loadBanners();}
+  catch(e){toast('❌ '+e.message);}
+}
+
+// ── ANNOUNCEMENT ──────────────────────────────────────────────
+async function loadAnnouncement() {
+  try {
+    const d = await apiFetch('/admin/announcement');
+    if(!d)return;
+    const ti=document.getElementById('announceText');
+    const li=document.getElementById('announceLink');
+    const lti=document.getElementById('announceLinkText');
+    const hi=document.getElementById('announceHidden');
+    if(ti) ti.value=d.text||'';
+    if(li) li.value=d.link||'';
+    if(lti) lti.value=d.linkText||'';
+    if(hi) hi.checked=!!d.hidden;
+    updateAnnouncePreview();
+  } catch(e){}
+}
+function updateAnnouncePreview() {
+  const text=document.getElementById('announceText')?.value||'';
+  const preview=document.getElementById('announcePreview');
+  if(!preview)return;
+  if(text){preview.style.display='block';preview.textContent=text;}
+  else preview.style.display='none';
+}
+async function saveAnnouncement() {
+  const text    = document.getElementById('announceText')?.value.trim()||'';
+  const link    = document.getElementById('announceLink')?.value.trim()||'';
+  const linkText= document.getElementById('announceLinkText')?.value.trim()||'';
+  const hidden  = document.getElementById('announceHidden')?.checked||false;
+  try{await apiFetch('/admin/announcement','PUT',{text,link,linkText,hidden});toast('✅ Announcement bar updated!');updateAnnouncePreview();}
+  catch(e){toast('❌ '+e.message);}
+}
+
+// ── PANEL SWITCH with loaders ─────────────────────────────────
+const _origShow = show;
+function show(id, navEl) {
+  _origShow(id, navEl);
+  const loaders = {
+    products: loadProducts,
+    stock:    loadStock,
+    coupons:  loadCoupons,
+    banners:  () => { loadBanners(); loadAnnouncement(); },
+  };
+  if (loaders[id]) loaders[id]();
+  // update hash for deep-linking
+  window.location.hash = id !== 'products' ? id : '';
+}
+</script>
+</body>
+</html>

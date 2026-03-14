@@ -390,6 +390,13 @@ tr:hover td{background:#FAF7FC;}
     <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
     <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
     <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
+    <p style="text-align:center;margin-top:12px;font-size:.82rem;">
+      <a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:var(--pp);font-weight:700;">Forgot password?</a>
+    </p>
+    <div id="forgotBox" style="display:none;margin-top:8px;">
+      <input class="linp" type="email" id="forgotEmail" placeholder="admin@kidscart.kids">
+      <button class="lbtn" style="margin-top:8px;" onclick="adminForgot()">Send Reset Link 📧</button>
+    </div>
     <div id="loginErr"></div>
   </div>
 </div>
@@ -609,7 +616,7 @@ tr:hover td{background:#FAF7FC;}
                 <select name="category" required>
                   <option value="">Select…</option>
                   <option>Girls</option><option>Boys</option><option>Baby</option>
-                  <option>Party</option><option>Ethnic</option><option>Winter</option><option>School</option><option>Accessories</option>
+                  <option>Party Wear</option><option>Ethnic</option><option>Western</option><option>Festive</option><option>Winter</option><option>School</option><option>Accessories</option>
                 </select>
               </div>
               <div class="fgroup"><label>Selling Price (₹) *</label><input type="number" name="price" placeholder="599" required min="1"></div>
@@ -647,17 +654,38 @@ tr:hover td{background:#FAF7FC;}
               <div style="font-size:.75rem;color:var(--gy)">First image becomes the thumbnail. You can upload multiple images for gallery view.</div>
             </div>
             
-            <!-- Stock by Size -->
+            <!-- Stock by Size — 12 sizes -->
             <div style="margin-bottom:16px;">
               <div style="font-weight:800;font-size:.85rem;color:#555;margin-bottom:10px;">📦 Initial Stock by Size</div>
-              <div class="grid3">
-                <div class="fgroup"><label>XS / 0-3M</label><input type="number" name="stockXS" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>S / 3-6M</label><input type="number" name="stockS" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>M / 6-12M</label><input type="number" name="stockM" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>L / 1-2Y</label><input type="number" name="stockL" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>XL / 2-4Y</label><input type="number" name="stockXL" placeholder="0" min="0" value="0"></div>
-                <div class="fgroup"><label>XXL / 4-6Y</label><input type="number" name="stockXXL" placeholder="0" min="0" value="0"></div>
+              <div id="prodSizes" class="grid3">
+                <div class="fgroup"><label>0-3M</label><input type="number" name="s_0-3M" data-size="0-3M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>3-6M</label><input type="number" name="s_3-6M" data-size="3-6M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>6-12M</label><input type="number" name="s_6-12M" data-size="6-12M" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>1-2Y</label><input type="number" name="s_1-2Y" data-size="1-2Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>2-3Y</label><input type="number" name="s_2-3Y" data-size="2-3Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>3-4Y</label><input type="number" name="s_3-4Y" data-size="3-4Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>4-5Y</label><input type="number" name="s_4-5Y" data-size="4-5Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>5-6Y</label><input type="number" name="s_5-6Y" data-size="5-6Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>6-8Y</label><input type="number" name="s_6-8Y" data-size="6-8Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>8-10Y</label><input type="number" name="s_8-10Y" data-size="8-10Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>10-12Y</label><input type="number" name="s_10-12Y" data-size="10-12Y" placeholder="0" min="0" value="0"></div>
+                <div class="fgroup"><label>12-15Y</label><input type="number" name="s_12-15Y" data-size="12-15Y" placeholder="0" min="0" value="0"></div>
               </div>
+            </div>
+
+            <!-- Colors -->
+            <div class="fgroup" style="margin-bottom:16px;">
+              <label>🎨 Available Colors <small style="color:var(--gy)">(type and press Enter)</small></label>
+              <div id="prodColorTags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:32px;padding:6px;border:1.5px solid #ddd;border-radius:8px;background:#fff;margin-bottom:6px;"></div>
+              <input type="text" id="prodColorInput" placeholder="e.g. Red, Blue, Pink..." style="width:100%;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addColorTag(this.value);this.value='';}">
+              <input type="hidden" id="prodColors" name="colors" value="">
+            </div>
+
+            <!-- Display Order -->
+            <div class="fgroup" style="margin-bottom:16px;">
+              <label>🔢 Display Order <small style="color:var(--gy)">(lower = shows first, default 0)</small></label>
+              <input type="number" id="prodOrder" name="order" placeholder="0" min="0" value="0" style="width:120px;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;">
             </div>
             
             <!-- Settings -->
@@ -818,6 +846,31 @@ tr:hover td{background:#FAF7FC;}
               </div>
             </form>
           </div>
+          <!-- Announcement Bar -->
+          <div class="card" style="margin-bottom:18px;">
+            <div class="card-head"><h3>📢 Announcement Bar</h3><span style="font-size:.78rem;color:var(--gy);">Purple strip at top of shop</span></div>
+            <div style="padding:4px 0 14px;">
+              <div class="fgroup"><label>Bar Text</label>
+                <input type="text" id="announceText" placeholder="🎉 Sale is Live! Use WELCOME10 for 10% off" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;" oninput="updateAnnouncePreview()">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="fgroup"><label>Link URL (optional)</label>
+                  <input type="text" id="announceLink" placeholder="#products" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;">
+                </div>
+                <div class="fgroup"><label>Link Text</label>
+                  <input type="text" id="announceLinkText" placeholder="Shop Now →" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;">
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;margin-top:8px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;font-weight:700;">
+                  <input type="checkbox" id="announceHidden" style="width:16px;height:16px;"> Hide bar
+                </label>
+                <button onclick="saveAnnouncement()" style="background:var(--pp);color:#fff;border:none;padding:9px 22px;border-radius:8px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.85rem;">💾 Save</button>
+              </div>
+              <div id="announcePreview" style="margin-top:10px;background:linear-gradient(135deg,#7B2D8B,#9b3db5);color:#fff;text-align:center;padding:8px 16px;border-radius:8px;font-size:.8rem;font-weight:700;display:none;"></div>
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-head"><h3>All Banners</h3><span style="font-size:.78rem;color:var(--gy)">Banners show full-width at top of shop</span></div>
             <div id="bannersList"><p style="color:var(--gy);text-align:center;padding:24px;">Loading…</p></div>
@@ -1089,7 +1142,7 @@ function show(id, navEl) {
   const loaders = {
     dashboard: loadDashboard, orders: loadOrders, products: loadProducts,
     stock: loadStock, customers: loadCustomers, coupons: loadCoupons,
-    banners: loadBanners, chat: loadChats, reports: () => setReportRange(30),
+    banners: () => { loadBanners(); loadAnnouncement(); }, chat: loadChats, reports: () => setReportRange(30),
     adminusers: loadAdminUsers,
     inbox: loadInbox, crm: loadCrm, crmstages: loadCrmSettings
   };
@@ -1158,7 +1211,10 @@ function renderDashOrders(orders) {
       <td>${o.user?.name || '—'}</td>
       <td>₹${(o.total || 0).toLocaleString('en-IN')}</td>
       <td><span class="badge b-${o.status}">${o.status}</span></td>
-      <td><button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}')">Update</button></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}','${o.payment?.method||'cod'}','${o.payment?.status||'pending'}')">Update</button>
+        <button class="btn-sm" style="background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;padding:6px 10px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;margin-left:4px;" onclick="viewOrderDetail('${o._id}')">📋 Details</button>
+      </td>
     </tr>`).join('');
 }
 
@@ -1374,6 +1430,19 @@ function editProduct(id) {
     // Show existing thumbnail
     const thumbInput = document.getElementById('prodThumbUrl');
     if (thumbInput) thumbInput.value = p.thumbnail || '';
+
+  // Repopulate 12 sizes
+  if (p.sizes && p.sizes.length) {
+    document.querySelectorAll('#prodSizes input[data-size]').forEach(inp => {
+      const found = p.sizes.find(s => s.size === inp.dataset.size);
+      inp.value = found ? found.stock : 0;
+    });
+  }
+  // Repopulate colors
+  setColorTags(p.colors || []);
+  // Repopulate display order
+  const orderInp = document.getElementById('prodOrder');
+  if (orderInp) orderInp.value = p.order || 0;
     // Show existing images
     const preview = document.getElementById('prodImagePreviews');
     if (preview) {
@@ -1414,15 +1483,24 @@ async function saveProduct(e) {
   data.codEnabled = data.codEnabled === 'true';
   // Parse tags
   data.tags = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
-  data.sizes = [
-    { size:'XS/0-3M', stock: +data.stockXS || 0 },
-    { size:'S/3-6M',  stock: +data.stockS  || 0 },
-    { size:'M/6-12M', stock: +data.stockM  || 0 },
-    { size:'L/1-2Y',  stock: +data.stockL  || 0 },
-    { size:'XL/2-4Y', stock: +data.stockXL || 0 },
-    { size:'XXL/4-6Y',stock: +data.stockXXL|| 0 },
-  ];
+  // 12-size system — read from data-size inputs
+  const sizeInputs = document.querySelectorAll('#prodSizes input[data-size]');
+  data.sizes = Array.from(sizeInputs).map(inp => ({
+    size: inp.dataset.size, stock: parseInt(inp.value) || 0
+  })).filter(s => s.stock > 0);
+  if (data.sizes.length === 0) data.sizes = [{ size: 'Free Size', stock: 0 }];
+  // Remove old size keys from form data
   ['stockXS','stockS','stockM','stockL','stockXL','stockXXL'].forEach(k => delete data[k]);
+  // Remove s_* keys (new size inputs in form)
+  Object.keys(data).filter(k => k.startsWith('s_')).forEach(k => delete data[k]);
+
+  // Colors
+  try { data.colors = JSON.parse(document.getElementById('prodColors')?.value || '[]'); } catch(e) { data.colors = []; }
+  delete data.colors; // will use prodColorList directly
+  data.colors = [...prodColorList];
+
+  // Display order
+  data.order = parseInt(document.getElementById('prodOrder')?.value) || 0;
 
   // Upload images if any selected
   const submitBtn = e.target.querySelector('button[type=submit]');
@@ -2071,7 +2149,313 @@ function syncMobBadge() {
   if (sb) { sb.textContent = total; sb.style.display = total > 0 ? 'inline-flex' : 'none'; }
 }
 
+
+// ── FORGOT / RESET PASSWORD ──────────────────────────────
+async function adminForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email) { toast('⚠️ Enter your email'); return; }
+  try {
+    await fetch(API + '/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    toast('✅ Reset link sent to ' + email);
+    document.getElementById('forgotBox').style.display = 'none';
+  } catch(e) { toast('❌ ' + e.message); }
+}
+(function handleResetToken() {
+  const p = new URLSearchParams(window.location.search);
+  const rt = p.get('resetToken'), uid = p.get('userId');
+  if (!rt || !uid) return;
+  document.getElementById('loginScreen').innerHTML = `
+    <div class="login-box">
+      <div class="login-logo"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart"></div>
+      <h2>Set New Password</h2><p>Enter your new admin password</p>
+      <input class="linp" type="password" id="np1" placeholder="New password (min 8 chars)">
+      <input class="linp" type="password" id="np2" placeholder="Confirm new password">
+      <button class="lbtn" onclick="doReset('${rt}','${uid}')">Set Password</button>
+      <div id="loginErr" style="color:var(--er);font-size:.83rem;text-align:center;margin-top:8px;"></div>
+    </div>`;
+  document.getElementById('loginScreen').style.display = 'flex';
+})();
+async function doReset(token, userId) {
+  const p1 = document.getElementById('np1').value;
+  const p2 = document.getElementById('np2').value;
+  const err = document.getElementById('loginErr');
+  if (p1.length < 8) { err.textContent = 'Min 8 characters'; return; }
+  if (p1 !== p2) { err.textContent = 'Passwords do not match'; return; }
+  try {
+    const r = await fetch(API + '/auth/reset-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, userId, newPassword: p1 })
+    });
+    const d = await r.json();
+    if (r.ok) { toast('✅ Password updated! Redirecting…'); setTimeout(() => location.href = '/admin.html', 2000); }
+    else err.textContent = d.error || 'Failed';
+  } catch(e) { err.textContent = e.message; }
+}
+
+// ── ANNOUNCEMENT BAR ──────────────────────────────────────
+async function loadAnnouncement() {
+  try {
+    const d = await apiFetch('/admin/announcement');
+    if (!d) return;
+    const ti = document.getElementById('announceText');
+    const li = document.getElementById('announceLink');
+    const lti = document.getElementById('announceLinkText');
+    const hi = document.getElementById('announceHidden');
+    if (ti) ti.value = d.text || '';
+    if (li) li.value = d.link || '';
+    if (lti) lti.value = d.linkText || '';
+    if (hi) hi.checked = !!d.hidden;
+    updateAnnouncePreview();
+  } catch(e) {}
+}
+function updateAnnouncePreview() {
+  const text = document.getElementById('announceText')?.value || '';
+  const preview = document.getElementById('announcePreview');
+  if (!preview) return;
+  if (text) { preview.style.display = 'block'; preview.textContent = text; }
+  else preview.style.display = 'none';
+}
+async function saveAnnouncement() {
+  const text = document.getElementById('announceText')?.value.trim() || '';
+  const link = document.getElementById('announceLink')?.value.trim() || '';
+  const linkText = document.getElementById('announceLinkText')?.value.trim() || '';
+  const hidden = document.getElementById('announceHidden')?.checked || false;
+  try {
+    await apiFetch('/admin/announcement', 'PUT', { text, link, linkText, hidden });
+    toast('✅ Announcement bar updated!');
+    updateAnnouncePreview();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── PRODUCT COLORS ────────────────────────────────────────
+let prodColorList = [];
+function addColorTag(val) {
+  if (!val.trim()) return;
+  val.split(',').map(v => v.trim()).filter(Boolean).forEach(v => {
+    if (!prodColorList.includes(v)) {
+      prodColorList.push(v);
+      renderColorTags();
+    }
+  });
+}
+function removeColorTag(v) {
+  prodColorList = prodColorList.filter(c => c !== v);
+  renderColorTags();
+}
+function renderColorTags() {
+  const wrap = document.getElementById('prodColorTags');
+  const inp  = document.getElementById('prodColors');
+  if (!wrap) return;
+  wrap.innerHTML = prodColorList.map(v =>
+    `<span style="background:var(--lt2);color:var(--pp);padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+      ${v} <span onclick="removeColorTag('${v}')" style="cursor:pointer;color:var(--er);font-size:.9rem;">×</span>
+    </span>`
+  ).join('');
+  if (inp) inp.value = JSON.stringify(prodColorList);
+}
+function setColorTags(colors) {
+  prodColorList = Array.isArray(colors) ? colors : [];
+  renderColorTags();
+}
+
+// ── STOCK UPDATE (inline editing) ────────────────────────
+async function updateStock(productId, size, val) {
+  const qty = parseInt(val);
+  if (isNaN(qty) || qty < 0) return;
+  try {
+    await apiFetch('/admin/products/' + productId + '/stock', 'PUT', { size, qty });
+    toast('✅ Stock updated');
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── DELETE USER ───────────────────────────────────────────
+async function deleteUser(id) {
+  if (!confirm('Delete this customer account? This cannot be undone.')) return;
+  try {
+    await apiFetch('/admin/users/' + id, 'DELETE');
+    toast('✅ User deleted');
+    loadCustomers();
+  } catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── LOAD ADMINS ───────────────────────────────────────────
+async function loadAdmins() {
+  try {
+    const d = await apiFetch('/admin/admins');
+    const el = document.getElementById('adminUsersList');
+    if (!el) return;
+    el.innerHTML = (d.admins || []).map(a => `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--lt2);">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:.88rem;">${a.name}</div>
+          <div style="font-size:.78rem;color:var(--gy);">${a.email} · ${a.role}</div>
+        </div>
+        ${a.role !== 'super_admin' ? `<button onclick="deleteAdmin('${a._id}')" style="background:#ffebee;color:var(--er);border:none;border-radius:8px;padding:6px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">Delete</button>` : '<span style="color:var(--gy);font-size:.78rem;">Super Admin</span>'}
+      </div>`).join('') || '<div style="color:var(--gy);padding:20px;text-align:center;">No admins yet</div>';
+  } catch(e) { toast('❌ ' + e.message); }
+}
+async function deleteAdmin(id) {
+  if (!confirm('Remove this admin?')) return;
+  try { await apiFetch('/admin/admins/' + id, 'DELETE'); toast('✅ Admin removed'); loadAdmins(); }
+  catch(e) { toast('❌ ' + e.message); }
+}
+
+// ── PRODUCT DISPLAY ORDER ─────────────────────────────────
+async function updateProductOrder(id, order) {
+  try { await apiFetch('/admin/products/' + id + '/order', 'PUT', { order: parseInt(order) || 0 }); }
+  catch(e) { console.error('Order update failed:', e.message); }
+}
+
+// ── BANNER DRAG REPOSITION ───────────────────────────────
+function initBannerDrag() {
+  const img = document.getElementById('bannerPreviewImg');
+  if (!img) return;
+  let dragging = false, startY = 0, startPos = 50;
+  img.style.cursor = 'grab';
+  img.addEventListener('mousedown', e => {
+    dragging = true; startY = e.clientY;
+    const m = (img.style.objectPosition || '50% 50%').match(/(\d+)%/g);
+    startPos = m ? parseInt(m[1]) : 50;
+    img.style.cursor = 'grabbing'; e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const delta = ((e.clientY - startY) / img.offsetHeight) * 100;
+    const newPos = Math.max(0, Math.min(100, startPos + delta));
+    img.style.objectPosition = '50% ' + newPos + '%';
+    document.getElementById('bannerFocusY').value = newPos.toFixed(0);
+  });
+  document.addEventListener('mouseup', () => { dragging = false; if(img) img.style.cursor = 'grab'; });
+}
+
+// ── IMAGE COVER / ORDERING ────────────────────────────────
+function imgCover(idx) {
+  const allImgs = document.querySelectorAll('#prodImagePreviews .img-thumb-wrap');
+  allImgs.forEach((w, i) => {
+    w.dataset.isCover = i === idx ? 'yes' : 'no';
+    const badge = w.querySelector('.img-cover-badge');
+    if (badge) badge.style.display = i === idx ? 'block' : 'none';
+  });
+  // Move cover image URL to thumbnail field
+  const imgs = document.querySelectorAll('#prodImagePreviews img.img-thumb');
+  if (imgs[idx]) document.getElementById('prodThumbUrl').value = imgs[idx].src;
+  toast('✅ Cover image set');
+}
+
+// ── PATCH saveProduct to handle 12 sizes + colors + order ──
+const _origSaveProduct = saveProduct;
+// Override form data extraction for sizes
+function getSizeData() {
+  const sizes = [];
+  document.querySelectorAll('#prodSizes input[data-size]').forEach(inp => {
+    const qty = parseInt(inp.value) || 0;
+    if (qty > 0) sizes.push({ size: inp.dataset.size, stock: qty });
+  });
+  // Also add Free Size if no sizes entered
+  if (sizes.length === 0) sizes.push({ size: 'Free Size', stock: parseInt(document.querySelector('#prodSizes input')?.value) || 0 });
+  return sizes;
+}
+
+
+// ── ORDER DETAIL MODAL ────────────────────────────────────
+async function viewOrderDetail(id) {
+  const modal = document.getElementById('orderDetailModal');
+  const body  = document.getElementById('ordDetailBody');
+  if (!modal || !body) return;
+  modal.style.display = 'flex';
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;">Loading…</div>';
+  try {
+    const o = await apiFetch('/admin/orders/' + id);
+    const order = o.order || o;
+    const items = (order.items || []).map(i =>
+      `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--lt2);font-size:.85rem;">
+        <span>${i.emoji||'🛍️'} ${i.name} (${i.size||'—'}) ×${i.qty}</span>
+        <span style="font-weight:700;">₹${((i.price||0)*i.qty).toLocaleString('en-IN')}</span>
+      </div>`
+    ).join('');
+    const tracking = (order.tracking || []).map(t =>
+      `<div style="display:flex;gap:10px;padding:8px 0;font-size:.82rem;">
+        <span style="color:var(--ok);font-size:1rem;">●</span>
+        <div><strong>${t.status}</strong> — ${t.message||''}<br>
+        <small style="color:var(--gy);">${t.time ? new Date(t.time).toLocaleString('en-IN') : ''}</small></div>
+      </div>`
+    ).join('');
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div>
+          <div style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;">Customer</div>
+          <div style="font-size:.88rem;font-weight:700;">${order.user?.name||'—'}</div>
+          <div style="font-size:.82rem;color:var(--gy);">${order.user?.email||''}</div>
+          <div style="font-size:.82rem;color:var(--gy);">${order.user?.phone||''}</div>
+        </div>
+        <div>
+          <div style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:6px;">Shipping Address</div>
+          <div style="font-size:.82rem;line-height:1.6;">
+            ${order.shippingAddress?.name||''}, ${order.shippingAddress?.phone||''}<br>
+            ${order.shippingAddress?.line1||''}${order.shippingAddress?.line2?', '+order.shippingAddress.line2:''}<br>
+            ${order.shippingAddress?.city||''}, ${order.shippingAddress?.state||''} — ${order.shippingAddress?.pincode||''}
+          </div>
+        </div>
+      </div>
+      <div style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:8px;">Items</div>
+      ${items}
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:.88rem;">
+        <span>Subtotal</span><span>₹${(order.subtotal||0).toLocaleString('en-IN')}</span>
+      </div>
+      ${order.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;color:var(--ok);"><span>Discount (${order.couponCode||''})</span><span>−₹${order.discount.toLocaleString('en-IN')}</span></div>`:''}
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;">
+        <span>Delivery</span><span>${order.deliveryFee===0?'FREE':'₹'+order.deliveryFee}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:1rem;font-weight:900;border-top:2px solid var(--lt2);">
+        <span>Total</span><span style="color:var(--pp);">₹${(order.total||0).toLocaleString('en-IN')}</span>
+      </div>
+      <div style="margin-top:16px;">
+        <div style="font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;margin-bottom:8px;">Tracking Timeline</div>
+        ${tracking || '<div style="color:var(--gy);font-size:.82rem;">No tracking info yet</div>'}
+      </div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:var(--lt);border-radius:10px;padding:12px;font-size:.82rem;">
+          <div style="color:var(--gy);font-size:.72rem;font-weight:700;text-transform:uppercase;">Payment</div>
+          <div style="font-weight:700;margin-top:4px;">${(order.payment?.method||'COD').toUpperCase()}</div>
+          <div style="color:${order.payment?.status==='paid'?'var(--ok)':'var(--or)'};">${order.payment?.status||'pending'}</div>
+          ${order.payment?.transactionId?`<div style="font-size:.72rem;color:var(--gy);margin-top:4px;">ID: ${order.payment.transactionId}</div>`:''}
+        </div>
+        <div style="background:var(--lt);border-radius:10px;padding:12px;font-size:.82rem;">
+          <div style="color:var(--gy);font-size:.72rem;font-weight:700;text-transform:uppercase;">Status</div>
+          <div style="font-weight:700;margin-top:4px;"><span class="badge b-${order.status}">${order.status}</span></div>
+          ${order.estimatedDelivery?`<div style="font-size:.72rem;color:var(--gy);margin-top:4px;">Est. delivery: ${new Date(order.estimatedDelivery).toLocaleDateString('en-IN')}</div>`:''}
+        </div>
+      </div>
+      <div style="margin-top:16px;text-align:right;">
+        <button onclick="openOrderModal('${order._id}','${order.orderId}','${order.status}','${order.payment?.method||'cod'}','${order.payment?.status||'pending'}')" style="background:var(--pp);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;">Update Status</button>
+      </div>`;
+  } catch(e) {
+    body.innerHTML = '<div style="color:var(--er);padding:16px;">Error: ' + e.message + '</div>';
+  }
+}
+function closeOrderDetail() {
+  document.getElementById('orderDetailModal').style.display = 'none';
+}
+
+
+function renderBubble(m) { return mkBubble ? mkBubble(m) : ""; }
 </script>
+
+
+<!-- ORDER DETAIL MODAL -->
+<div id="orderDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <div style="position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #f0e4f9;display:flex;justify-content:space-between;align-items:center;z-index:1;border-radius:20px 20px 0 0;">
+      <h2 style="font-size:1rem;font-weight:900;color:var(--pp);">📦 Order Details</h2>
+      <button onclick="closeOrderDetail()" style="background:var(--lt);border:none;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;color:var(--pp);">✕</button>
+    </div>
+    <div id="ordDetailBody" style="padding:20px;"></div>
+  </div>
+</div>
 
 </body>
 </html>

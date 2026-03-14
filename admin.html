@@ -595,7 +595,7 @@ tr:hover td{background:#FAF7FC;}
           <div class="card-head"><h3>📋 Stock Management</h3><span style="font-size:.8rem;color:var(--gy);">Click a stock value to edit inline</span></div>
           <div class="tbl-wrap">
             <table>
-              <thead><tr><th>Product</th><th>XS/0-3M</th><th>S/3-6M</th><th>M/6-12M</th><th>L/1-2Y</th><th>XL/2-4Y</th><th>XXL/4-6Y</th><th>Total</th><th>Save</th></tr></thead>
+              <thead><tr><th>Product</th><th>0-3M</th><th>3-6M</th><th>6-12M</th><th>1-2Y</th><th>2-3Y</th><th>3-4Y</th><th>4-5Y</th><th>5-6Y</th><th>6-8Y</th><th>8-10Y</th><th>10-12Y</th><th>12-15Y</th><th>Total</th><th>Save</th></tr></thead>
               <tbody id="stockTableBody"><tr><td colspan="9" style="text-align:center;color:var(--gy);padding:24px;">Loading…</td></tr></tbody>
             </table>
           </div>
@@ -1553,19 +1553,30 @@ async function loadStock() {
 
 function renderStock(prods) {
   const el = document.getElementById('stockTableBody');
-  const sizeKeys = ['XS/0-3M','S/3-6M','M/6-12M','L/1-2Y','XL/2-4Y','XXL/4-6Y'];
+  // All 12 size keys matching new product form
+  const sizeKeys = ['0-3M','3-6M','6-12M','1-2Y','2-3Y','3-4Y','4-5Y','5-6Y','6-8Y','8-10Y','10-12Y','12-15Y'];
+  // Also support legacy keys for old products
+  const legacyMap = {'XS/0-3M':'0-3M','S/3-6M':'3-6M','M/6-12M':'6-12M','L/1-2Y':'1-2Y','XL/2-4Y':'2-3Y','XXL/4-6Y':'4-5Y'};
   el.innerHTML = prods.map(p => {
     const sizeMap = {};
-    (p.sizes || []).forEach(s => sizeMap[s.size] = s.stock || 0);
+    (p.sizes || []).forEach(s => {
+      // Normalise legacy keys
+      const key = legacyMap[s.size] || s.size;
+      sizeMap[key] = (sizeMap[key] || 0) + (s.stock || 0);
+    });
     const inputs = sizeKeys.map(k => {
       const v = sizeMap[k] || 0;
-      const cls = v === 0 ? 'var(--er)' : v <= 5 ? 'var(--or)' : '#222';
-      return `<td><input type="number" value="${v}" min="0" data-pid="${p._id}" data-size="${k}" style="width:68px;padding:5px 8px;border:2px solid #eee;border-radius:6px;text-align:center;font-family:'Nunito';font-weight:800;color:${cls};" oninput="this.style.color='var(--pp)'"></td>`;
+      const cls = v === 0 ? '#bbb' : v <= 3 ? 'var(--er)' : v <= 10 ? 'var(--or)' : 'var(--ok)';
+      return `<td><input type="number" value="${v}" min="0" data-size="${k}"
+        style="width:54px;padding:4px 6px;border:2px solid ${v===0?'#eee':v<=3?'#ffcdd2':v<=10?'#ffe0b2':'#c8e6c9'};border-radius:6px;text-align:center;font-family:'Nunito';font-weight:800;font-size:.8rem;color:${cls};"
+        oninput="this.style.color='var(--pp)';this.style.borderColor='var(--lt2)'"></td>`;
     }).join('');
+    const total = Object.values(sizeMap).reduce((a,b)=>a+b,0);
+    const totClr = total===0?'var(--er)':total<=10?'var(--or)':'var(--ok)';
     return `<tr>
-      <td><b>${p.emoji || '📦'} ${p.name}</b></td>
+      <td style="min-width:140px;"><b>${p.emoji||'📦'} ${p.name}</b><br><small style="color:var(--gy)">${p.category||''}</small></td>
       ${inputs}
-      <td style="font-weight:800;color:${p.totalStock===0?'var(--er)':p.totalStock<=10?'var(--or)':'var(--ok)'}">${p.totalStock}</td>
+      <td style="font-weight:900;color:${totClr}">${total}</td>
       <td><button class="btn btn-ok-g btn-sm" onclick="saveStock('${p._id}',this)">💾 Save</button></td>
     </tr>`;
   }).join('');

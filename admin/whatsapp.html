@@ -4,73 +4,78 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WhatsApp Inbox — KidsCart Admin</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};</script>
 <script src="/admin/shared.js"></script>
 <style>
-/* ── WhatsApp Inbox Styles ── */
-.inbox-wrap{display:flex;height:calc(100vh - 130px);background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
-.conv-list{width:300px;flex-shrink:0;border-right:1px solid #f0e5f8;display:flex;flex-direction:column;background:#fff;}
-.conv-search{padding:10px 12px;border-bottom:1px solid #f0e5f8;}
-.conv-search input{width:100%;padding:8px 14px;border:1.5px solid #e8d5f5;border-radius:22px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;background:#faf6ff;}
-.conv-search input:focus{border-color:var(--pp);}
-.conv-filter{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid #f0e5f8;}
-.conv-filter button{padding:5px 14px;border-radius:22px;border:1.5px solid #e0d0f0;background:#fff;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
-.conv-filter button.active{background:var(--pp);color:#fff;border-color:var(--pp);}
+.inbox-layout{display:flex;height:calc(100vh - 130px);background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(123,45,139,.08);box-shadow:0 4px 24px rgba(74,16,112,.07);}
+.conv-list{width:300px;flex-shrink:0;border-right:1px solid #f5f0fb;display:flex;flex-direction:column;background:#fff;}
+.conv-search-wrap{padding:12px;border-bottom:1px solid #f5f0fb;}
+.conv-search-wrap input{width:100%;padding:9px 14px;border:1.5px solid #e8dff5;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.84rem;outline:none;background:#f8f5fd;transition:.2s;}
+.conv-search-wrap input:focus{border-color:#4A1070;background:#fff;}
+.conv-filter{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid #f5f0fb;}
+.conv-filter button{padding:5px 14px;border-radius:20px;border:1.5px solid #e8dff5;background:#fff;font-size:.74rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:#888;transition:.15s;}
+.conv-filter button.active{background:#4A1070;color:#fff;border-color:#4A1070;}
 .conv-items{flex:1;overflow-y:auto;}
-.conv-item{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;border-bottom:1px solid #f9f4fc;transition:.15s;}
-.conv-item:hover{background:#faf4ff;}
-.conv-item.active{background:#f0e5f8;border-left:3px solid var(--pp);}
-.conv-item.unread .conv-name{font-weight:900;color:#111;}
-.conv-avi{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.1rem;flex-shrink:0;}
+.conv-item{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;border-bottom:1px solid #faf7fe;transition:.1s;}
+.conv-item:hover{background:#faf7fe;}
+.conv-item.active{background:#f0e8fb;border-left:3px solid #4A1070;}
+.conv-item.unread .conv-name{font-weight:900;color:#1a0a2e;}
+.conv-avi{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1rem;flex-shrink:0;}
 .conv-info{flex:1;min-width:0;}
-.conv-name{font-size:.86rem;font-weight:700;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.conv-last{font-size:.75rem;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.conv-name{font-size:.84rem;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.conv-last{font-size:.72rem;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
 .conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
-.conv-time{font-size:.68rem;color:#bbb;white-space:nowrap;}
-.unread-dot{width:20px;height:20px;background:#25D366;border-radius:50%;color:#fff;font-size:.65rem;font-weight:900;display:flex;align-items:center;justify-content:center;}
-.chat-win{flex:1;display:flex;flex-direction:column;min-width:0;background:#ece5dd;}
-.chat-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#bbb;gap:10px;background:#f8f4ff;}
-.chat-back-btn{display:none;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--pp);padding:4px 8px;}
-.chat-header{padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;background:#fff;flex-shrink:0;}
-.chat-header-avi{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1rem;flex-shrink:0;}
-.chat-header-info{flex:1;min-width:0;}
-.chat-header-name{font-weight:800;font-size:.92rem;color:#222;}
-.chat-header-sub{font-size:.72rem;color:#999;}
-.chat-act-btn{padding:5px 10px;border-radius:8px;border:1.5px solid #e0d0f0;background:#fff;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:#555;white-space:nowrap;}
+.conv-time{font-size:.66rem;color:#ccc;white-space:nowrap;}
+.unread-dot{width:20px;height:20px;background:#25D366;border-radius:50%;color:#fff;font-size:.62rem;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.chat-win{flex:1;display:flex;flex-direction:column;min-width:0;background:#f0f2f5;}
+.chat-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;gap:12px;background:#f8f5fd;}
+.chat-back-btn{display:none;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#4A1070;padding:4px 8px;}
+.chat-header{padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;background:#fff;flex-shrink:0;box-shadow:0 1px 4px rgba(74,16,112,.05);}
+.chat-header-avi{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:.95rem;flex-shrink:0;}
+.chat-header-name{font-weight:800;font-size:.9rem;color:#1a0a2e;}
+.chat-header-sub{font-size:.7rem;color:#bbb;}
+.chat-act-btn{padding:5px 11px;border-radius:8px;border:1.5px solid #e8dff5;background:#fff;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:#555;white-space:nowrap;transition:.15s;}
+.chat-act-btn:hover{border-color:#4A1070;color:#4A1070;}
 .chat-act-btn.green{background:#e8f5e9;border-color:#25D366;color:#25D366;}
-.chat-msgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:4px;}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px 14px;display:flex;flex-direction:column;gap:4px;}
 .msg-wrap{display:flex;flex-direction:column;}
 .msg-wrap.out{align-items:flex-end;}
 .msg-wrap.in{align-items:flex-start;}
-.msg-bubble{max-width:75%;padding:8px 12px 4px;border-radius:8px;font-size:.85rem;line-height:1.5;word-break:break-word;}
-.msg-bubble.in{background:#fff;border-radius:0 8px 8px 8px;box-shadow:0 1px 2px rgba(0,0,0,.1);}
-.msg-bubble.out{background:#dcf8c6;border-radius:8px 0 8px 8px;}
-.msg-time{font-size:.64rem;color:#999;margin-top:2px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:3px;}
-.msg-date-div{text-align:center;font-size:.72rem;color:#888;font-weight:700;background:rgba(255,255,255,.8);padding:4px 14px;border-radius:20px;align-self:center;margin:6px 0;}
-.chat-input-area{padding:10px 12px;border-top:1px solid #e0e0e0;background:#f0f2f5;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
-.chat-input-area textarea{flex:1;padding:10px 14px;border:none;border-radius:22px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;resize:none;max-height:100px;line-height:1.5;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1);}
-.wa-send-btn{width:44px;height:44px;border-radius:50%;background:#25D366;color:#fff;border:none;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(37,211,102,.4);}
-.wa-tmpl-btn{width:40px;height:40px;border-radius:50%;background:#fff;color:var(--pp);border:1.5px solid #e0d0f0;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.tmpl-dd{position:absolute;bottom:68px;left:8px;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.15);padding:6px;min-width:270px;max-height:260px;overflow-y:auto;z-index:100;display:none;border:1px solid #f0e5f8;}
-.tmpl-dd.open{display:block;}
-.tmpl-item{padding:10px 12px;border-radius:8px;cursor:pointer;border-bottom:1px solid #f9f4fc;}
-.tmpl-item:hover{background:var(--lt);}
-.tmpl-item-name{font-size:.82rem;font-weight:800;color:var(--pp);}
-.tmpl-item-body{font-size:.75rem;color:#666;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.contact-panel{width:240px;flex-shrink:0;border-left:1px solid #f0e5f8;padding:14px;overflow-y:auto;background:#fafafa;}
-.contact-panel h4{font-size:.75rem;font-weight:800;color:var(--pp);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--lt2);}
-.cp-field{font-size:.82rem;color:#444;margin-bottom:6px;line-height:1.5;}
-.cp-lbl{font-size:.68rem;color:#aaa;font-weight:700;display:block;text-transform:uppercase;margin-bottom:1px;}
-.tag-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;color:#fff;margin:2px;}
-.won-b{background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:800;}
-.lost-b{background:#ffebee;color:#c62828;padding:3px 10px;border-radius:20px;font-size:.74rem;font-weight:800;}
-
+.msg-bubble{max-width:72%;padding:9px 13px 5px;border-radius:10px;font-size:.84rem;line-height:1.55;word-break:break-word;font-family:'Nunito',sans-serif;}
+.msg-bubble.in{background:#fff;border-radius:0 10px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.msg-bubble.out{background:#dcf8c6;border-radius:10px 0 10px 10px;}
+.msg-time{font-size:.62rem;color:#bbb;margin-top:3px;display:flex;align-items:center;justify-content:flex-end;gap:3px;}
+.msg-date-div{text-align:center;font-size:.7rem;color:#999;font-weight:700;background:rgba(255,255,255,.9);padding:4px 14px;border-radius:20px;align-self:center;margin:6px 0;border:1px solid rgba(123,45,139,.1);}
+.chat-input-area{padding:10px 12px;border-top:1px solid #eee;background:#fff;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+.chat-input-area textarea{flex:1;padding:10px 14px;border:1.5px solid #e8dff5;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.87rem;outline:none;resize:none;max-height:100px;line-height:1.5;background:#f8f5fd;transition:.2s;}
+.chat-input-area textarea:focus{border-color:#4A1070;background:#fff;}
+.wa-send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#25D366,#1da851);color:#fff;border:none;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(37,211,102,.3);transition:.15s;}
+.wa-send-btn:hover{transform:scale(1.05);}
+.wa-tmpl-btn{width:38px;height:38px;border-radius:50%;background:#f8f5fd;color:#4A1070;border:1.5px solid #e8dff5;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.wa-tmpl-btn:hover{background:#ede7f6;}
+.tmpl-dd{position:absolute;bottom:68px;left:8px;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(74,16,112,.15);padding:6px;min-width:275px;max-height:260px;overflow-y:auto;z-index:100;display:none;border:1px solid #f0e8fb;}
+.tmpl-dd.open{display:block;animation:fadeIn .15s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.tmpl-item{padding:10px 12px;border-radius:9px;cursor:pointer;border-bottom:1px solid #faf7fe;}
+.tmpl-item:hover{background:#f8f5fd;}
+.tmpl-item-name{font-size:.8rem;font-weight:800;color:#4A1070;}
+.tmpl-item-body{font-size:.73rem;color:#888;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.contact-panel{width:240px;flex-shrink:0;border-left:1px solid #f5f0fb;padding:16px;overflow-y:auto;background:#fafafa;}
+.contact-panel h4{font-size:.68rem;font-weight:800;color:#4A1070;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-bottom:5px;border-bottom:1px solid #f0e8fb;}
+.cp-field{font-size:.8rem;color:#444;margin-bottom:7px;line-height:1.6;}
+.cp-lbl{font-size:.65rem;color:#bbb;font-weight:700;display:block;text-transform:uppercase;margin-bottom:2px;}
+.tag-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700;color:#fff;margin:2px;}
+.won-b{background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
+.lost-b{background:#ffebee;color:#c62828;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
 @media(max-width:768px){
-  .inbox-wrap{height:calc(100vh - 120px);border-radius:0;}
+  .inbox-layout{height:calc(100vh - 120px);border-radius:0;}
   .conv-list{width:100%;border-right:none;}
   .conv-list.hidden{display:none!important;}
-  .chat-win{display:none!important;position:fixed;inset:0;z-index:250;background:#ece5dd;flex-direction:column;top:54px;bottom:62px;}
+  .chat-win{display:none!important;position:fixed;inset:0;z-index:250;background:#f0f2f5;flex-direction:column;top:54px;bottom:62px;}
   .chat-win.mob-open{display:flex!important;}
   .chat-back-btn{display:block;}
   .contact-panel{display:none;}
@@ -78,85 +83,60 @@
 </style>
 </head>
 <body>
-
-<!-- LOGIN SCREEN (injected by shared.js renderLoginScreen) -->
-<div id="loginScreen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#7B2D8B,#5C1F7A);">
-  <div class="login-box">
-    <div class="login-logo"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart"></div>
-    <h2>Admin Panel</h2><p>Sign in to manage your store</p>
-    <input class="linp" type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username">
-    <input class="linp" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
-    <button class="lbtn" onclick="adminLogin()">🔐 Sign In</button>
-    <p style="text-align:center;margin-top:12px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#9b60bf;font-weight:700;">Forgot password?</a></p>
-    <div id="forgotBox" style="display:none;margin-top:8px;">
-      <input class="linp" type="email" id="forgotEmail" placeholder="admin@kidscart.kids">
-      <button class="lbtn" style="margin-top:8px;" onclick="adminForgot()">Send Reset Link 📧</button>
-    </div>
-    <div id="loginErr" style="color:#c62828;font-size:.83rem;text-align:center;margin-top:10px;display:none;"></div>
+<div id="loginScreen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);">
+  <div style="background:#fff;border-radius:24px;padding:44px 40px;width:380px;max-width:96vw;box-shadow:0 24px 64px rgba(0,0,0,.25);">
+    <div style="text-align:center;margin-bottom:28px;"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:80px;object-fit:contain;"></div>
+    <h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.4rem;font-weight:800;margin-bottom:6px;">Welcome back</h2>
+    <p style="text-align:center;color:#999;font-size:.85rem;margin-bottom:28px;">Sign in to your admin panel</p>
+    <div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div>
+    <div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <button class="btn-full" onclick="adminLogin()" style="margin-top:8px;">Sign In →</button>
+    <p style="text-align:center;margin-top:16px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p>
+    <div id="forgotBox" style="display:none;margin-top:10px;"><div class="fgroup"><label>Your email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div><button class="btn-full" onclick="adminForgot()">Send Reset Link</button></div>
+    <div id="loginErr" style="color:#c62828;font-size:.82rem;text-align:center;margin-top:12px;display:none;padding:8px;background:#ffebee;border-radius:8px;"></div>
   </div>
 </div>
 
-<!-- ADMIN APP -->
 <div id="adminApp" style="display:none;">
-
-  <!-- Mobile top header -->
-  <div class="mob-header">
-    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
-    <span class="mob-hdr-title">📱 WhatsApp Inbox</span>
-    <div class="mob-hdr-right" id="mobUser"></div>
-  </div>
-
-  <!-- Sidebar (rendered by shared.js) -->
+  <div id="mobMount"></div>
   <div id="sidebarMount"></div>
-
-  <!-- Main -->
-  <div class="main">
+  <div class="main" id="mainArea">
     <div class="topbar">
-      <h2>📱 WhatsApp Inbox</h2>
+      <h2 class="page-title">📱 WhatsApp Inbox</h2>
       <div class="topbar-right">
         <span class="admin-badge" id="adminName">Admin</span>
-        <a href="/" target="_blank" style="font-size:.78rem;color:var(--pp);font-weight:800;text-decoration:none;">🛍️ View Shop</a>
+        <a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a>
       </div>
     </div>
-
     <div class="content">
-      <div class="inbox-wrap">
+      <div class="inbox-layout">
         <!-- Conversation list -->
         <div class="conv-list" id="convListPanel">
-          <div class="conv-search">
-            <input type="text" id="convSearch" placeholder="🔍 Search..." oninput="filterConvs(this.value)">
-          </div>
+          <div class="conv-search-wrap"><input type="text" id="convSearch" placeholder="🔍 Search conversations…" oninput="filterConvs(this.value)"></div>
           <div class="conv-filter">
             <button class="active" onclick="setConvFilter('all',this)">All</button>
             <button onclick="setConvFilter('unread',this)">🟢 Unread</button>
           </div>
           <div class="conv-items" id="convList">
-            <div style="padding:30px;text-align:center;color:#bbb;">
-              <div style="font-size:2rem;margin-bottom:8px;">💬</div>
-              <div style="font-size:.85rem;font-weight:700;">Loading conversations...</div>
-            </div>
+            <div style="padding:30px;text-align:center;color:#ccc;"><div style="font-size:2.2rem;margin-bottom:10px;">💬</div><div style="font-size:.84rem;font-weight:700;">Loading conversations…</div></div>
           </div>
         </div>
 
         <!-- Chat window -->
         <div class="chat-win" id="chatWin">
           <div class="chat-empty-state" id="chatEmpty">
-            <span style="font-size:3rem">💬</span>
-            <p style="font-weight:700;">Select a conversation</p>
-            <small>Choose a chat from the left to start</small>
+            <span style="font-size:3.5rem;">💬</span>
+            <p style="font-weight:700;color:#888;">Select a conversation</p>
+            <small style="color:#bbb;">Choose a chat from the left to start</small>
           </div>
           <div id="chatActive" style="display:none;flex-direction:column;height:100%;flex:1;">
-            <div class="chat-header" id="chatHeader">
-              <button class="chat-back-btn" onclick="closeMobileChat()">←</button>
-            </div>
+            <div class="chat-header" id="chatHeader"><button class="chat-back-btn" onclick="closeMobileChat()">←</button></div>
             <div class="chat-msgs" id="chatMsgs"></div>
             <div style="position:relative;">
               <div class="tmpl-dd" id="tmplDD"></div>
               <div class="chat-input-area">
                 <button class="wa-tmpl-btn" onclick="toggleTmpls()" title="Quick replies">⚡</button>
-                <textarea id="msgInput" rows="1" placeholder="Type a message..."
-                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}"
-                  oninput="autoResizeTA(this)"></textarea>
+                <textarea id="msgInput" rows="1" placeholder="Type a message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}" oninput="autoResizeTA(this)"></textarea>
                 <button class="wa-send-btn" onclick="sendWaMsg()">➤</button>
               </div>
             </div>
@@ -165,275 +145,47 @@
 
         <!-- Contact panel -->
         <div class="contact-panel" id="contactPanel">
-          <div style="text-align:center;color:#ccc;padding:30px 10px;">
-            <div style="font-size:2rem;margin-bottom:8px;">👤</div>
-            <div style="font-size:.8rem;">Select a conversation</div>
-          </div>
+          <div style="text-align:center;color:#ccc;padding:30px 10px;"><div style="font-size:2rem;margin-bottom:8px;">👤</div><div style="font-size:.78rem;">Select a conversation</div></div>
         </div>
       </div>
-    </div><!-- /content -->
-  </div><!-- /main -->
-
-  <!-- Mobile bottom nav (rendered by shared.js) -->
-  <div id="mobBarMount"></div>
-
-</div><!-- /adminApp -->
-
+    </div>
+  </div>
+  <div id="mobBarMount" style="display:none;"></div>
+</div>
 <div id="toast"></div>
 
 <script>
-// ── PAGE STATE ───────────────────────────────────────────────
-let activePhone = null;
-let allConvs    = [];
-let convFilter  = 'all';
-let waTmpls     = [];
-let crmStages   = [];
-let crmTags     = [];
+let activePhone=null,allConvs=[],convFilter='all',waTmpls=[];
 
-// ── BOOT ────────────────────────────────────────────────────
 window._kcAfterLogin = function(user) {
-  // Inject sidebar + mob bar
   document.getElementById('sidebarMount').innerHTML = renderSidebar('inbox');
-  document.getElementById('mobBarMount').innerHTML  = renderMobBar('inbox');
+  initSidebarState();
   showAdminApp();
+  document.getElementById('adminName').textContent = '👤 '+(user.name||'Admin');
   loadInbox();
 };
+window.addEventListener('DOMContentLoaded',()=>{document.getElementById('loginScreen').style.display='flex';KC.init(window._kcAfterLogin);});
 
-window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('loginScreen').style.display = 'flex';
-  KC.init(window._kcAfterLogin);
-});
-
-// ── INBOX LOAD ───────────────────────────────────────────────
-async function loadInbox() {
-  await loadWaTmpls();
-  await refreshConvs();
-}
-
-async function refreshConvs() {
-  try {
-    const d = await apiFetch('/admin/whatsapp/inbox' + (convFilter === 'unread' ? '?filter=unread' : ''));
-    allConvs = d.conversations || [];
-    renderConvs(allConvs);
-    syncMobBadge();
-  } catch(e) { console.error('inbox:', e.message); }
-}
-
-function setConvFilter(f, btn) {
-  convFilter = f;
-  document.querySelectorAll('.conv-filter button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  refreshConvs();
-}
-
-function filterConvs(q) {
-  renderConvs(q
-    ? allConvs.filter(cv => (cv.contactName||'').toLowerCase().includes(q.toLowerCase()) || cv.phone.includes(q))
-    : allConvs);
-}
-
-function renderConvs(list) {
-  const el = document.getElementById('convList');
-  if (!el) return;
-  if (!list.length) {
-    el.innerHTML = '<div style="padding:30px;text-align:center;color:#bbb;"><div style="font-size:2rem;margin-bottom:8px;">💬</div><div style="font-size:.85rem;font-weight:700;">No conversations yet</div><div style="font-size:.75rem;margin-top:6px;color:#ccc;">Send a WhatsApp to your business number to start</div></div>';
-    return;
-  }
-  el.innerHTML = list.map(cv => {
-    const nm = cv.contactName || cv.phone;
-    const t  = cv.lastMessageAt ? fmtT(new Date(cv.lastMessageAt)) : '';
-    const u  = (cv.unreadCount || 0) > 0;
-    return `<div class="conv-item ${u ? 'unread' : ''} ${cv.phone === activePhone ? 'active' : ''}" onclick="openConv('${cv.phone}','${nm.replace(/'/g,"\\'")}')">
-      <div class="conv-avi">${nm.charAt(0).toUpperCase()}</div>
-      <div class="conv-info">
-        <div class="conv-name">${nm}</div>
-        <div class="conv-last">${cv.lastMessage || ''}</div>
-      </div>
-      <div class="conv-meta">
-        <div class="conv-time">${t}</div>
-        ${u ? `<div class="unread-dot">${cv.unreadCount}</div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function openConv(phone, name) {
-  activePhone = phone;
-  await apiFetch('/admin/whatsapp/read/' + encodeURIComponent(phone), 'PUT');
-  const cv = allConvs.find(c => c.phone === phone);
-  if (cv) cv.unreadCount = 0;
-  syncMobBadge();
-
-  document.getElementById('chatEmpty').style.display = 'none';
-  const ca = document.getElementById('chatActive');
-  ca.style.display = 'flex';
-
-  if (window.innerWidth <= 768) {
-    document.getElementById('convListPanel').classList.add('hidden');
-    document.getElementById('chatWin').classList.add('mob-open');
-  }
-
-  const init = (name || phone).charAt(0).toUpperCase();
-  document.getElementById('chatHeader').innerHTML = `
-    <button class="chat-back-btn" onclick="closeMobileChat()">←</button>
-    <div class="chat-header-avi">${init}</div>
-    <div class="chat-header-info">
-      <div class="chat-header-name">${name || phone}</div>
-      <div class="chat-header-sub">${phone}</div>
-    </div>
-    <div style="display:flex;gap:6px;margin-left:auto;">
-      <button class="chat-act-btn green" onclick="openCrmForPhone('${phone}')">📊 CRM</button>
-      <button class="chat-act-btn" onclick="loadMsgs('${phone}')">↻ Refresh</button>
-    </div>`;
-
-  await loadMsgs(phone);
-  loadContactPanel(phone);
-  renderConvs(allConvs);
-}
-
-function closeMobileChat() {
-  activePhone = null;
-  document.getElementById('convListPanel').classList.remove('hidden');
-  document.getElementById('chatWin').classList.remove('mob-open');
-  document.getElementById('chatActive').style.display = 'none';
-  document.getElementById('chatEmpty').style.display = 'flex';
-  renderConvs(allConvs);
-}
-
-async function loadMsgs(phone) {
-  const el = document.getElementById('chatMsgs');
-  if (!el) return;
-  try {
-    const d = await apiFetch('/admin/whatsapp/messages/' + encodeURIComponent(phone));
-    const msgs = d.messages || [];
-    el.innerHTML = '';
-    let lastD = '';
-    msgs.forEach(m => {
-      const ds = new Date(m.timestamp).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-      if (ds !== lastD) { el.innerHTML += `<div class="msg-date-div">${ds}</div>`; lastD = ds; }
-      el.innerHTML += mkBubble(m);
-    });
-    el.scrollTop = el.scrollHeight;
-  } catch(e) { console.error('msgs:', e); }
-}
-
-function mkBubble(m) {
-  const dir  = m.direction === 'outbound' ? 'out' : 'in';
-  const t    = new Date(m.timestamp).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
-  const tick = dir === 'out'
-    ? (m.status === 'read' ? '<span style="color:#4fc3f7">✓✓</span>'
-    : m.status === 'delivered' ? '<span style="color:#aaa">✓✓</span>'
-    : '<span style="color:#aaa">✓</span>') : '';
-  const body = (m.type && m.type !== 'text')
-    ? `<em style="color:#aaa;font-size:.78rem;">[${m.type}] ${m.body||''}</em>`
-    : (m.body || '');
-  return `<div class="msg-wrap ${dir}"><div class="msg-bubble ${dir}">${body}<div class="msg-time">${t} ${tick}</div></div></div>`;
-}
-
-function appendMsg(m) {
-  const el = document.getElementById('chatMsgs');
-  if (!el) return;
-  el.innerHTML += mkBubble(m);
-  el.scrollTop = el.scrollHeight;
-}
-
-async function sendWaMsg() {
-  const inp = document.getElementById('msgInput');
-  const txt = inp?.value?.trim();
-  if (!txt || !activePhone) return;
-  inp.value = '';
-  inp.style.height = 'auto';
-  appendMsg({ direction:'outbound', body:txt, timestamp:new Date(), status:'sent' });
-  try {
-    await apiFetch('/admin/whatsapp/send', 'POST', { phone: activePhone, text: txt });
-    refreshConvs();
-  } catch(e) { toast('❌ Send failed: ' + e.message); }
-}
-
-function autoResizeTA(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
-}
-
-// ── QUICK REPLY TEMPLATES ────────────────────────────────────
-async function loadWaTmpls() {
-  try {
-    const d = await apiFetch('/admin/whatsapp/templates');
-    waTmpls = d.templates || [];
-  } catch(e) {}
-}
-
-function toggleTmpls() {
-  const dd = document.getElementById('tmplDD');
-  if (!dd) return;
-  dd.classList.toggle('open');
-  if (dd.classList.contains('open')) {
-    dd.innerHTML = waTmpls.length
-      ? waTmpls.map(t => `<div class="tmpl-item" onclick="useTmpl(${JSON.stringify(t.body)})">
-          <div class="tmpl-item-name">⚡ ${t.name}</div>
-          <div class="tmpl-item-body">${t.body}</div>
-        </div>`).join('')
-      : '<div style="padding:12px;color:#aaa;font-size:.82rem;">No templates. Add them in CRM → Settings.</div>';
-  }
-}
-
-function useTmpl(body) {
-  document.getElementById('msgInput').value = body;
-  document.getElementById('tmplDD').classList.remove('open');
-  document.getElementById('msgInput').focus();
-}
-
-// ── CONTACT PANEL ────────────────────────────────────────────
-async function loadContactPanel(phone) {
-  const el = document.getElementById('contactPanel');
-  if (!el) return;
-  el.innerHTML = '<div style="color:#ccc;padding:20px;text-align:center;font-size:.82rem;">Loading...</div>';
-  try {
-    const d    = await apiFetch('/admin/crm/leads?search=' + encodeURIComponent(phone));
-    const lead = d.leads?.[0];
-    if (!lead) {
-      el.innerHTML = `
-        <h4>Contact</h4>
-        <div class="cp-field"><span class="cp-lbl">Phone</span>${phone}</div>
-        <button onclick="createLeadFromPhone('${phone}')" style="width:100%;padding:8px;background:var(--pp);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;margin-top:8px;">+ Add to CRM</button>`;
-      return;
-    }
-    const sd   = lead.stage ? `<span style="background:${lead.stage.color};border-radius:50%;width:10px;height:10px;display:inline-block;margin-right:4px;vertical-align:middle;"></span>` : '';
-    const tags = (lead.tags||[]).map(t => `<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');
-    el.innerHTML = `
-      <h4>Contact</h4>
-      <div class="cp-field"><span class="cp-lbl">Name</span>${lead.name||phone}</div>
-      <div class="cp-field"><span class="cp-lbl">Phone</span>${phone}</div>
-      ${lead.email ? `<div class="cp-field"><span class="cp-lbl">Email</span>${lead.email}</div>` : ''}
-      <div class="cp-field"><span class="cp-lbl">Stage</span>${sd}${lead.stage?.name||'No stage'}</div>
-      <div class="cp-field"><span class="cp-lbl">Status</span>${lead.status==='won'?'<span class="won-b">Won ✅</span>':lead.status==='lost'?'<span class="lost-b">Lost ❌</span>':'Open'}</div>
-      ${tags ? `<div><span class="cp-lbl">Tags</span><div style="margin-top:4px;">${tags}</div></div>` : ''}
-      <button onclick="adminNav('crm')" style="width:100%;padding:8px;background:var(--lt);color:var(--pp);border:1px solid var(--lt2);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;margin-top:8px;">View Full Lead →</button>`;
-  } catch(e) {}
-}
-
-async function createLeadFromPhone(phone) {
-  try {
-    await apiFetch('/admin/crm/leads', 'POST', { phone, name: phone, source: 'whatsapp' });
-    loadContactPanel(phone);
-    toast('✅ Lead created!');
-  } catch(e) { toast('❌ ' + e.message); }
-}
-
-function openCrmForPhone(phone) {
-  adminNav('crm');
-}
-
-// ── CLOSE DROPDOWNS ON OUTSIDE CLICK ────────────────────────
-document.addEventListener('click', e => {
-  if (!e.target.closest('#tmplDD') && !e.target.closest('.wa-tmpl-btn')) {
-    document.getElementById('tmplDD')?.classList.remove('open');
-  }
-});
-
-// ── SOCKET: Real-time new messages ───────────────────────────
-// initAdminSocket() is called by showAdminApp() from shared.js.
-// It emits 'wa_message' which shared.js routes to appendMsg + refreshConvs.
+async function loadInbox(){await loadWaTmpls();await refreshConvs();}
+async function refreshConvs(){try{const d=await apiFetch('/admin/whatsapp/inbox'+(convFilter==='unread'?'?filter=unread':''));allConvs=d.conversations||[];renderConvs(allConvs);syncMobBadge();}catch(e){console.error('inbox:',e.message);}}
+function setConvFilter(f,btn){convFilter=f;document.querySelectorAll('.conv-filter button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');refreshConvs();}
+function filterConvs(q){renderConvs(q?allConvs.filter(cv=>(cv.contactName||'').toLowerCase().includes(q.toLowerCase())||cv.phone.includes(q)):allConvs);}
+function renderConvs(list){const el=document.getElementById('convList');if(!el)return;if(!list.length){el.innerHTML='<div style="padding:30px;text-align:center;color:#ccc;"><div style="font-size:2rem;margin-bottom:8px;">💬</div><div style="font-size:.82rem;font-weight:700;">No conversations yet</div></div>';return;}el.innerHTML=list.map(cv=>{const nm=cv.contactName||cv.phone;const t=cv.lastMessageAt?fmtT(new Date(cv.lastMessageAt)):'';const u=(cv.unreadCount||0)>0;return`<div class="conv-item ${u?'unread':''} ${cv.phone===activePhone?'active':''}" onclick="openConv('${cv.phone}','${nm.replace(/'/g,"\\'")}')"><div class="conv-avi">${nm.charAt(0).toUpperCase()}</div><div class="conv-info"><div class="conv-name">${nm}</div><div class="conv-last">${cv.lastMessage||''}</div></div><div class="conv-meta"><div class="conv-time">${t}</div>${u?`<div class="unread-dot">${cv.unreadCount}</div>`:''}</div></div>`;}).join('');}
+async function openConv(phone,name){activePhone=phone;await apiFetch('/admin/whatsapp/read/'+encodeURIComponent(phone),'PUT');const cv=allConvs.find(c=>c.phone===phone);if(cv)cv.unreadCount=0;syncMobBadge();document.getElementById('chatEmpty').style.display='none';const ca=document.getElementById('chatActive');ca.style.display='flex';if(window.innerWidth<=768){document.getElementById('convListPanel').classList.add('hidden');document.getElementById('chatWin').classList.add('mob-open');}const init=(name||phone).charAt(0).toUpperCase();document.getElementById('chatHeader').innerHTML=`<button class="chat-back-btn" onclick="closeMobileChat()">←</button><div class="chat-header-avi">${init}</div><div style="flex:1;min-width:0;"><div class="chat-header-name">${name||phone}</div><div class="chat-header-sub">${phone}</div></div><div style="display:flex;gap:6px;margin-left:auto;"><button class="chat-act-btn green" onclick="addToCrm('${phone}')">📊 CRM</button><button class="chat-act-btn" onclick="loadMsgs('${phone}')">↻</button></div>`;await loadMsgs(phone);loadContactPanel(phone);renderConvs(allConvs);}
+function closeMobileChat(){activePhone=null;document.getElementById('convListPanel').classList.remove('hidden');document.getElementById('chatWin').classList.remove('mob-open');document.getElementById('chatActive').style.display='none';document.getElementById('chatEmpty').style.display='flex';renderConvs(allConvs);}
+async function loadMsgs(phone){const el=document.getElementById('chatMsgs');if(!el)return;try{const d=await apiFetch('/admin/whatsapp/messages/'+encodeURIComponent(phone));const msgs=d.messages||[];el.innerHTML='';let lastD='';msgs.forEach(m=>{const ds=new Date(m.timestamp).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});if(ds!==lastD){el.innerHTML+=`<div class="msg-date-div">${ds}</div>`;lastD=ds;}el.innerHTML+=mkBubble(m);});el.scrollTop=el.scrollHeight;}catch(e){console.error('msgs:',e);}}
+function mkBubble(m){const dir=m.direction==='outbound'?'out':'in';const t=new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});const tick=dir==='out'?(m.status==='read'?'<span style="color:#4A90D9">✓✓</span>':m.status==='delivered'?'<span style="color:#ccc">✓✓</span>':'<span style="color:#ccc">✓</span>'):'';const body=(m.type&&m.type!=='text')?`<em style="color:#bbb;font-size:.76rem;">[${m.type}] ${m.body||''}</em>`:(m.body||'');return`<div class="msg-wrap ${dir}"><div class="msg-bubble ${dir}">${body}<div class="msg-time">${t} ${tick}</div></div></div>`;}
+function appendMsg(m){const el=document.getElementById('chatMsgs');if(!el)return;el.innerHTML+=mkBubble(m);el.scrollTop=el.scrollHeight;}
+async function sendWaMsg(){const inp=document.getElementById('msgInput');const txt=inp?.value?.trim();if(!txt||!activePhone)return;inp.value='';inp.style.height='auto';appendMsg({direction:'outbound',body:txt,timestamp:new Date(),status:'sent'});try{await apiFetch('/admin/whatsapp/send','POST',{phone:activePhone,text:txt});refreshConvs();}catch(e){toast('❌ Send failed: '+e.message);}}
+function autoResizeTA(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+async function loadWaTmpls(){try{const d=await apiFetch('/admin/whatsapp/templates');waTmpls=d.templates||[];}catch(e){}}
+function toggleTmpls(){const dd=document.getElementById('tmplDD');if(!dd)return;dd.classList.toggle('open');if(dd.classList.contains('open')){dd.innerHTML=waTmpls.length?waTmpls.map(t=>`<div class="tmpl-item" onclick="useTmpl(${JSON.stringify(t.body)})"><div class="tmpl-item-name">⚡ ${t.name}</div><div class="tmpl-item-body">${t.body}</div></div>`).join(''):'<div style="padding:14px;color:#bbb;font-size:.8rem;">No templates. Add in CRM → Settings.</div>';}}
+function useTmpl(body){document.getElementById('msgInput').value=body;document.getElementById('tmplDD').classList.remove('open');document.getElementById('msgInput').focus();}
+async function loadContactPanel(phone){const el=document.getElementById('contactPanel');if(!el)return;el.innerHTML='<div style="color:#ccc;padding:20px;text-align:center;font-size:.8rem;">Loading…</div>';try{const d=await apiFetch('/admin/crm/leads?search='+encodeURIComponent(phone));const lead=d.leads?.[0];if(!lead){el.innerHTML=`<h4>Contact</h4><div class="cp-field"><span class="cp-lbl">Phone</span>${phone}</div><button onclick="createLeadFromPhone('${phone}')" class="btn btn-pp" style="width:100%;margin-top:10px;font-size:.76rem;">+ Add to CRM</button>`;return;}const tags=(lead.tags||[]).map(t=>`<span class="tag-chip" style="background:${t.color}">${t.name}</span>`).join('');el.innerHTML=`<h4>Contact</h4><div class="cp-field"><span class="cp-lbl">Name</span>${lead.name||phone}</div><div class="cp-field"><span class="cp-lbl">Phone</span>${phone}</div>${lead.email?`<div class="cp-field"><span class="cp-lbl">Email</span>${lead.email}</div>`:''}<div class="cp-field"><span class="cp-lbl">Stage</span>${lead.stage?`<span style="background:${lead.stage.color};color:#fff;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700;">${lead.stage.name}</span>`:'No stage'}</div><div class="cp-field"><span class="cp-lbl">Status</span>${lead.status==='won'?'<span class="won-b">Won ✅</span>':lead.status==='lost'?'<span class="lost-b">Lost ❌</span>':'Open'}</div>${tags?`<div><span class="cp-lbl">Tags</span><div style="margin-top:5px;">${tags}</div></div>`:''}<button onclick="location.href='/admin/crm.html'" class="btn btn-ghost" style="width:100%;margin-top:12px;font-size:.76rem;">View Full Lead →</button>`;}catch(e){}}
+async function createLeadFromPhone(phone){try{await apiFetch('/admin/crm/leads','POST',{phone,name:phone,source:'whatsapp'});loadContactPanel(phone);toast('✅ Lead created!');}catch(e){toast('❌ '+e.message);}}
+function addToCrm(phone){location.href='/admin/crm.html';}
+function syncMobBadge(){const total=allConvs.reduce((s,cv)=>s+(cv.unreadCount||0),0);const mb=document.getElementById('mobInboxBadge');if(mb){mb.textContent=total;mb.style.display=total>0?'flex':'none';}}
+document.addEventListener('click',e=>{if(!e.target.closest('#tmplDD')&&!e.target.closest('.wa-tmpl-btn'))document.getElementById('tmplDD')?.classList.remove('open');});
 </script>
 </body>
 </html>

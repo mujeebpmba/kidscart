@@ -192,6 +192,23 @@ tr:hover td { background: #faf7fe; }
 .tab-btn.active{background:#4A1070;color:#fff;box-shadow:0 2px 6px rgba(74,16,112,.22);}
 .tab-btn:hover:not(.active){background:#ede7f6;color:#4A1070;}
 .color-chip{background:#ede7f6;color:#4A1070;padding:2px 8px;border-radius:20px;font-size:.73rem;font-weight:700;display:inline-flex;align-items:center;gap:3px;margin:2px;}
+
+/* ── Mobile tab-bar: scrollable, sticky ── */
+@media(max-width:768px){
+  .tab-bar{
+    position:sticky;top:0;z-index:100;
+    overflow-x:auto;flex-wrap:nowrap;
+    scrollbar-width:none;
+    background:#fff;
+    border-radius:0;
+    margin:0 -12px 14px;
+    padding:10px 12px 6px;
+    border-bottom:1px solid #f0e8fb;
+    gap:6px;
+  }
+  .tab-bar::-webkit-scrollbar{display:none;}
+  .tab-btn{white-space:nowrap;flex-shrink:0;padding:7px 14px;font-size:.76rem;}
+}
 </style>
 <script>(function(){var s=document.createElement('style');if(localStorage.getItem('kc_admin_token')){s.textContent='#loginScreen{display:none!important}#adminApp{display:flex!important}';}else{s.textContent='#adminApp{display:none!important}';}document.head.appendChild(s);})()</script>
 <script src="/admin/shared.js"></script>
@@ -213,6 +230,13 @@ tr:hover td { background: #faf7fe; }
 </div>
 <div id="notifDrawer" style="position:fixed;top:58px;right:18px;width:280px;background:#fff;border-radius:14px;border:1px solid rgba(123,45,139,.12);box-shadow:0 12px 32px rgba(74,16,112,.13);z-index:400;display:none;overflow:hidden;"><div style="padding:12px 14px;border-bottom:1px solid #f5f0fb;display:flex;justify-content:space-between;align-items:center;"><span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.84rem;color:#1a0a2e;">Notifications</span><button onclick="document.getElementById('notifDot').style.display='none';document.getElementById('notifDrawer').classList.remove('open')" style="font-size:.71rem;color:#4A1070;font-weight:700;background:none;border:none;cursor:pointer;">Mark read</button></div><div id="notifList"><div style="padding:14px;color:#bbb;font-size:.8rem;text-align:center;">No new notifications</div></div></div>
 <div class="content">
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-products" onclick="switchTab('products',this)">👗 Products</button>
+  <button class="tab-btn" id="tab-addprod" onclick="switchTab('addprod',this)">➕ Add Product</button>
+  <button class="tab-btn" id="tab-stock" onclick="switchTab('stock',this)">📋 Stock</button>
+  <button class="tab-btn" id="tab-banners" onclick="switchTab('banners',this)">🎨 Banners</button>
+  <button class="tab-btn" id="tab-coupons" onclick="switchTab('coupons',this)">🎟️ Coupons</button>
+</div>
 <div class="panel active" id="productsPanel">
   <div class="card">
     <div class="card-head">
@@ -451,8 +475,7 @@ window._kcAfterLogin = function(user) {
   const hash = window.location.hash.replace('#','');
   const tabs = {products:0,addprod:1,stock:2,banners:3,coupons:4};
   if (hash && tabs[hash]!==undefined) {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    switchTab(hash, tabBtns[tabs[hash]]);
+    switchTab(hash);
   } else loadProducts();
 };
 
@@ -460,12 +483,15 @@ window._kcAfterLogin = function(user) {
 function switchTab(id, btn) {
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(id+'Panel')?.classList.add('active');
-  if(btn) btn.classList.add('active');
-  const titles={products:'👗 Products',addprod:'➕ Add Product',stock:'📋 Stock',banners:'🎨 Banners & Announcements',coupons:'🎟️ Coupons'};
-  document.getElementById('pageTitle').textContent=titles[id]||id;
+  var panel = document.getElementById(id+'Panel');
+  if(panel) panel.classList.add('active');
+  // Activate by btn param OR by matching tab id
+  if(btn) { btn.classList.add('active'); }
+  else { var tb = document.getElementById('tab-'+id); if(tb) tb.classList.add('active'); }
+  var titles={products:'👗 Products',addprod:'➕ Add Product',stock:'📋 Stock',banners:'🎨 Banners & Announcements',coupons:'🎟️ Coupons'};
+  var pt = document.getElementById('pageTitle'); if(pt) pt.textContent=titles[id]||id;
   window.location.hash=id!=='products'?id:'';
-  const loaders={products:loadProducts,stock:loadStock,banners:()=>{loadBanners();loadAnnouncement();},coupons:loadCoupons};
+  var loaders={products:loadProducts,stock:loadStock,banners:function(){loadBanners();loadAnnouncement();},coupons:loadCoupons};
   if(loaders[id]) loaders[id]();
 }
 
@@ -500,9 +526,9 @@ function renderProducts(prods) {
 function filterProductList(){const q=document.getElementById('prodSearch').value.toLowerCase();const cat=document.getElementById('prodCatFilter').value;let f=prodsData;if(q)f=f.filter(p=>p.name.toLowerCase().includes(q));if(cat)f=f.filter(p=>p.category===cat);renderProducts(f);}
 function previewProdImages(input){const preview=document.getElementById('prodImagePreviews');Array.from(input.files).forEach(file=>{const r=new FileReader();r.onload=e=>{const div=document.createElement('div');div.style.cssText='position:relative;display:inline-block';div.innerHTML=`<img src="${e.target.result}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:2px solid #4A1070;"><div style="position:absolute;top:-4px;right:-4px;background:#c62828;color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;font-weight:900;" onclick="this.parentElement.remove()">×</div>`;preview.appendChild(div);};r.readAsDataURL(file);});}
 async function uploadProdImages(){const input=document.getElementById('prodImageInput');if(!input.files.length)return[];const fd=new FormData();Array.from(input.files).forEach(f=>fd.append('images',f));const r=await fetch(API+'/admin/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});const d=await r.json();if(!r.ok)throw new Error(d.error||'Upload failed');return(d.urls||[]).map(url=>fixImgSrc(url));}
-function editProduct(id){const p=prodsData.find(x=>x._id===id);if(!p)return;const tabBtns=document.querySelectorAll('.tab-btn');switchTab('addprod',tabBtns[1]);setTimeout(()=>{const form=document.getElementById('prodForm');if(!form)return;form.name.value=p.name||'';form.category.value=p.category||'';form.price.value=p.price||'';form.mrp.value=p.mrp||'';form.costPrice.value=p.costPrice||0;form.ageGroup.value=p.ageGroup||'';form.gender.value=p.gender||'Girls';form.emoji.value=p.emoji||'';form.badge.value=p.badge||'';form.brand.value=p.brand||'';form.description.value=p.description||'';form.tags.value=(p.tags||[]).join(', ');form.isFeatured.value=p.isFeatured?'true':'false';form.isActive.value=p.isActive!==false?'true':'false';form.codEnabled.value=p.codEnabled!==false?'true':'false';document.getElementById('prodOrder').value=p.order||0;document.querySelectorAll('#prodSizes input[data-size]').forEach(inp=>{const found=(p.sizes||[]).find(s=>s.size===inp.dataset.size);inp.value=found?found.stock:0;});setColorTags(p.colors||[]);const preview=document.getElementById('prodImagePreviews');if(preview)preview.innerHTML=(p.images||[]).map(img=>`<img src="${fixImgSrc(img)}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #f0e8fb;" onerror="this.style.opacity='.3'">`).join('');document.getElementById('prodThumbUrl').value=p.thumbnail||'';document.getElementById('prodEditId').value=id;document.getElementById('addprodTitle').textContent='✏️ Edit: '+p.name;},80);}
-async function saveProduct(e){e.preventDefault();const fd=new FormData(e.target);const data=Object.fromEntries(fd.entries());data.price=+data.price;data.mrp=+data.mrp;data.costPrice=+(data.costPrice||0);data.isFeatured=data.isFeatured==='true';data.isActive=data.isActive==='true';data.codEnabled=data.codEnabled==='true';data.tags=(data.tags||'').split(',').map(t=>t.trim()).filter(Boolean);data.sizes=Array.from(document.querySelectorAll('#prodSizes input[data-size]')).map(inp=>({size:inp.dataset.size,stock:parseInt(inp.value)||0})).filter(s=>s.stock>0);if(!data.sizes.length)data.sizes=[{size:'Free Size',stock:0}];Object.keys(data).filter(k=>k.startsWith('s_')).forEach(k=>delete data[k]);data.colors=[...prodColorList];data.order=parseInt(document.getElementById('prodOrder')?.value)||0;const submitBtn=document.getElementById('prodSaveBtn');try{submitBtn.textContent='⏳ Uploading…';submitBtn.disabled=true;const uploadedUrls=await uploadProdImages().catch(()=>[]);if(uploadedUrls.length>0){data.images=uploadedUrls;data.thumbnail=uploadedUrls[0];}else if(data.thumbnail){data.images=[data.thumbnail];}const editId=document.getElementById('prodEditId').value;if(editId){await apiFetch(`/admin/products/${editId}`,'PUT',data);toast('✅ Product updated!');document.getElementById('prodEditId').value='';}else{await apiFetch('/admin/products','POST',data);toast('✅ Product added to shop!');}e.target.reset();document.getElementById('addprodTitle').textContent='➕ Add New Product';document.getElementById('prodImagePreviews').innerHTML='';prodColorList=[];renderColorTags();const tabBtns=document.querySelectorAll('.tab-btn');switchTab('products',tabBtns[0]);}catch(err){toast('❌ '+err.message);}finally{submitBtn.textContent='💾 Save Product';submitBtn.disabled=false;}}
-function cancelEditProd(){document.getElementById('prodForm').reset();document.getElementById('prodEditId').value='';document.getElementById('addprodTitle').textContent='➕ Add New Product';document.getElementById('prodImagePreviews').innerHTML='';prodColorList=[];renderColorTags();const tabBtns=document.querySelectorAll('.tab-btn');switchTab('products',tabBtns[0]);}
+function editProduct(id){const p=prodsData.find(x=>x._id===id);if(!p)return;switchTab('addprod');setTimeout(()=>{const form=document.getElementById('prodForm');if(!form)return;form.name.value=p.name||'';form.category.value=p.category||'';form.price.value=p.price||'';form.mrp.value=p.mrp||'';form.costPrice.value=p.costPrice||0;form.ageGroup.value=p.ageGroup||'';form.gender.value=p.gender||'Girls';form.emoji.value=p.emoji||'';form.badge.value=p.badge||'';form.brand.value=p.brand||'';form.description.value=p.description||'';form.tags.value=(p.tags||[]).join(', ');form.isFeatured.value=p.isFeatured?'true':'false';form.isActive.value=p.isActive!==false?'true':'false';form.codEnabled.value=p.codEnabled!==false?'true':'false';document.getElementById('prodOrder').value=p.order||0;document.querySelectorAll('#prodSizes input[data-size]').forEach(inp=>{const found=(p.sizes||[]).find(s=>s.size===inp.dataset.size);inp.value=found?found.stock:0;});setColorTags(p.colors||[]);const preview=document.getElementById('prodImagePreviews');if(preview)preview.innerHTML=(p.images||[]).map(img=>`<img src="${fixImgSrc(img)}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #f0e8fb;" onerror="this.style.opacity='.3'">`).join('');document.getElementById('prodThumbUrl').value=p.thumbnail||'';document.getElementById('prodEditId').value=id;document.getElementById('addprodTitle').textContent='✏️ Edit: '+p.name;},80);}
+async function saveProduct(e){e.preventDefault();const fd=new FormData(e.target);const data=Object.fromEntries(fd.entries());data.price=+data.price;data.mrp=+data.mrp;data.costPrice=+(data.costPrice||0);data.isFeatured=data.isFeatured==='true';data.isActive=data.isActive==='true';data.codEnabled=data.codEnabled==='true';data.tags=(data.tags||'').split(',').map(t=>t.trim()).filter(Boolean);data.sizes=Array.from(document.querySelectorAll('#prodSizes input[data-size]')).map(inp=>({size:inp.dataset.size,stock:parseInt(inp.value)||0})).filter(s=>s.stock>0);if(!data.sizes.length)data.sizes=[{size:'Free Size',stock:0}];Object.keys(data).filter(k=>k.startsWith('s_')).forEach(k=>delete data[k]);data.colors=[...prodColorList];data.order=parseInt(document.getElementById('prodOrder')?.value)||0;const submitBtn=document.getElementById('prodSaveBtn');try{submitBtn.textContent='⏳ Uploading…';submitBtn.disabled=true;const uploadedUrls=await uploadProdImages().catch(()=>[]);if(uploadedUrls.length>0){data.images=uploadedUrls;data.thumbnail=uploadedUrls[0];}else if(data.thumbnail){data.images=[data.thumbnail];}const editId=document.getElementById('prodEditId').value;if(editId){await apiFetch(`/admin/products/${editId}`,'PUT',data);toast('✅ Product updated!');document.getElementById('prodEditId').value='';}else{await apiFetch('/admin/products','POST',data);toast('✅ Product added to shop!');}e.target.reset();document.getElementById('addprodTitle').textContent='➕ Add New Product';document.getElementById('prodImagePreviews').innerHTML='';prodColorList=[];renderColorTags();switchTab('products');}catch(err){toast('❌ '+err.message);}finally{submitBtn.textContent='💾 Save Product';submitBtn.disabled=false;}}
+function cancelEditProd(){document.getElementById('prodForm').reset();document.getElementById('prodEditId').value='';document.getElementById('addprodTitle').textContent='➕ Add New Product';document.getElementById('prodImagePreviews').innerHTML='';prodColorList=[];renderColorTags();switchTab('products');}
 async function deleteProduct(id,name){if(!confirm(`Delete "${name}"?`))return;try{await apiFetch(`/admin/products/${id}`,'DELETE');toast('🗑️ Deleted');loadProducts();}catch(e){toast('❌ '+e.message);}}
 function addColorTag(val){if(!val.trim())return;val.split(',').map(v=>v.trim()).filter(Boolean).forEach(v=>{if(!prodColorList.includes(v)){prodColorList.push(v);renderColorTags();}});}
 function removeColorTag(v){prodColorList=prodColorList.filter(c=>c!==v);renderColorTags();}

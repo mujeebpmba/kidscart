@@ -902,15 +902,14 @@ let activePhone=null,allConvs=[],convFilter='all',waTmpls=[];
 
 startPage(function(user) {
   // sidebar already in HTML
-  showAdminApp();
+  showApp();
   if(document.getElementById('adminName')) document.getElementById('adminName').textContent = '👤 '+(user.name||'Admin');
   if(document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent=(user.name||'A').charAt(0).toUpperCase();
   if(document.getElementById('sbUserName')) document.getElementById('sbUserName').textContent=user.name||'Admin';
   if(document.getElementById('sbUserRole')) document.getElementById('sbUserRole').textContent=user.role==='super_admin'?'Super Admin':'Admin';
   if(document.getElementById('mobUser')) document.getElementById('mobUser').textContent=user.name||'';
   loadInbox();
-};
-=>{document.getElementById('loginScreen').style.display='flex';KC.init(window._kcAfterLogin);});
+});
 
 async function loadInbox(){await loadWaTmpls();await refreshConvs();}
 async function refreshConvs(){try{const d=await apiFetch('/admin/whatsapp/inbox'+(convFilter==='unread'?'?filter=unread':''));allConvs=d.conversations||[];renderConvs(allConvs);syncMobBadge();}catch(e){console.error('inbox:',e.message);}}

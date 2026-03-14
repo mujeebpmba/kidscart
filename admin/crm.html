@@ -954,15 +954,14 @@ let crmStages=[],crmTags=[],crmTab='kanban',dragLeadId=null,waTmpls=[];
 
 startPage(function(user) {
   // sidebar already in HTML
-    showAdminApp();
+    showApp();
   if(document.getElementById('adminName')) document.getElementById('adminName').textContent = '👤 '+(user.name||'Admin');
   if(document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent=(user.name||'A').charAt(0).toUpperCase();
   if(document.getElementById('sbUserName')) document.getElementById('sbUserName').textContent=user.name||'Admin';
   if(document.getElementById('sbUserRole')) document.getElementById('sbUserRole').textContent=user.role==='super_admin'?'Super Admin':'Admin';
   if(document.getElementById('mobUser')) document.getElementById('mobUser').textContent=user.name||'';
   loadCrm();
-};
-=>{document.getElementById('loginScreen').style.display='flex';KC.init(window._kcAfterLogin);});
+});
 
 function showCrm(){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('crmPanel').classList.add('active');document.getElementById('pageTitle').textContent='🤝 CRM';loadCrm();}
 function showSettings(){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('crmstagesPanel').classList.add('active');document.getElementById('pageTitle').textContent='⚙️ CRM Settings';loadCrmSettings();}

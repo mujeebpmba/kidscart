@@ -860,7 +860,7 @@ function filterOrders(){
 function openOM(dbId,orderId,status,pm,ps){document.getElementById('modalOrderDbId').value=dbId;document.getElementById('modalOrderId').textContent=orderId;document.getElementById('modalStatus').value=status;document.getElementById('modalPayMethod').value=pm.toLowerCase();document.getElementById('modalPayStatus').value=ps;document.getElementById('modalMsg').value='';document.getElementById('orderModal').style.display='flex';}
 async function updateOrd(){var id=document.getElementById('modalOrderDbId').value;try{await apiFetch('/admin/orders/'+id+'/status','PUT',{status:document.getElementById('modalStatus').value,message:document.getElementById('modalMsg').value.trim()});await apiFetch('/admin/orders/'+id+'/payment','PUT',{method:document.getElementById('modalPayMethod').value,status:document.getElementById('modalPayStatus').value});toast('✅ Updated!');document.getElementById('orderModal').style.display='none';loadOrders();}catch(e){toast('❌ '+e.message);}}
 async function delOrd(id,orderId){if(!confirm('Delete order #'+orderId+'?'))return;try{await apiFetch('/admin/orders/'+id,'DELETE');toast('🗑 Deleted');loadOrders();}catch(e){toast('❌ '+e.message);}}
-async async function viewOrd(id){
+async function viewOrd(id){
   var modal=document.getElementById('orderDetailModal'),body=document.getElementById('ordDetailBody');
   modal.style.display='flex';body.innerHTML='<div style="text-align:center;padding:28px;color:#bbb;">Loading…</div>';
   try{

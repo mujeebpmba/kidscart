@@ -1055,7 +1055,7 @@ async function updateOrd(){
     toast('✅ Order updated!');document.getElementById('orderModal').style.display='none';loadDash();
   }catch(e){toast('❌ '+e.message);}
 }
-async async function viewOrd(id){
+async function viewOrd(id){
   var modal=document.getElementById('orderDetailModal'),body=document.getElementById('ordDetailBody');
   modal.style.display='flex';body.innerHTML='<div style="text-align:center;padding:28px;color:#bbb;">Loading…</div>';
   try{
@@ -1086,13 +1086,43 @@ async async function viewOrd(id){
 }
 var custsData=[];
 async function loadCusts(){try{var r=await apiFetch('/admin/users?limit=200');custsData=r.users||[];renderCusts(custsData);}catch(e){}}
-function renderCusts(u){var el=document.getElementById('customersTable');if(!u.length){el.innerHTML='<tr><td colspan="7" style="text-align:center;color:#bbb;padding:18px;">No customers</td></tr>';return;}el.innerHTML=u.map(function(x){return'<tr><td><b>'+x.name+'</b></td><td>'+(x.email||'—')+'</td><td>'+(x.phone||'—')+'</td><td>'+(x.isVerified?'✅':'⏳')+'</td><td>'+fmtDate(x.createdAt)+'</td><td>'+(x.addresses?x.addresses.length:0)+'</td><td><button class="btn btn-er-g btn-sm" onclick="delCust(''+x._id+\''\,''+x.name+\''\)">🗑</button></td></tr>';}).join('');}
+function renderCusts(u){
+  var el=document.getElementById('customersTable');
+  if(!u.length){el.innerHTML='<tr><td colspan="7" style="text-align:center;color:#bbb;padding:20px;">No customers</td></tr>';return;}
+  el.innerHTML=u.map(function(x){
+    return '<tr>'
+      +'<td><b>'+(x.name||'—')+'</b></td>'
+      +'<td>'+(x.email||'—')+'</td>'
+      +'<td>'+(x.phone||'—')+'</td>'
+      +'<td>'+(x.isVerified?'✅':'⏳')+'</td>'
+      +'<td>'+fmtDate(x.createdAt)+'</td>'
+      +'<td>'+(x.addresses?x.addresses.length:0)+' saved</td>'
+      +'<td><button class="btn btn-er-g btn-sm kc-del-cust" data-id="'+x._id+'" data-name="'+(x.name||'').replace(/"/g,"")+'">🗑</button></td>'
+      +'</tr>';
+  }).join('');
+  el.querySelectorAll('.kc-del-cust').forEach(function(btn){
+    btn.addEventListener('click',function(){ delCust(this.dataset.id,this.dataset.name); });
+  });
+}
 function searchCusts(){var q=document.getElementById('custSearch').value.toLowerCase();renderCusts(q?custsData.filter(function(u){return(u.name&&u.name.toLowerCase().includes(q))||(u.email&&u.email.toLowerCase().includes(q));}):custsData);}
 async function delCust(id,name){if(!confirm('Delete "'+name+'"?'))return;try{await apiFetch('/admin/users/'+id,'DELETE');toast('🗑 Deleted');loadCusts();}catch(e){toast('❌ '+e.message);}}
 async function loadAdmins(){
-  try{var r=await apiFetch('/admin/admins'),el=document.getElementById('adminUsersTable'),a=r.admins||[];
-  if(!a.length){el.innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:18px;">No admins</td></tr>';return;}
-  el.innerHTML=a.map(function(u){return'<tr><td><b>'+u.name+'</b></td><td>'+u.email+'</td>'+'<td><span class="badge" style="background:'+(u.role==='super_admin'?'#ede7f6':'#e8f5e9')+';color:'+(u.role==='super_admin'?'#4A1070':'#2e7d32')+';">'+u.role+'</span></td>'+'<td>'+(u.role!=='super_admin'?'<button class="btn btn-er-g btn-sm" onclick="delAdmin(''+u._id+\''\,''+u.name+\''\)">🗑</button>':'—')+'</td></tr>';}).join('');
+  try{
+    var r=await apiFetch('/admin/admins');
+    var el=document.getElementById('adminUsersTable');
+    var a=r.admins||[];
+    if(!a.length){el.innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:20px;">No admins</td></tr>';return;}
+    el.innerHTML=a.map(function(u){
+      return '<tr>'
+        +'<td><b>'+u.name+'</b></td>'
+        +'<td>'+u.email+'</td>'
+        +'<td><span class="badge" style="background:'+(u.role==='super_admin'?'#ede7f6':'#e8f5e9')+';color:'+(u.role==='super_admin'?'#4A1070':'#2e7d32')+';">'+u.role+'</span></td>'
+        +'<td>'+(u.role!=='super_admin'?'<button class="btn btn-er-g btn-sm kc-del-admin" data-id="'+u._id+'" data-name="'+(u.name||'').replace(/"/g,'')+'">🗑</button>':'—')+'</td>'
+        +'</tr>';
+    }).join('');
+    el.querySelectorAll('.kc-del-admin').forEach(function(btn){
+      btn.addEventListener('click',function(){ delAdmin(this.dataset.id,this.dataset.name); });
+    });
   }catch(e){toast('❌ '+e.message);}
 }
 async function addAdmin(){
@@ -1128,8 +1158,7 @@ async function askAI(preset){
     var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,system:ctx,messages:aiConvo})});
     var data=await res.json();var reply=(data.content&&data.content[0]&&data.content[0].text)||'No response.';
     aiConvo.push({role:'assistant',content:reply});
-    resp.style.fontStyle='normal';resp.style.color='#333';resp.innerHTML=reply.replace(/
-/g,'<br>');
+    resp.style.fontStyle='normal';resp.style.color='#333';resp.innerHTML=reply.replace(/\n/g,'<br>');
   }catch(e){resp.style.color='#c62828';resp.textContent='AI unavailable. Try again.';}
 }
 </script>

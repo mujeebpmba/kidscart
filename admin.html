@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KidsCart Admin — Dashboard</title>
+<title>Dashboard — KidsCart Admin</title>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-/* ============================================================
+<style>/* ============================================================
    KidsCart Admin v3 — Premium UI Styles
    Shared across all admin pages via <link rel="stylesheet">
    ============================================================ */
@@ -592,211 +591,86 @@ tr:hover td{background:#faf7fe;}
   .kanban-col{width:200px;}
 }
 
-/* Dashboard-specific */
-.ai-panel{background:linear-gradient(135deg,#f8f4ff,#ede7f6);border:1px solid rgba(123,45,139,.15);border-radius:16px;padding:20px;}
-.ai-panel-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
-.ai-orb{width:38px;height:38px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,#f7941d,#4A1070);display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 4px 12px rgba(247,148,29,.3);}
-.ai-panel-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:.88rem;color:#1a0a2e;}
-.ai-panel-sub{font-size:.68rem;color:#999;font-weight:600;}
-.ai-chips{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
-.ai-chip{background:#fff;border:1px solid rgba(123,45,139,.12);border-radius:10px;padding:9px 12px;font-size:.76rem;color:#4A1070;cursor:pointer;font-weight:700;transition:.15s;text-align:left;display:flex;align-items:center;gap:8px;font-family:'Nunito',sans-serif;}
-.ai-chip:hover{background:#ede7f6;border-color:rgba(123,45,139,.25);}
-.ai-input-wrap{display:flex;gap:8px;margin-top:4px;}
-.ai-input{flex:1;padding:9px 14px;background:#fff;border:1px solid rgba(123,45,139,.15);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;color:#1a0a2e;}
-.ai-input:focus{border-color:#4A1070;}
-.ai-send-btn{width:36px;height:36px;background:linear-gradient(135deg,#f7941d,#e07819);border:none;border-radius:10px;cursor:pointer;font-size:.9rem;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
-.ai-response{background:#fff;border:1px solid rgba(123,45,139,.1);border-radius:10px;padding:12px;margin-top:10px;font-size:.78rem;line-height:1.6;color:#333;display:none;}
-.chart-wrap{height:140px;display:flex;align-items:flex-end;gap:6px;padding-bottom:4px;}
-.chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.chart-bar{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#c9b3e8,#ddd5f5);transition:.3s;min-height:4px;}
-.chart-bar.today{background:linear-gradient(180deg,#f7941d,#e07819);}
-.chart-bar.high{background:linear-gradient(180deg,#4A1070,#7B2D8B);}
-.chart-label{font-size:.6rem;color:#bbb;font-weight:700;}
-.chart-legend{display:flex;gap:16px;margin-top:12px;}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:.68rem;color:#888;font-weight:700;}
-.legend-dot{width:8px;height:8px;border-radius:50%;}
-.ord-table{width:100%;border-collapse:collapse;font-size:.82rem;}
-.ord-table th{background:#f8f5fd;color:#4A1070;font-weight:800;padding:10px 12px;text-align:left;white-space:nowrap;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;}
-.ord-table td{padding:11px 12px;border-bottom:1px solid #f5f0fb;vertical-align:middle;}
-.ord-table tr:last-child td{border-bottom:none;}
-.ord-table tr:hover td{background:#faf7fe;}
-.ord-avatar{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#4A1070,#7B2D8B);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.7rem;margin-right:8px;vertical-align:middle;}
-.dash-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-bottom:18px;}
+.dash-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;}
 .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-.qa-card{background:#fff;border:1px solid rgba(123,45,139,.08);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;transition:.2s;text-decoration:none;display:block;}
-.qa-card:hover{background:#f8f5fd;border-color:rgba(123,45,139,.2);transform:translateY(-2px);}
-.qa-icon{width:44px;height:44px;border-radius:12px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
-.qa-label{font-size:.72rem;font-weight:800;color:#4A1070;}
-.ls-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f0fb;font-size:.82rem;}
+.qa-card{background:#fff;border:1px solid rgba(123,45,139,.08);border-radius:13px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s;text-decoration:none;display:block;}
+.qa-card:hover{background:#f8f5fd;transform:translateY(-2px);}
+.qa-icon{width:40px;height:40px;border-radius:11px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.qa-label{font-size:.71rem;font-weight:800;color:#4A1070;}
+.ai-panel{background:linear-gradient(135deg,#f8f4ff,#ede7f6);border:1px solid rgba(123,45,139,.15);border-radius:16px;padding:18px;}
+.ai-panel-hdr{display:flex;align-items:center;gap:11px;margin-bottom:13px;}
+.ai-orb{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#f7941d,#4A1070);display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+.ai-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:.85rem;color:#1a0a2e;}
+.ai-sub{font-size:.66rem;color:#999;}
+.ai-chips{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.ai-chip{background:#fff;border:1px solid rgba(123,45,139,.12);border-radius:9px;padding:8px 11px;font-size:.75rem;color:#4A1070;cursor:pointer;font-weight:700;font-family:'Nunito',sans-serif;text-align:left;border:none;width:100%;}
+.ai-chip:hover{background:#ede7f6;}
+.ai-row{display:flex;gap:7px;}
+.ai-inp{flex:1;padding:8px 11px;background:#fff;border:1px solid rgba(123,45,139,.15);border-radius:9px;font-family:'Nunito',sans-serif;font-size:.81rem;outline:none;color:#1a0a2e;}
+.ai-inp:focus{border-color:#4A1070;}
+.ai-send{width:33px;height:33px;background:linear-gradient(135deg,#f7941d,#e07819);border:none;border-radius:9px;cursor:pointer;font-size:.85rem;color:#fff;flex-shrink:0;}
+.ai-resp{background:#fff;border:1px solid rgba(123,45,139,.1);border-radius:9px;padding:10px;margin-top:8px;font-size:.78rem;line-height:1.6;color:#333;display:none;}
+.chart-wrap{height:110px;display:flex;align-items:flex-end;gap:5px;padding-bottom:4px;}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.cb{width:100%;border-radius:5px 5px 0 0;background:#e0d5f5;min-height:3px;}
+.cb.top{background:linear-gradient(180deg,#f7941d,#e07819);}
+.cb.hi{background:linear-gradient(180deg,#4A1070,#7B2D8B);}
+.chart-lbl{font-size:.57rem;color:#bbb;font-weight:700;}
+.ord-av{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#4A1070,#7B2D8B);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.62rem;margin-right:6px;vertical-align:middle;}
+.ls-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f0fb;font-size:.81rem;}
 .ls-item:last-child{border-bottom:none;}
-.ls-name{font-weight:700;color:#1a0a2e;}
-.notif-drawer{position:fixed;top:60px;right:20px;width:300px;background:#fff;border-radius:16px;border:1px solid rgba(123,45,139,.12);box-shadow:0 16px 40px rgba(74,16,112,.15);z-index:400;display:none;overflow:hidden;}
-.notif-drawer.open{display:block;animation:modalIn .15s ease;}
-.notif-item{padding:12px 16px;border-bottom:1px solid #f5f0fb;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:.15s;}
-.notif-item:hover{background:#faf7fe;}
-.notif-dot-indicator{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
-.notif-text{font-size:.78rem;color:#333;line-height:1.5;}
-.notif-time{font-size:.65rem;color:#bbb;margin-top:2px;font-weight:600;}
-.report-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-@media(max-width:1100px){.dash-grid{grid-template-columns:1fr;}}
-@media(max-width:768px){
-  .dash-grid{grid-template-columns:1fr;}
-  .quick-grid{grid-template-columns:repeat(2,1fr);}
-  .report-row{grid-template-columns:1fr;}
-  .notif-drawer{right:10px;width:calc(100vw - 20px);}
-}
+.notif-drawer{position:fixed;top:56px;right:16px;width:280px;background:#fff;border-radius:13px;border:1px solid rgba(123,45,139,.12);box-shadow:0 12px 32px rgba(74,16,112,.13);z-index:400;display:none;overflow:hidden;}
+.notif-drawer.open{display:block;}
+.ni{padding:10px 13px;border-bottom:1px solid #f5f0fb;display:flex;gap:8px;cursor:pointer;}
+.ni:hover{background:#faf7fe;}
+.report-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:1024px){.dash-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){.quick-grid{grid-template-columns:repeat(2,1fr);}.report-row{grid-template-columns:1fr;}.notif-drawer{right:8px;width:calc(100vw - 16px);}}
 </style>
-<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};
-// Minimal shared config - no external shared.js dependency for speed
-const API = window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
-let token=localStorage.getItem('kc_admin_token')||'';
-let adminUser=null;
-window.KC={
-  init(cb){if(token){fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}}).then(r=>r.json()).then(d=>{if(d.user&&['admin','super_admin'].includes(d.user.role)){adminUser=d.user;if(cb)cb(d.user);}else{token='';localStorage.removeItem('kc_admin_token');showLoginScreen();}}).catch(()=>showLoginScreen())}else showLoginScreen();},
-  getUser:()=>adminUser,getToken:()=>token
-};
-function showLoginScreen(){document.getElementById('loginScreen').style.display='flex';document.getElementById('adminApp').style.display='none';}
-function showAdminApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminApp').style.display='flex';}
-async function adminLogin(){
-  const email=document.getElementById('adminEmail').value.trim();
-  const pass=document.getElementById('adminPass').value;
-  const err=document.getElementById('loginErr');
-  err.style.display='none';
-  if(!email||!pass){err.textContent='⚠️ Enter email and password';err.style.display='block';return;}
-  try{
-    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error||'Login failed');
-    if(!['admin','super_admin'].includes(d.user.role))throw new Error('Not an admin account');
-    token=d.token;adminUser=d.user;localStorage.setItem('kc_admin_token',token);
-    bootApp(d.user);
-  }catch(e){err.textContent='❌ '+e.message;err.style.display='block';}
-}
-function adminLogout(){token='';adminUser=null;localStorage.removeItem('kc_admin_token');showLoginScreen();}
-async function adminForgot(){
-  const email=document.getElementById('forgotEmail').value.trim();
-  if(!email){toast('⚠️ Enter email');return;}
-  try{await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});toast('✅ Reset link sent to '+email);document.getElementById('forgotBox').style.display='none';}catch(e){toast('❌ '+e.message);}
-}
-async function apiFetch(path,method='GET',body=null){
-  const opts={method,headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})}};
-  if(body)opts.body=JSON.stringify(body);
-  const r=await fetch(API+path,opts);
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok)throw new Error(d.error||'Error '+r.status);
-  return d;
-}
-function toast(msg,dur=2800){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
-function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
+<script>const API=window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
+let token=localStorage.getItem('kc_admin_token')||'',adminUser=null;
+async function apiFetch(path,method,body){method=method||'GET';const opts={method,headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})}};if(body)opts.body=JSON.stringify(body);const r=await fetch(API+path,opts);const d=await r.json().catch(function(){return{};});if(!r.ok)throw new Error(d.error||'Error '+r.status);return d;}
+function showLogin(){document.getElementById('loginScreen').style.display='flex';document.getElementById('adminApp').style.display='none';}
+function showApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminApp').style.display='flex';}
+function initAuth(cb){if(!token){showLogin();return;}fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}}).then(function(r){return r.json();}).then(function(d){if(d.user&&(d.user.role==='admin'||d.user.role==='super_admin')){adminUser=d.user;cb(d.user);}else{token='';localStorage.removeItem('kc_admin_token');showLogin();}}).catch(function(){showLogin();});}
+async function adminLogin(){var email=document.getElementById('adminEmail').value.trim(),pass=document.getElementById('adminPass').value,err=document.getElementById('loginErr');err.style.display='none';if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}try{var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});var d=await r.json();if(!r.ok)throw new Error(d.error||'Login failed');if(d.user.role!=='admin'&&d.user.role!=='super_admin')throw new Error('Not an admin account');token=d.token;adminUser=d.user;localStorage.setItem('kc_admin_token',token);window._boot(d.user);}catch(e){err.textContent=e.message;err.style.display='block';}}
+function adminLogout(){token='';adminUser=null;localStorage.removeItem('kc_admin_token');showLogin();}
+async function adminForgot(){var email=document.getElementById('forgotEmail').value.trim();if(!email){toast('Enter email');return;}try{await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});toast('Reset link sent');document.getElementById('forgotBox').style.display='none';}catch(e){toast('Error: '+e.message);}}
+function toast(msg,dur){dur=dur||2800;var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},dur);}
+function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
 function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtT(d){var diff=Date.now()-d;if(diff<86400000)return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});if(diff<604800000)return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});}
 function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data:'))return s;return window.location.origin+(s.startsWith('/')?s:'/'+s);}
-</script>
+var _sbOpen=true;
+function toggleSb(){var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea'),btn=sb&&sb.querySelector('.sb-toggle');if(!sb)return;_sbOpen=!_sbOpen;sb.classList.toggle('collapsed',!_sbOpen);if(main)main.classList.toggle('expanded',!_sbOpen);if(btn)btn.textContent=_sbOpen?'◀':'▶';localStorage.setItem('kc_sb',_sbOpen?'1':'0');}
+function restoreSb(){if(localStorage.getItem('kc_sb')==='0'){setTimeout(function(){var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');if(!sb)return;sb.classList.add('collapsed');if(main)main.classList.add('expanded');_sbOpen=false;var btn=sb.querySelector('.sb-toggle');if(btn)btn.textContent='▶';},80);}}
+function setUserUI(user){setText('sbAvatar',(user.name||'A').charAt(0).toUpperCase());setText('sbUserName',user.name||'Admin');setText('sbUserRole',user.role==='super_admin'?'Super Admin':'Admin');setText('adminName','👤 '+(user.name||'Admin'));setText('mobUser',user.name||'');if(user.role==='super_admin')document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});}
+function startPage(onReady){window.addEventListener('DOMContentLoaded',function(){window._boot=function(user){adminUser=user;setUserUI(user);showApp();restoreSb();onReady(user);};initAuth(window._boot);});}</script>
 </head>
+
 <body>
-
-<!-- LOGIN SCREEN - visible by default -->
-<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);">
-  <div style="background:#fff;border-radius:24px;padding:40px 36px;width:380px;max-width:95vw;box-shadow:0 24px 64px rgba(0,0,0,.3);">
-    <div style="text-align:center;margin-bottom:24px;">
-      <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:64px;object-fit:contain;">
-    </div>
-    <h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.35rem;font-weight:800;margin-bottom:5px;">Welcome back</h2>
-    <p style="text-align:center;color:#999;font-size:.84rem;margin-bottom:24px;">Sign in to your admin panel</p>
-    <div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div>
-    <div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
-    <button class="btn-full" onclick="adminLogin()" style="margin-top:8px;">Sign In →</button>
-    <p style="text-align:center;margin-top:14px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p>
-    <div id="forgotBox" style="display:none;margin-top:10px;">
-      <div class="fgroup"><label>Your email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div>
-      <button class="btn-full" onclick="adminForgot()">Send Reset Link</button>
-    </div>
-    <div id="loginErr" style="display:none;color:#c62828;font-size:.82rem;text-align:center;margin-top:10px;padding:8px;background:#ffebee;border-radius:8px;"></div>
-  </div>
-</div>
-
-<!-- ADMIN APP - hidden by default -->
+<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);"><div style="background:#fff;border-radius:24px;padding:38px 34px;width:370px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.28);"><div style="text-align:center;margin-bottom:20px;"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:70px;object-fit:contain;"></div><h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.28rem;font-weight:800;margin-bottom:4px;">Welcome back</h2><p style="text-align:center;color:#999;font-size:.83rem;margin-bottom:20px;">Sign in to your admin panel</p><div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div><div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div><button class="btn-full" onclick="adminLogin()" style="margin-top:6px;">Sign In →</button><p style="text-align:center;margin-top:12px;font-size:.81rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p><div id="forgotBox" style="display:none;margin-top:8px;"><div class="fgroup"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div><button class="btn-full" onclick="adminForgot()">Send Reset Link</button></div><div id="loginErr" style="display:none;color:#c62828;font-size:.81rem;text-align:center;margin-top:9px;padding:7px;background:#ffebee;border-radius:7px;"></div></div></div>
 <div id="adminApp" style="display:none;">
-
-  <!-- Mobile top header -->
-  <div class="mob-header">
-    <img src="/logo-white.png" alt="KidsCart" style="height:28px;object-fit:contain;">
-    <span class="mob-hdr-title" id="mobTitle">Dashboard</span>
-    <div class="mob-hdr-right" id="mobUser"></div>
-  </div>
-
-  <!-- Mobile bottom nav -->
-  <div class="mob-bar">
-    <div class="mob-bar-inner">
-      <button class="mob-btn active" id="mbn-dash" onclick="mobNav('dashboard',this)"><span class="mi">📊</span><span class="ml">Home</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/orders.html'"><span class="mi">📦</span><span class="ml">Orders</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/products.html'"><span class="mi">👗</span><span class="ml">Products</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/whatsapp.html'"><span class="mi">📱</span><span class="ml">WhatsApp</span><span class="mob-badge" id="mobWaBadge" style="display:none;">0</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/crm.html'"><span class="mi">🤝</span><span class="ml">CRM</span></button>
-      <button class="mob-btn" id="mbn-cust" onclick="mobNav('customers',this)"><span class="mi">👥</span><span class="ml">Customers</span></button>
-      <button class="mob-btn" id="mbn-rep" onclick="mobNav('reports',this)"><span class="mi">📈</span><span class="ml">Reports</span></button>
-      <button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button>
-    </div>
-  </div>
-
-  <!-- Sidebar -->
-  <div class="sidebar" id="sidebar">
-    <div class="sb-top">
-      <div class="sb-brand">
-        <img src="/logo-white.png" alt="KidsCart" style="height:32px;object-fit:contain;filter:none;">
-      </div>
-      <button class="sb-toggle" onclick="toggleSidebar()" title="Collapse sidebar">◀</button>
-    </div>
-    <nav class="sb-nav">
-      <div class="nav-group-label">Main</div>
-      <div class="nav-item active" onclick="showPanel('dashboard',this)"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></div>
-      <a class="nav-item" href="/admin/orders.html"><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a>
-      <a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a>
-      <a class="nav-item" href="/admin/products.html#stock"><span class="nav-icon">📋</span><span class="sb-label">Stock</span></a>
-      <a class="nav-item" href="/admin/products.html#addprod"><span class="nav-icon">➕</span><span class="sb-label">Add Product</span></a>
-      <div class="nav-group-label">Marketing</div>
-      <a class="nav-item" href="/admin/products.html#banners"><span class="nav-icon">🎨</span><span class="sb-label">Banners</span></a>
-      <a class="nav-item" href="/admin/products.html#coupons"><span class="nav-icon">🎟️</span><span class="sb-label">Coupons</span></a>
-      <div class="nav-item" onclick="showPanel('customers',this)"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></div>
-      <div class="nav-group-label">Communication</div>
-      <a class="nav-item" href="/admin/whatsapp.html"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span><span id="waBadge" style="display:none;background:#25D366;color:#fff;border-radius:20px;padding:1px 7px;font-size:.6rem;font-weight:800;margin-left:auto;">0</span></a>
-      <a class="nav-item" href="/admin/crm.html"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a>
-      <div class="nav-group-label">Analytics</div>
-      <div class="nav-item" onclick="showPanel('reports',this)"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></div>
-      <div class="nav-item super-only" style="display:none;" onclick="showPanel('adminusers',this)"><span class="nav-icon">🔐</span><span class="sb-label">Admin Users</span></div>
-    </nav>
-    <div class="sb-user">
-      <div class="sb-avatar" id="sbAvatar">A</div>
-      <div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div>
-      <button class="sb-logout" onclick="adminLogout()" title="Logout">🚪</button>
-    </div>
-  </div>
-
-  <!-- Main area -->
+  <div class="mob-header"><img src="/logo-white.png" alt="KidsCart" style="height:26px;object-fit:contain;"><span class="mob-hdr-title" id="mobTitle">KidsCart</span><div class="mob-hdr-right" id="mobUser"></div></div><div class="mob-bar"><div class="mob-bar-inner"><a class="mob-btn" href="/admin.html" style="color:#4A1070;font-weight:900;"><span class="mi">📊</span><span class="ml">Home</span></a><a class="mob-btn" href="/admin/orders.html"><span class="mi">📦</span><span class="ml">Orders</span></a><a class="mob-btn" href="/admin/products.html"><span class="mi">👗</span><span class="ml">Products</span></a><a class="mob-btn" href="/admin/whatsapp.html"><span class="mi">📱</span><span class="ml">WhatsApp</span></a><a class="mob-btn" href="/admin/crm.html"><span class="mi">🤝</span><span class="ml">CRM</span></a><button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button></div></div>
+  <div class="sidebar" id="sidebar"><div class="sb-top"><div class="sb-brand"><img src="/logo-white.png" alt="KidsCart" style="height:30px;object-fit:contain;max-width:150px;"></div><button class="sb-toggle" onclick="toggleSb()">◀</button></div><nav class="sb-nav"><div class="nav-group-label">MAIN</div><a class="nav-item active" href="/admin.html"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></a><a class="nav-item" href="/admin/orders.html"><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a><a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a><a class="nav-item" href="/admin/products.html#stock" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">📋</span><span class="sb-label">Stock</span></a><a class="nav-item" href="/admin/products.html#addprod" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">➕</span><span class="sb-label">Add Product</span></a><div class="nav-group-label">MARKETING</div><a class="nav-item" href="/admin/products.html#banners" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">🎨</span><span class="sb-label">Banners</span></a><a class="nav-item" href="/admin/products.html#coupons" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">🎟️</span><span class="sb-label">Coupons</span></a><a class="nav-item" href="/admin.html#customers"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></a><div class="nav-group-label">COMMUNICATION</div><a class="nav-item" href="/admin/whatsapp.html"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span></a><a class="nav-item" href="/admin/crm.html"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a><div class="nav-group-label">ANALYTICS</div><a class="nav-item" href="/admin.html#reports"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></a><a class="nav-item super-only" style="display:none" href="/admin.html#adminusers"><span class="nav-icon">🔐</span><span class="sb-label">Admin Users</span></a></nav><div class="sb-user"><div class="sb-avatar" id="sbAvatar">A</div><div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div><button class="sb-logout" onclick="adminLogout()" title="Logout">🚪</button></div></div>
   <div class="main" id="mainArea">
     <div class="topbar">
       <h2 class="page-title" id="pageTitle">Dashboard</h2>
       <div class="topbar-right">
-        <div class="notif-btn" onclick="toggleNotifDrawer()">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></div>
-        <button class="ai-btn" onclick="focusAI()">✨ Ask AI</button>
+        <div class="notif-btn" onclick="document.getElementById('notifDrawer').classList.toggle('open')">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></div>
+        <button class="ai-btn" onclick="showP('dashboard');setTimeout(function(){var i=document.getElementById('aiInput');if(i)i.focus();},100)">✨ Ask AI</button>
         <span class="admin-badge" id="adminName">Admin</span>
         <a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a>
       </div>
     </div>
-
-    <!-- Notification drawer -->
     <div class="notif-drawer" id="notifDrawer">
-      <div style="padding:14px 16px;border-bottom:1px solid #f5f0fb;display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.85rem;color:#1a0a2e;">Notifications</span>
-        <button onclick="markAllRead()" style="font-size:.72rem;color:#4A1070;font-weight:700;background:none;border:none;cursor:pointer;">Mark all read</button>
+      <div style="padding:11px 13px;border-bottom:1px solid #f5f0fb;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.83rem;color:#1a0a2e;">Notifications</span>
+        <button onclick="document.getElementById('notifDot').style.display='none';document.getElementById('notifDrawer').classList.remove('open')" style="font-size:.71rem;color:#4A1070;font-weight:700;background:none;border:none;cursor:pointer;">Mark read</button>
       </div>
-      <div id="notifList">
-        <div class="notif-item"><div class="notif-dot-indicator" style="background:#f7941d;"></div><div><div class="notif-text">New order placed — check orders</div><div class="notif-time">Loading…</div></div></div>
-      </div>
+      <div id="notifList"><div class="ni"><div style="width:7px;height:7px;border-radius:50%;background:#f7941d;margin-top:4px;flex-shrink:0;"></div><div style="font-size:.76rem;color:#333;">Loading notifications…</div></div></div>
     </div>
-
     <div class="content">
-
-      <!-- ══ DASHBOARD PANEL ══ -->
       <div class="panel active" id="dashboardPanel">
         <div class="stats-grid">
           <div class="stat-card v1"><div class="stat-icon">📦</div><div class="stat-label">Total Orders</div><div class="stat-value" id="statOrders">—</div><div class="stat-sub">Excl. cancelled</div></div>
@@ -804,262 +678,186 @@ function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data
           <div class="stat-card v3"><div class="stat-icon">👥</div><div class="stat-label">Customers</div><div class="stat-value" id="statCustomers">—</div><div class="stat-sub">Registered users</div></div>
           <div class="stat-card v4"><div class="stat-icon">⚠️</div><div class="stat-label">Low Stock</div><div class="stat-value" id="statLowStock">—</div><div class="stat-sub">Items ≤ 10 units</div></div>
         </div>
-
-        <div class="card" style="margin-bottom:18px;">
+        <div class="card" style="margin-bottom:14px;">
           <div class="card-head"><span class="card-title">Quick Actions</span></div>
           <div class="quick-grid">
             <a href="/admin/products.html#addprod" class="qa-card"><div class="qa-icon" style="background:#ede7f6;">➕</div><div class="qa-label">Add Product</div></a>
             <a href="/admin/whatsapp.html" class="qa-card"><div class="qa-icon" style="background:#e8f5e9;">💬</div><div class="qa-label">WhatsApp</div></a>
-            <a href="/admin/products.html#coupons" class="qa-card"><div class="qa-icon" style="background:#fff3e0;">🎟️</div><div class="qa-label">Create Coupon</div></a>
-            <a href="/admin/products.html#banners" class="qa-card"><div class="qa-icon" style="background:#fce4ec;">🎨</div><div class="qa-label">Add Banner</div></a>
+            <a href="/admin/products.html#coupons" class="qa-card"><div class="qa-icon" style="background:#fff3e0;">🎟️</div><div class="qa-label">Coupon</div></a>
+            <a href="/admin/products.html#banners" class="qa-card"><div class="qa-icon" style="background:#fce4ec;">🎨</div><div class="qa-label">Banner</div></a>
           </div>
         </div>
-
         <div class="dash-grid">
           <div>
             <div class="card">
-              <div class="card-head"><span class="card-title">Revenue — Last 7 Days</span><span id="chartTotal" style="font-size:.78rem;color:#f7941d;font-weight:800;"></span></div>
-              <div class="chart-wrap" id="revenueChart"><div style="color:#bbb;font-size:.82rem;text-align:center;width:100%;padding:20px;">Loading chart…</div></div>
-              <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#f7941d;"></div>Highest day</div><div class="legend-item"><div class="legend-dot" style="background:#4A1070;"></div>Other days</div></div>
+              <div class="card-head"><span class="card-title">Revenue — Last 7 Days</span><span id="chartTotal" style="font-size:.76rem;color:#f7941d;font-weight:800;"></span></div>
+              <div class="chart-wrap" id="revenueChart"><div style="color:#bbb;font-size:.8rem;text-align:center;width:100%;padding:14px;">Loading…</div></div>
+              <div style="display:flex;gap:13px;margin-top:9px;"><span style="display:flex;align-items:center;gap:4px;font-size:.66rem;color:#888;font-weight:700;"><span style="width:8px;height:8px;border-radius:50%;background:#f7941d;display:inline-block;"></span>Highest</span><span style="display:flex;align-items:center;gap:4px;font-size:.66rem;color:#888;font-weight:700;"><span style="width:8px;height:8px;border-radius:50%;background:#4A1070;display:inline-block;"></span>Others</span></div>
             </div>
             <div class="card">
               <div class="card-head"><span class="card-title">Recent Orders</span><a href="/admin/orders.html" class="card-action">View All →</a></div>
-              <div class="tbl-wrap"><table class="ord-table"><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="recentOrdersTable"><tr><td colspan="5" style="text-align:center;color:#bbb;padding:20px;">Loading…</td></tr></tbody></table></div>
+              <div class="tbl-wrap"><table style="width:100%;border-collapse:collapse;font-size:.81rem;">
+                <thead><tr><th style="background:#f8f5fd;color:#4A1070;font-weight:800;padding:8px 10px;text-align:left;font-size:.69rem;text-transform:uppercase;">Order</th><th style="background:#f8f5fd;color:#4A1070;font-weight:800;padding:8px 10px;text-align:left;font-size:.69rem;text-transform:uppercase;">Customer</th><th style="background:#f8f5fd;color:#4A1070;font-weight:800;padding:8px 10px;text-align:left;font-size:.69rem;text-transform:uppercase;">Amount</th><th style="background:#f8f5fd;color:#4A1070;font-weight:800;padding:8px 10px;text-align:left;font-size:.69rem;text-transform:uppercase;">Status</th><th style="background:#f8f5fd;color:#4A1070;font-weight:800;padding:8px 10px;text-align:left;font-size:.69rem;text-transform:uppercase;">Action</th></tr></thead>
+                <tbody id="recentOrdersTable"><tr><td colspan="5" style="text-align:center;color:#bbb;padding:16px;">Loading…</td></tr></tbody>
+              </table></div>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;flex-direction:column;gap:14px;">
             <div class="ai-panel">
-              <div class="ai-panel-header"><div class="ai-orb">✨</div><div><div class="ai-panel-title">AI Assistant</div><div class="ai-panel-sub">Ask anything about your store</div></div></div>
+              <div class="ai-panel-hdr"><div class="ai-orb">✨</div><div><div class="ai-title">AI Assistant</div><div class="ai-sub">Ask anything about your store</div></div></div>
               <div class="ai-chips">
-                <button class="ai-chip" onclick="askAI('Which products are selling the most this week?')">📦 Which products sell most?</button>
-                <button class="ai-chip" onclick="askAI('How is revenue trending compared to last week?')">📈 How is revenue trending?</button>
-                <button class="ai-chip" onclick="askAI('Which items are low on stock and need restocking?')">⚠️ What needs restocking?</button>
+                <button class="ai-chip" onclick="askAI('Which products are selling most?')">📦 Which products sell most?</button>
+                <button class="ai-chip" onclick="askAI('How is revenue trending vs last week?')">📈 Revenue trend?</button>
+                <button class="ai-chip" onclick="askAI('What items are low on stock?')">⚠️ What needs restocking?</button>
               </div>
-              <div class="ai-input-wrap"><input class="ai-input" id="aiInput" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')askAI()"><button class="ai-send-btn" onclick="askAI()">→</button></div>
-              <div class="ai-response" id="aiResponse"></div>
+              <div class="ai-row"><input class="ai-inp" id="aiInput" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')askAI()"><button class="ai-send" onclick="askAI()">→</button></div>
+              <div class="ai-resp" id="aiResponse"></div>
             </div>
             <div class="card" style="margin-bottom:0;">
-              <div class="card-head"><span class="card-title">⚠️ Low Stock</span><a href="/admin/products.html#stock" class="card-action">Manage →</a></div>
-              <div id="lowStockList"><p style="text-align:center;color:#bbb;padding:20px;font-size:.82rem;">Loading…</p></div>
+              <div class="card-head"><span class="card-title">⚠️ Low Stock</span><a href="/admin/products.html#stock" class="card-action">Fix →</a></div>
+              <div id="lowStockList"><p style="text-align:center;color:#bbb;padding:14px;font-size:.81rem;">Loading…</p></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ══ CUSTOMERS PANEL ══ -->
       <div class="panel" id="customersPanel">
-        <div class="card">
-          <div class="card-head"><span class="card-title">👥 Customers</span></div>
-          <div class="search-bar"><input type="text" id="custSearch" placeholder="Search by name or email…" oninput="searchCustomers()"></div>
-          <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Verified</th><th>Joined</th><th>Addresses</th><th>Action</th></tr></thead><tbody id="customersTable"><tr><td colspan="7" style="text-align:center;color:#bbb;padding:24px;">Loading…</td></tr></tbody></table></div>
+        <div class="card"><div class="card-head"><span class="card-title">👥 Customers</span></div>
+          <div class="search-bar"><input type="text" id="custSearch" placeholder="Search by name or email…" oninput="searchCusts()"></div>
+          <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Verified</th><th>Joined</th><th>Addresses</th><th>Action</th></tr></thead><tbody id="customersTable"><tr><td colspan="7" style="text-align:center;color:#bbb;padding:20px;">Loading…</td></tr></tbody></table></div>
         </div>
       </div>
 
-      <!-- ══ REPORTS PANEL ══ -->
       <div class="panel" id="reportsPanel">
         <div class="card">
           <div class="card-head"><span class="card-title">📈 Sales Report</span></div>
-          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;">
-            <div class="fgroup" style="margin-bottom:0;"><label>From</label><input type="date" id="rptFrom" style="width:auto;"></div>
-            <div class="fgroup" style="margin-bottom:0;"><label>To</label><input type="date" id="rptTo" style="width:auto;"></div>
-            <button class="btn btn-pp" onclick="loadReports()">Run Report</button>
-            <button class="btn btn-ghost" onclick="setReportRange(7)">Last 7 days</button>
-            <button class="btn btn-ghost" onclick="setReportRange(30)">Last 30 days</button>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;">
+            <div class="fgroup" style="margin:0;"><label>From</label><input type="date" id="rptFrom" style="width:auto;"></div>
+            <div class="fgroup" style="margin:0;"><label>To</label><input type="date" id="rptTo" style="width:auto;"></div>
+            <button class="btn btn-pp" onclick="loadRpt()">Run</button>
+            <button class="btn btn-ghost" onclick="setRptRange(7)">7 days</button>
+            <button class="btn btn-ghost" onclick="setRptRange(30)">30 days</button>
           </div>
           <div class="report-row">
-            <div><div style="font-weight:800;font-size:.82rem;color:#4A1070;margin-bottom:10px;">📅 Daily Revenue</div><div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Orders</th><th>Revenue</th></tr></thead><tbody id="salesByDayTable"><tr><td colspan="3" style="text-align:center;color:#bbb;padding:16px;">Run a report</td></tr></tbody></table></div></div>
-            <div><div style="font-weight:800;font-size:.82rem;color:#4A1070;margin-bottom:10px;">🏆 Top Products</div><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Product</th><th>Units Sold</th><th>Revenue</th></tr></thead><tbody id="topProdsTable"><tr><td colspan="4" style="text-align:center;color:#bbb;padding:16px;">Run a report</td></tr></tbody></table></div></div>
+            <div><div style="font-weight:800;font-size:.79rem;color:#4A1070;margin-bottom:8px;">📅 Daily Revenue</div><div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Orders</th><th>Revenue</th></tr></thead><tbody id="salesByDayTable"><tr><td colspan="3" style="text-align:center;color:#bbb;padding:12px;">Run a report</td></tr></tbody></table></div></div>
+            <div><div style="font-weight:800;font-size:.79rem;color:#4A1070;margin-bottom:8px;">🏆 Top Products</div><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Product</th><th>Units</th><th>Revenue</th></tr></thead><tbody id="topProdsTable"><tr><td colspan="4" style="text-align:center;color:#bbb;padding:12px;">Run a report</td></tr></tbody></table></div></div>
           </div>
         </div>
       </div>
 
-      <!-- ══ ADMIN USERS PANEL ══ -->
       <div class="panel" id="adminusersPanel">
-        <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;">
-          <div class="card">
-            <div class="card-head"><span class="card-title">➕ Add Admin User</span></div>
-            <div class="fgroup"><label>Full Name *</label><input type="text" id="newAdminName" placeholder="John Doe"></div>
+        <div style="display:grid;grid-template-columns:300px 1fr;gap:14px;">
+          <div class="card"><div class="card-head"><span class="card-title">➕ Add Admin</span></div>
+            <div class="fgroup"><label>Name *</label><input type="text" id="newAdminName" placeholder="Full name"></div>
             <div class="fgroup"><label>Email *</label><input type="email" id="newAdminEmail" placeholder="admin@example.com"></div>
-            <div class="fgroup"><label>Password *</label><input type="password" id="newAdminPass" placeholder="Min 8 characters"></div>
+            <div class="fgroup"><label>Password *</label><input type="password" id="newAdminPass" placeholder="Min 8 chars"></div>
             <div class="fgroup"><label>Role</label><select id="newAdminRole"><option value="admin">Admin</option><option value="super_admin">Super Admin</option></select></div>
-            <button class="btn btn-pp" onclick="addAdminUser()" style="width:100%;margin-top:4px;">➕ Add Admin User</button>
-            <div id="addAdminErr" style="display:none;color:#c62828;font-size:.8rem;margin-top:8px;"></div>
+            <button class="btn btn-pp" style="width:100%;margin-top:4px;" onclick="addAdmin()">➕ Add Admin</button>
+            <div id="addAdminErr" style="display:none;color:#c62828;font-size:.79rem;margin-top:7px;"></div>
           </div>
-          <div class="card">
-            <div class="card-head"><span class="card-title">🔐 Admin Users</span><button class="card-action" onclick="loadAdminUsers()">↻ Refresh</button></div>
-            <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody id="adminUsersTable"><tr><td colspan="4" style="text-align:center;color:#bbb;padding:24px;">Loading…</td></tr></tbody></table></div>
+          <div class="card"><div class="card-head"><span class="card-title">🔐 Admin Users</span><button class="card-action" onclick="loadAdmins()">↻ Refresh</button></div>
+            <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody id="adminUsersTable"><tr><td colspan="4" style="text-align:center;color:#bbb;padding:20px;">Loading…</td></tr></tbody></table></div>
           </div>
         </div>
       </div>
-
-    </div><!-- /content -->
-  </div><!-- /main -->
-</div><!-- /adminApp -->
-
-<!-- Order Status Modal -->
-<div class="modal-overlay" id="orderModal">
-  <div class="modal-box">
-    <div class="modal-head"><h3>📦 Update Order #<span id="modalOrderId"></span></h3><button class="modal-close" onclick="closeOrderModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="fgroup"><label>Order Status</label><select id="modalStatus"><option value="placed">Placed</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="out_for_delivery">Out for Delivery</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option><option value="returned">Returned</option></select></div>
-      <div class="grid2">
-        <div class="fgroup"><label>Payment Method</label><select id="modalPayMethod"><option value="cod">COD</option><option value="upi">UPI</option><option value="card">Card</option><option value="netbanking">Net Banking</option></select></div>
-        <div class="fgroup"><label>Payment Status</label><select id="modalPayStatus"><option value="pending">Pending</option><option value="paid">Paid ✅</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></div>
-      </div>
-      <div class="fgroup"><label>Message to Customer</label><textarea id="modalMsg" placeholder="e.g. Your order is on the way!"></textarea></div>
-      <input type="hidden" id="modalOrderDbId">
-      <button class="btn-full" onclick="updateOrderStatus()">✅ Save Changes</button>
     </div>
   </div>
 </div>
-
-<!-- Order Detail Modal -->
-<div class="modal-overlay" id="orderDetailModal">
-  <div class="modal-box wide"><div class="modal-head"><h3>📦 Order Details</h3><button class="modal-close" onclick="closeOrderDetail()">✕</button></div><div class="modal-body" id="ordDetailBody">Loading…</div></div>
+<div class="modal-overlay" id="orderModal">
+  <div class="modal-box"><div class="modal-head"><h3>Update Order #<span id="modalOrderId"></span></h3><button class="modal-close" onclick="document.getElementById('orderModal').style.display='none'">✕</button></div>
+  <div class="modal-body">
+    <div class="fgroup"><label>Status</label><select id="modalStatus"><option value="placed">Placed</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="out_for_delivery">Out for Delivery</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option><option value="returned">Returned</option></select></div>
+    <div class="grid2"><div class="fgroup"><label>Payment Method</label><select id="modalPayMethod"><option value="cod">COD</option><option value="upi">UPI</option><option value="card">Card</option><option value="netbanking">Net Banking</option></select></div><div class="fgroup"><label>Payment Status</label><select id="modalPayStatus"><option value="pending">Pending</option><option value="paid">Paid ✅</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></div></div>
+    <div class="fgroup"><label>Message to Customer</label><textarea id="modalMsg" placeholder="Optional…"></textarea></div>
+    <input type="hidden" id="modalOrderDbId">
+    <button class="btn-full" onclick="updateOrd()">✅ Save</button>
+  </div></div>
 </div>
-
+<div class="modal-overlay" id="orderDetailModal">
+  <div class="modal-box wide"><div class="modal-head"><h3>📦 Order Details</h3><button class="modal-close" onclick="document.getElementById('orderDetailModal').style.display='none'">✕</button></div><div class="modal-body" id="ordDetailBody">Loading…</div></div>
+</div>
 <div id="toast"></div>
-
 <script>
-// ── BOOT ─────────────────────────────────────────────────────
-let sidebarOpen = true;
-
-function bootApp(user) {
-  adminUser = user;
-  const init = (user.name||'A').charAt(0).toUpperCase();
-  document.getElementById('sbAvatar').textContent   = init;
-  document.getElementById('sbUserName').textContent = user.name||'Admin';
-  document.getElementById('sbUserRole').textContent = user.role==='super_admin'?'Super Admin':'Admin';
-  document.getElementById('adminName').textContent  = '👤 '+(user.name||'Admin');
-  document.getElementById('mobUser').textContent    = user.name||'';
-  if (user.role==='super_admin') document.querySelectorAll('.super-only').forEach(el=>el.style.display='flex');
-  showAdminApp();
-  loadDashboard();
-  setTimeout(pollWaBadge, 8000);
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  KC.init(bootApp);
-});
-
-// ── SIDEBAR ───────────────────────────────────────────────────
-function toggleSidebar() {
-  const sb=document.getElementById('sidebar'), main=document.getElementById('mainArea'), btn=sb.querySelector('.sb-toggle');
-  sidebarOpen=!sidebarOpen;
-  sb.classList.toggle('collapsed',!sidebarOpen);
-  main.classList.toggle('expanded',!sidebarOpen);
-  btn.textContent=sidebarOpen?'◀':'▶';
-  localStorage.setItem('kc_sb',sidebarOpen?'1':'0');
-}
-(function(){
-  if(localStorage.getItem('kc_sb')==='0'){
-    setTimeout(()=>{
-      const sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');
-      if(sb){sb.classList.add('collapsed');if(main)main.classList.add('expanded');sidebarOpen=false;const btn=sb.querySelector('.sb-toggle');if(btn)btn.textContent='▶';}
-    },100);
-  }
-})();
-
-// ── PANELS ───────────────────────────────────────────────────
-const PANEL_TITLES = {dashboard:'Dashboard',customers:'Customers',reports:'Reports & Analytics',adminusers:'Admin Users'};
-function showPanel(id, navEl) {
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const p=document.getElementById(id+'Panel'); if(p) p.classList.add('active');
-  document.querySelectorAll('.nav-item,.mob-btn').forEach(n=>n.classList.remove('active'));
-  if(navEl) navEl.classList.add('active');
-  const pt=document.getElementById('pageTitle'); if(pt) pt.textContent=PANEL_TITLES[id]||id;
-  const mt=document.getElementById('mobTitle'); if(mt) mt.textContent=PANEL_TITLES[id]||id;
+var PANELS={dashboard:'Dashboard',customers:'Customers',reports:'Reports',adminusers:'Admin Users'};
+function showP(id,navEl){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  var p=document.getElementById(id+'Panel');if(p)p.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  if(navEl)navEl.classList.add('active');
+  setText('pageTitle',PANELS[id]||id);
+  setText('mobTitle',PANELS[id]||id);
   window.scrollTo(0,0);
-  const loaders={dashboard:loadDashboard,customers:loadCustomers,reports:()=>setReportRange(30),adminusers:loadAdminUsers};
-  if(loaders[id]) loaders[id]();
+  var loaders={dashboard:loadDash,customers:loadCusts,reports:function(){setRptRange(30);},adminusers:loadAdmins};
+  if(loaders[id])loaders[id]();
 }
-function mobNav(id,btn) { document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); showPanel(id); }
+function checkHash(){var h=window.location.hash.replace('#','');if(h&&PANELS[h])showP(h);}
 
-// ── NOTIFICATIONS ─────────────────────────────────────────────
-function toggleNotifDrawer() { document.getElementById('notifDrawer').classList.toggle('open'); }
-function markAllRead() { document.getElementById('notifDot').style.display='none'; document.getElementById('notifDrawer').classList.remove('open'); }
-document.addEventListener('click',e=>{
-  if(!e.target.closest('#notifDrawer')&&!e.target.closest('.notif-btn')) document.getElementById('notifDrawer')?.classList.remove('open');
-  if(e.target.id==='orderModal') closeOrderModal();
-  if(e.target.id==='orderDetailModal') closeOrderDetail();
+startPage(function(user){
+  checkHash();
+  if(!window.location.hash)loadDash();
+  setTimeout(pollWaBadge,8000);
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeOrderModal();closeOrderDetail();} });
-function focusAI(){ showPanel('dashboard'); setTimeout(()=>document.getElementById('aiInput')?.focus(),100); }
+window.addEventListener('hashchange',checkHash);
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#notifDrawer')&&!e.target.closest('.notif-btn'))
+    document.getElementById('notifDrawer')&&document.getElementById('notifDrawer').classList.remove('open');
+  if(e.target.id==='orderModal')e.target.style.display='none';
+  if(e.target.id==='orderDetailModal')e.target.style.display='none';
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){document.getElementById('orderModal').style.display='none';document.getElementById('orderDetailModal').style.display='none';}
+  if(e.key==='Enter'&&document.activeElement&&document.activeElement.id==='adminPass')adminLogin();
+});
 
-// ── WHATSAPP BADGE ────────────────────────────────────────────
-async function pollWaBadge() {
-  try {
-    const d=await apiFetch('/admin/whatsapp/inbox');
-    const n=(d.conversations||[]).reduce((s,c)=>s+(c.unreadCount||0),0);
-    const wb=document.getElementById('waBadge'), mb=document.getElementById('mobWaBadge');
-    if(wb){wb.textContent=n;wb.style.display=n>0?'inline-flex':'none';}
-    if(mb){mb.textContent=n;mb.style.display=n>0?'flex':'none';}
-    if(n>0) document.getElementById('notifDot').style.display='block';
-  }catch(e){}
+async function pollWaBadge(){
+  try{var d=await apiFetch('/admin/whatsapp/inbox');var n=(d.conversations||[]).reduce(function(s,c){return s+(c.unreadCount||0);},0);var wb=document.getElementById('waBadge'),mb=document.getElementById('mobWaBadge');if(wb){wb.textContent=n;wb.style.display=n>0?'inline-flex':'none';}if(mb){mb.textContent=n;mb.style.display=n>0?'flex':'none';}if(n>0)document.getElementById('notifDot').style.display='block';}catch(e){}
   setTimeout(pollWaBadge,30000);
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────
-async function loadDashboard() {
-  try {
-    const r=await apiFetch('/admin/dashboard');
-    if(!r.success) return;
-    const s=r.stats;
-    setText('statOrders', s.activeOrders??s.totalOrders??0);
-    setText('statRevenue', '₹'+(s.activeRevenue??s.totalRevenue??0).toLocaleString('en-IN'));
-    setText('statCustomers', s.totalUsers||0);
-    setText('statLowStock', r.lowStock?.length||0);
+async function loadDash(){
+  try{
+    var r=await apiFetch('/admin/dashboard');
+    if(!r.success)return;
+    var s=r.stats;
+    setText('statOrders',s.activeOrders!=null?s.activeOrders:s.totalOrders||0);
+    setText('statRevenue','₹'+((s.activeRevenue!=null?s.activeRevenue:s.totalRevenue)||0).toLocaleString('en-IN'));
+    setText('statCustomers',s.totalUsers||0);
+    setText('statLowStock',r.lowStock?r.lowStock.length:0);
     renderDashOrders(r.recentOrders||[]);
     renderLowStock(r.lowStock||[]);
     renderChart(r.recentOrders||[]);
-  }catch(e){console.error(e);}
+  }catch(e){console.error('dash',e);}
 }
-
-function renderChart(orders) {
-  const el=document.getElementById('revenueChart'); if(!el) return;
-  const days=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date(); d.setDate(d.getDate()-i);
-    const key=d.toISOString().slice(0,10);
-    const label=d.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3);
-    const rev=orders.filter(o=>o.createdAt?.slice(0,10)===key&&o.status!=='cancelled').reduce((s,o)=>s+(o.total||0),0);
-    days.push({label,rev});
-  }
-  const max=Math.max(...days.map(d=>d.rev),1);
-  const total=days.reduce((s,d)=>s+d.rev,0);
-  setText('chartTotal','₹'+total.toLocaleString('en-IN'));
-  const maxRev=Math.max(...days.map(d=>d.rev));
-  el.innerHTML=days.map(d=>{
-    const pct=Math.max((d.rev/max)*100,4);
-    const cls=d.rev===maxRev&&d.rev>0?'chart-bar today':pct>60?'chart-bar high':'chart-bar';
-    return`<div class="chart-bar-col" title="${d.label}: ₹${d.rev.toLocaleString('en-IN')}"><div class="${cls}" style="height:${pct}%"></div><div class="chart-label">${d.label}</div></div>`;
+function renderChart(orders){
+  var el=document.getElementById('revenueChart');if(!el)return;
+  var days=[];
+  for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);var key=d.toISOString().slice(0,10);var lbl=d.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3);var rev=orders.filter(function(o){return o.createdAt&&o.createdAt.slice(0,10)===key&&o.status!=='cancelled';}).reduce(function(s,o){return s+(o.total||0);},0);days.push({lbl:lbl,rev:rev});}
+  var max=Math.max.apply(null,days.map(function(d){return d.rev;}).concat([1]));
+  setText('chartTotal','₹'+days.reduce(function(s,d){return s+d.rev;},0).toLocaleString('en-IN'));
+  var maxRev=Math.max.apply(null,days.map(function(d){return d.rev;}));
+  el.innerHTML=days.map(function(d){var pct=Math.max((d.rev/max)*100,4);var cls=d.rev===maxRev&&d.rev>0?'cb top':pct>60?'cb hi':'cb';return'<div class="chart-col" title="'+d.lbl+': ₹'+d.rev.toLocaleString('en-IN')+'"><div class="'+cls+'" style="height:'+pct+'%"></div><div class="chart-lbl">'+d.lbl+'</div></div>';}).join('');
+}
+function renderDashOrders(orders){
+  var el=document.getElementById('recentOrdersTable');if(!el)return;
+  if(!orders.length){el.innerHTML='<tr><td colspan="5" style="text-align:center;color:#bbb;padding:14px;">No orders yet</td></tr>';return;}
+  el.innerHTML=orders.slice(0,6).map(function(o){
+    return '<tr style="border-bottom:1px solid #f5f0fb;">'
+      +'<td style="padding:9px 10px;"><b style="color:#4A1070;">#'+o.orderId+'</b></td>'
+      +'<td style="padding:9px 10px;"><span class="ord-av">'+((o.user&&o.user.name)||'?').charAt(0).toUpperCase()+'</span>'+((o.user&&o.user.name)||'—')+'</td>'
+      +'<td style="padding:9px 10px;"><b>₹'+((o.total||0).toLocaleString('en-IN'))+'</b></td>'
+      +'<td style="padding:9px 10px;"><span class="badge b-'+o.status+'">'+o.status+'</span></td>'
+      +'<td style="padding:9px 10px;white-space:nowrap;">'
+      +'<button class="btn btn-ok-g btn-sm" onclick="openOrdModal(''+o._id+'',''+o.orderId+'',''+o.status+'',''+(o.payment&&o.payment.method||'cod')+'',''+(o.payment&&o.payment.status||'pending')+'')">✏️</button> '
+      +'<button class="btn btn-ghost btn-sm" onclick="viewOrd(''+o._id+'')">👁</button>'
+      +'</td></tr>';
   }).join('');
 }
-
-function renderDashOrders(orders) {
-  const el=document.getElementById('recentOrdersTable'); if(!el) return;
-  if(!orders.length){el.innerHTML='<tr><td colspan="5" style="text-align:center;color:#bbb;padding:20px;">No orders yet</td></tr>';return;}
-  el.innerHTML=orders.slice(0,6).map(o=>`
-    <tr>
-      <td><b style="color:#4A1070;">#${o.orderId}</b></td>
-      <td><span class="ord-avatar">${(o.user?.name||'?').charAt(0).toUpperCase()}</span>${o.user?.name||'—'}</td>
-      <td><b>₹${(o.total||0).toLocaleString('en-IN')}</b></td>
-      <td><span class="badge b-${o.status}">${o.status}</span></td>
-      <td style="white-space:nowrap;">
-        <button class="btn btn-ok-g btn-sm" onclick="openOrderModal('${o._id}','${o.orderId}','${o.status}','${o.payment?.method||'cod'}','${o.payment?.status||'pending'}')">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="viewOrderDetail('${o._id}')">👁</button>
-      </td>
-    </tr>`).join('');
+function renderLowStock(items){
+  var el=document.getElementById('lowStockList');if(!el)return;
+  if(!items.length){el.innerHTML='<p style="text-align:center;color:#00a651;padding:12px;font-size:.81rem;">✅ All stocked!</p>';return;}
+  el.innerHTML=items.slice(0,8).map(function(p){return'<div class="ls-item"><span style="font-weight:700;">'+(p.emoji||'📦')+' '+p.name+'</span><span style="font-weight:900;color:'+(p.totalStock===0?'#c62828':'#f7941d')+';">'+p.totalStock+' '+(p.totalStock===0?'❌':'⚠️')+'</span></div>';}).join('');
 }
-
-function renderLowStock(items) {
-  const el=document.getElementById('lowStockList'); if(!el) return;
-  if(!items.length){el.innerHTML='<p style="text-align:center;color:#00a651;padding:20px;font-size:.82rem;">✅ All products well stocked!</p>';return;}
-  el.innerHTML=items.slice(0,8).map(p=>`<div class="ls-item"><span class="ls-name">${p.emoji||'📦'} ${p.name}</span><span style="font-weight:900;color:${p.totalStock===0?'#c62828':'#f7941d'};">${p.totalStock} units ${p.totalStock===0?'❌':'⚠️'}</span></div>`).join('');
-}
-
-// ── ORDER MODALS ──────────────────────────────────────────────
-function openOrderModal(dbId,orderId,status,payMethod,payStatus){
+function openOrdModal(dbId,orderId,status,payMethod,payStatus){
   document.getElementById('modalOrderDbId').value=dbId;
   document.getElementById('modalOrderId').textContent=orderId;
   document.getElementById('modalStatus').value=status;
@@ -1068,98 +866,82 @@ function openOrderModal(dbId,orderId,status,payMethod,payStatus){
   document.getElementById('modalMsg').value='';
   document.getElementById('orderModal').style.display='flex';
 }
-function closeOrderModal(){document.getElementById('orderModal').style.display='none';}
-async function updateOrderStatus(){
-  const id=document.getElementById('modalOrderDbId').value;
-  const status=document.getElementById('modalStatus').value;
-  const message=document.getElementById('modalMsg').value.trim();
-  const payM=document.getElementById('modalPayMethod').value;
-  const payS=document.getElementById('modalPayStatus').value;
-  try{await apiFetch(`/admin/orders/${id}/status`,'PUT',{status,message});await apiFetch(`/admin/orders/${id}/payment`,'PUT',{method:payM,status:payS});toast('✅ Order updated!');closeOrderModal();loadDashboard();}catch(e){toast('❌ '+e.message);}
-}
-async function viewOrderDetail(id){
-  const modal=document.getElementById('orderDetailModal'),body=document.getElementById('ordDetailBody');
-  modal.style.display='flex';body.innerHTML='<div style="text-align:center;padding:40px;color:#bbb;">Loading…</div>';
+async function updateOrd(){
+  var id=document.getElementById('modalOrderDbId').value;
   try{
-    const o=await apiFetch('/admin/orders/'+id),order=o.order||o;
-    const items=(order.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f5f0fb;font-size:.84rem;"><span>${i.emoji||'🛍️'} ${i.name} (${i.size||'—'}) ×${i.qty}</span><span style="font-weight:700;">₹${((i.price||0)*i.qty).toLocaleString('en-IN')}</span></div>`).join('');
-    body.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;"><div><div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:6px;">Customer</div><div style="font-weight:700;">${order.user?.name||'—'}</div><div style="font-size:.82rem;color:#999;">${order.user?.email||''}</div><div style="font-size:.82rem;color:#999;">${order.user?.phone||''}</div></div><div><div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:6px;">Shipping</div><div style="font-size:.82rem;line-height:1.7;">${order.shippingAddress?.name||''}, ${order.shippingAddress?.phone||''}<br>${order.shippingAddress?.line1||''}<br>${order.shippingAddress?.city||''}, ${order.shippingAddress?.state||''} — ${order.shippingAddress?.pincode||''}</div></div></div>
-    <div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:8px;">Items</div>${items}
-    <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:.88rem;"><span>Subtotal</span><span>₹${(order.subtotal||0).toLocaleString('en-IN')}</span></div>
-    ${order.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;color:#00a651;"><span>Discount</span><span>−₹${order.discount.toLocaleString('en-IN')}</span></div>`:''}
-    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;"><span>Delivery</span><span>${order.deliveryFee===0?'FREE':'₹'+order.deliveryFee}</span></div>
-    <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:1rem;font-weight:900;border-top:2px solid #f5f0fb;"><span>Total</span><span style="color:#4A1070;">₹${(order.total||0).toLocaleString('en-IN')}</span></div>
-    <div style="margin-top:14px;text-align:right;"><button onclick="openOrderModal('${order._id}','${order.orderId}','${order.status}','${order.payment?.method||'cod'}','${order.payment?.status||'pending'}')" class="btn btn-pp">✏️ Update Status</button></div>`;
-  }catch(e){body.innerHTML='<div style="color:#c62828;padding:16px;">Error: '+e.message+'</div>';}
-}
-function closeOrderDetail(){document.getElementById('orderDetailModal').style.display='none';}
-
-// ── CUSTOMERS ─────────────────────────────────────────────────
-let custsData=[];
-async function loadCustomers(){
-  try{const r=await apiFetch('/admin/users?limit=200');custsData=r.users||[];renderCustomers(custsData);}catch(e){}
-}
-function renderCustomers(users){
-  const el=document.getElementById('customersTable');
-  if(!users.length){el.innerHTML='<tr><td colspan="7" style="text-align:center;color:#bbb;padding:24px;">No customers</td></tr>';return;}
-  el.innerHTML=users.map(u=>`<tr><td><b>${u.name}</b></td><td>${u.email||'—'}</td><td>${u.phone||'—'}</td><td>${u.isVerified?'✅':'⏳'}</td><td>${fmtDate(u.createdAt)}</td><td>${u.addresses?.length||0} saved</td><td><button class="btn btn-er-g btn-sm" onclick="deleteCustomer('${u._id}','${u.name}')">🗑</button></td></tr>`).join('');
-}
-function searchCustomers(){const q=document.getElementById('custSearch').value.toLowerCase();renderCustomers(q?custsData.filter(u=>u.name?.toLowerCase().includes(q)||u.email?.toLowerCase().includes(q)):custsData);}
-async function deleteCustomer(id,name){if(!confirm(`Delete "${name}"?`))return;try{await apiFetch('/admin/users/'+id,'DELETE');toast('🗑 Deleted');loadCustomers();}catch(e){toast('❌ '+e.message);}}
-
-// ── ADMIN USERS ───────────────────────────────────────────────
-async function loadAdminUsers(){
-  try{
-    const r=await apiFetch('/admin/admins'),el=document.getElementById('adminUsersTable'),admins=r.admins||[];
-    if(!admins.length){el.innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:24px;">No admin users</td></tr>';return;}
-    el.innerHTML=admins.map(u=>`<tr><td><b>${u.name}</b></td><td>${u.email}</td><td><span class="badge" style="background:${u.role==='super_admin'?'#ede7f6':'#e8f5e9'};color:${u.role==='super_admin'?'#4A1070':'#2e7d32'};">${u.role}</span></td><td>${u.role!=='super_admin'?`<button class="btn btn-er-g btn-sm" onclick="deleteAdminUser('${u._id}','${u.name}')">🗑</button>`:'—'}</td></tr>`).join('');
+    await apiFetch('/admin/orders/'+id+'/status','PUT',{status:document.getElementById('modalStatus').value,message:document.getElementById('modalMsg').value.trim()});
+    await apiFetch('/admin/orders/'+id+'/payment','PUT',{method:document.getElementById('modalPayMethod').value,status:document.getElementById('modalPayStatus').value});
+    toast('✅ Order updated!');document.getElementById('orderModal').style.display='none';loadDash();
   }catch(e){toast('❌ '+e.message);}
 }
-async function addAdminUser(){
-  const name=document.getElementById('newAdminName').value.trim(),email=document.getElementById('newAdminEmail').value.trim(),password=document.getElementById('newAdminPass').value,role=document.getElementById('newAdminRole').value,err=document.getElementById('addAdminErr');
+async function viewOrd(id){
+  var modal=document.getElementById('orderDetailModal'),body=document.getElementById('ordDetailBody');
+  modal.style.display='flex';body.innerHTML='<div style="text-align:center;padding:28px;color:#bbb;">Loading…</div>';
+  try{
+    var o=await apiFetch('/admin/orders/'+id),order=o.order||o;
+    var items=(order.items||[]).map(function(i){return'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f0fb;font-size:.83rem;"><span>'+(i.emoji||'🛍️')+' '+i.name+' ('+(i.size||'—')+') ×'+i.qty+'</span><span style="font-weight:700;">₹'+((i.price||0)*i.qty).toLocaleString('en-IN')+'</span></div>';}).join('');
+    var addr=order.shippingAddress||{};
+    body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'
+      +'<div><div style="font-size:.69rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:4px;">Customer</div>'
+      +'<div style="font-weight:700;">'+((order.user&&order.user.name)||'—')+'</div>'
+      +'<div style="font-size:.8rem;color:#999;">'+((order.user&&order.user.email)||'')+'</div></div>'
+      +'<div><div style="font-size:.69rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:4px;">Shipping</div>'
+      +'<div style="font-size:.8rem;line-height:1.6;">'+(addr.name||'')+', '+(addr.phone||'')+'<br>'+(addr.line1||'')+'<br>'+(addr.city||'')+', '+(addr.pincode||'')+'</div></div>'
+      +'</div><div style="font-size:.69rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:7px;">Items</div>'+items
+      +'<div style="display:flex;justify-content:space-between;padding:9px 0;font-size:.86rem;"><span>Subtotal</span><span>₹'+((order.subtotal||0).toLocaleString('en-IN'))+'</span></div>'
+      +(order.discount>0?'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.86rem;color:#00a651;"><span>Discount</span><span>−₹'+order.discount.toLocaleString('en-IN')+'</span></div>':'')
+      +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.86rem;"><span>Delivery</span><span>'+(order.deliveryFee===0?'FREE':'₹'+order.deliveryFee)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:9px 0;font-size:.95rem;font-weight:900;border-top:2px solid #f5f0fb;"><span>Total</span><span style="color:#4A1070;">₹'+((order.total||0).toLocaleString('en-IN'))+'</span></div>'
+      +'<div style="margin-top:12px;text-align:right;"><button onclick="openOrdModal(''+order._id+'',''+order.orderId+'',''+order.status+'',''+(order.payment&&order.payment.method||'cod')+'',''+(order.payment&&order.payment.status||'pending')+'')" class="btn btn-pp">✏️ Update</button></div>';
+  }catch(e){body.innerHTML='<div style="color:#c62828;padding:12px;">'+e.message+'</div>';}
+}
+var custsData=[];
+async function loadCusts(){try{var r=await apiFetch('/admin/users?limit=200');custsData=r.users||[];renderCusts(custsData);}catch(e){}}
+function renderCusts(u){var el=document.getElementById('customersTable');if(!u.length){el.innerHTML='<tr><td colspan="7" style="text-align:center;color:#bbb;padding:18px;">No customers</td></tr>';return;}el.innerHTML=u.map(function(x){return'<tr><td><b>'+x.name+'</b></td><td>'+(x.email||'—')+'</td><td>'+(x.phone||'—')+'</td><td>'+(x.isVerified?'✅':'⏳')+'</td><td>'+fmtDate(x.createdAt)+'</td><td>'+(x.addresses?x.addresses.length:0)+'</td><td><button class="btn btn-er-g btn-sm" onclick="delCust(''+x._id+'',''+x.name+'')">🗑</button></td></tr>';}).join('');}
+function searchCusts(){var q=document.getElementById('custSearch').value.toLowerCase();renderCusts(q?custsData.filter(function(u){return(u.name&&u.name.toLowerCase().includes(q))||(u.email&&u.email.toLowerCase().includes(q));}):custsData);}
+async function delCust(id,name){if(!confirm('Delete "'+name+'"?'))return;try{await apiFetch('/admin/users/'+id,'DELETE');toast('🗑 Deleted');loadCusts();}catch(e){toast('❌ '+e.message);}}
+async function loadAdmins(){
+  try{var r=await apiFetch('/admin/admins'),el=document.getElementById('adminUsersTable'),a=r.admins||[];
+  if(!a.length){el.innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:18px;">No admins</td></tr>';return;}
+  el.innerHTML=a.map(function(u){return'<tr><td><b>'+u.name+'</b></td><td>'+u.email+'</td>'+'<td><span class="badge" style="background:'+(u.role==='super_admin'?'#ede7f6':'#e8f5e9')+';color:'+(u.role==='super_admin'?'#4A1070':'#2e7d32')+';">'+u.role+'</span></td>'+'<td>'+(u.role!=='super_admin'?'<button class="btn btn-er-g btn-sm" onclick="delAdmin(''+u._id+'',''+u.name+'')">🗑</button>':'—')+'</td></tr>';}).join('');
+  }catch(e){toast('❌ '+e.message);}
+}
+async function addAdmin(){
+  var name=document.getElementById('newAdminName').value.trim(),email=document.getElementById('newAdminEmail').value.trim(),pw=document.getElementById('newAdminPass').value,role=document.getElementById('newAdminRole').value,err=document.getElementById('addAdminErr');
   err.style.display='none';
-  if(!name||!email||!password){err.textContent='⚠️ All fields required';err.style.display='block';return;}
-  if(password.length<8){err.textContent='⚠️ Password min 8 chars';err.style.display='block';return;}
-  try{await apiFetch('/admin/admins','POST',{name,email,password,role});toast('✅ Admin added!');document.getElementById('newAdminName').value='';document.getElementById('newAdminEmail').value='';document.getElementById('newAdminPass').value='';loadAdminUsers();}catch(e){err.textContent='❌ '+e.message;err.style.display='block';}
+  if(!name||!email||!pw){err.textContent='All fields required';err.style.display='block';return;}
+  if(pw.length<8){err.textContent='Password min 8 chars';err.style.display='block';return;}
+  try{await apiFetch('/admin/admins','POST',{name:name,email:email,password:pw,role:role});toast('✅ Admin added');['newAdminName','newAdminEmail','newAdminPass'].forEach(function(id){document.getElementById(id).value='';});loadAdmins();}catch(e){err.textContent=e.message;err.style.display='block';}
 }
-async function deleteAdminUser(id,name){if(!confirm(`Delete admin "${name}"?`))return;try{await apiFetch('/admin/admins/'+id,'DELETE');toast('🗑 Deleted');loadAdminUsers();}catch(e){toast('❌ '+e.message);}}
-
-// ── REPORTS ───────────────────────────────────────────────────
-function setReportRange(days){const to=new Date(),from=new Date();from.setDate(from.getDate()-days);document.getElementById('rptFrom').value=from.toISOString().slice(0,10);document.getElementById('rptTo').value=to.toISOString().slice(0,10);loadReports();}
-async function loadReports(){
-  const from=document.getElementById('rptFrom').value,to=document.getElementById('rptTo').value;
-  if(!from||!to){toast('⚠️ Select date range');return;}
+async function delAdmin(id,name){if(!confirm('Delete "'+name+'"?'))return;try{await apiFetch('/admin/admins/'+id,'DELETE');toast('🗑 Deleted');loadAdmins();}catch(e){toast('❌ '+e.message);}}
+function setRptRange(days){var to=new Date(),from=new Date();from.setDate(from.getDate()-days);document.getElementById('rptFrom').value=from.toISOString().slice(0,10);document.getElementById('rptTo').value=to.toISOString().slice(0,10);loadRpt();}
+async function loadRpt(){
+  var from=document.getElementById('rptFrom').value,to=document.getElementById('rptTo').value;
+  if(!from||!to){toast('Select date range');return;}
   try{
-    const r=await apiFetch(`/admin/reports/sales?from=${from}&to=${to}`);
-    const sd=r.salesByDay||[],tp=r.topProducts||[];
-    const day=document.getElementById('salesByDayTable'),top=document.getElementById('topProdsTable');
-    if(!sd.length){day.innerHTML='<tr><td colspan="3" style="text-align:center;color:#bbb;padding:16px;">No data</td></tr>';}
-    else{const totR=sd.reduce((a,b)=>a+b.revenue,0),totO=sd.reduce((a,b)=>a+b.orders,0);day.innerHTML=sd.map(d=>`<tr><td>${d._id}</td><td>${d.orders}</td><td>₹${d.revenue.toLocaleString('en-IN')}</td></tr>`).join('')+`<tr style="background:#f8f5fd;font-weight:900;"><td>Total</td><td>${totO}</td><td>₹${totR.toLocaleString('en-IN')}</td></tr>`;}
-    if(!tp.length){top.innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:16px;">No data</td></tr>';}
-    else top.innerHTML=tp.map((p,i)=>`<tr><td>${i+1}</td><td>${p._id}</td><td><b>${p.sold}</b></td><td>₹${(p.revenue||0).toLocaleString('en-IN')}</td></tr>`).join('');
+    var r=await apiFetch('/admin/reports/sales?from='+from+'&to='+to);
+    var sd=r.salesByDay||[],tp=r.topProducts||[];
+    if(!sd.length)document.getElementById('salesByDayTable').innerHTML='<tr><td colspan="3" style="text-align:center;color:#bbb;padding:10px;">No data</td></tr>';
+    else{var tR=sd.reduce(function(a,b){return a+b.revenue;},0),tO=sd.reduce(function(a,b){return a+b.orders;},0);document.getElementById('salesByDayTable').innerHTML=sd.map(function(d){return'<tr><td>'+d._id+'</td><td>'+d.orders+'</td><td>₹'+d.revenue.toLocaleString('en-IN')+'</td></tr>';}).join('')+'<tr style="background:#f8f5fd;font-weight:900;"><td>Total</td><td>'+tO+'</td><td>₹'+tR.toLocaleString('en-IN')+'</td></tr>';}
+    if(!tp.length)document.getElementById('topProdsTable').innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:10px;">No data</td></tr>';
+    else document.getElementById('topProdsTable').innerHTML=tp.map(function(p,i){return'<tr><td>'+(i+1)+'</td><td>'+p._id+'</td><td><b>'+p.sold+'</b></td><td>₹'+((p.revenue||0).toLocaleString('en-IN'))+'</td></tr>';}).join('');
   }catch(e){toast('❌ '+e.message);}
 }
-
-// ── AI ASSISTANT ──────────────────────────────────────────────
-let aiConversation=[];
+var aiConvo=[];
 async function askAI(preset){
-  const input=document.getElementById('aiInput'),respDiv=document.getElementById('aiResponse');
-  const question=preset||input?.value?.trim();
-  if(!question)return;
-  if(input)input.value='';
-  respDiv.style.display='block';
-  respDiv.innerHTML='<span style="color:#aaa;font-style:italic;">✨ Thinking…</span>';
-  let ctx='You are an AI assistant for KidsCart, a kids fashion e-commerce store in India. ';
-  try{const r=await apiFetch('/admin/dashboard');const s=r.stats||{};ctx+=`Store stats: ${s.activeOrders||0} orders, revenue ₹${(s.activeRevenue||0).toLocaleString('en-IN')}, ${s.totalUsers||0} customers, ${r.lowStock?.length||0} low stock items. `;if(r.lowStock?.length)ctx+=`Low stock: ${r.lowStock.slice(0,3).map(p=>p.name).join(', ')}. `;}catch(e){}
-  aiConversation.push({role:'user',content:question});
-  if(aiConversation.length>8)aiConversation=aiConversation.slice(-6);
+  var inp=document.getElementById('aiInput'),resp=document.getElementById('aiResponse');
+  var q=preset||(inp&&inp.value.trim());if(!q)return;if(inp)inp.value='';
+  resp.style.display='block';resp.textContent='Thinking…';resp.style.fontStyle='italic';resp.style.color='#aaa';
+  var ctx='You are an AI assistant for KidsCart, a kids fashion e-commerce in India. Be concise, max 80 words. ';
+  try{var r=await apiFetch('/admin/dashboard');var s=r.stats||{};ctx+='Orders:'+s.activeOrders+', Revenue:₹'+s.activeRevenue+'. ';}catch(e){}
+  aiConvo.push({role:'user',content:q});if(aiConvo.length>6)aiConvo=aiConvo.slice(-4);
   try{
-    const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:ctx+'Give concise, actionable answers in under 100 words.',messages:aiConversation})});
-    const data=await response.json();
-    const reply=data.content?.[0]?.text||'Sorry, no response.';
-    aiConversation.push({role:'assistant',content:reply});
-    respDiv.innerHTML=reply.replace(/\n/g,'<br>');
-  }catch(e){respDiv.innerHTML='<span style="color:#c62828;">AI unavailable. Try again.</span>';}
+    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,system:ctx,messages:aiConvo})});
+    var data=await res.json();var reply=(data.content&&data.content[0]&&data.content[0].text)||'No response.';
+    aiConvo.push({role:'assistant',content:reply});
+    resp.style.fontStyle='normal';resp.style.color='#333';resp.innerHTML=reply.replace(/
+/g,'<br>');
+  }catch(e){resp.style.color='#c62828';resp.textContent='AI unavailable. Try again.';}
 }
 </script>
 </body>

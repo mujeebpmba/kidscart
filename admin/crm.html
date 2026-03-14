@@ -6,46 +6,485 @@
 <title>CRM — KidsCart Admin</title>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin/admin-styles.css">
-<script>
-window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};
-// Inline fast auth - no external shared.js for login
-const API=window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
-let token=localStorage.getItem('kc_admin_token')||'';
-let adminUser=null;
-async function apiFetch(path,method='GET',body=null){const opts={method,headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})}};if(body)opts.body=JSON.stringify(body);const r=await fetch(API+path,opts);const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Error '+r.status);return d;}
-function toast(msg,dur=2800){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
-function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
-function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
-function fmtT(d){const diff=Date.now()-d;if(diff<86400000)return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});if(diff<604800000)return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});}
-function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data:'))return s;return window.location.origin+(s.startsWith('/')?s:'/'+s);}
-function showLoginScreen(){document.getElementById('loginScreen').style.display='flex';document.getElementById('adminApp').style.display='none';}
-function showAdminApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminApp').style.display='flex';}
-async function adminLogin(){
-  const email=document.getElementById('adminEmail').value.trim(),pass=document.getElementById('adminPass').value,err=document.getElementById('loginErr');
-  err.style.display='none';
-  if(!email||!pass){err.textContent='⚠️ Enter email and password';err.style.display='block';return;}
-  try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Login failed');if(!['admin','super_admin'].includes(d.user.role))throw new Error('Not an admin');token=d.token;adminUser=d.user;localStorage.setItem('kc_admin_token',token);if(window._kcAfterLogin)window._kcAfterLogin(d.user);}catch(e){err.textContent='❌ '+e.message;err.style.display='block';}
+<style>/* ============================================================
+   KidsCart Admin v3 — Premium UI Styles
+   Shared across all admin pages via <link rel="stylesheet">
+   ============================================================ */
+
+/* ══════════════════════════════════════════
+   KIDSCART ADMIN v3 — Premium UI
+   Light body + Dark purple sidebar
+══════════════════════════════════════════ */
+
+/* ── Reset & base ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#F0ECF7;color:#1a0a2e;min-height:100vh;}
+
+/* ── Sidebar ── */
+.sidebar{
+  position:fixed;left:0;top:0;width:240px;height:100vh;
+  background:linear-gradient(180deg,#4A1070 0%,#3a0d5c 50%,#2d0a47 100%);
+  display:flex;flex-direction:column;z-index:200;
+  transition:width .25s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
 }
-function adminLogout(){token='';adminUser=null;localStorage.removeItem('kc_admin_token');showLoginScreen();}
-async function adminForgot(){const email=document.getElementById('forgotEmail').value.trim();if(!email){toast('⚠️ Enter email');return;}try{await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});toast('✅ Reset link sent');document.getElementById('forgotBox').style.display='none';}catch(e){toast('❌ '+e.message);}}
-window.KC={init(cb){if(token){apiFetch('/auth/me').then(d=>{if(d.user&&['admin','super_admin'].includes(d.user.role)){adminUser=d.user;if(cb)cb(d.user);}else{token='';localStorage.removeItem('kc_admin_token');showLoginScreen();}}).catch(()=>showLoginScreen());}else showLoginScreen();},getUser:()=>adminUser,getToken:()=>token};
-// Sidebar collapse
-let _sbOpen=true;
-function toggleSidebarGlobal(){const sb=document.getElementById('sidebar'),main=document.getElementById('mainArea'),btn=sb?.querySelector('.sb-toggle');if(!sb)return;_sbOpen=!_sbOpen;sb.classList.toggle('collapsed',!_sbOpen);if(main)main.classList.toggle('expanded',!_sbOpen);if(btn)btn.textContent=_sbOpen?'◀':'▶';localStorage.setItem('kc_sb',_sbOpen?'1':'0');}
-function initSidebarState(){if(localStorage.getItem('kc_sb')==='0'){setTimeout(()=>{const sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');if(sb){sb.classList.add('collapsed');if(main)main.classList.add('expanded');_sbOpen=false;const btn=sb.querySelector('.sb-toggle');if(btn)btn.textContent='▶';}},100);}}
-</script>
-<style>
+.sidebar.collapsed{width:68px;}
+.sidebar.collapsed .sb-label,
+.sidebar.collapsed .sb-logo-text,
+.sidebar.collapsed .sb-logo-sub,
+.sidebar.collapsed .nav-group-label,
+.sidebar.collapsed .sb-user-info,
+.sidebar.collapsed .nav-badge{display:none;}
+
+.sb-top{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.sb-brand{display:flex;align-items:center;gap:11px;min-width:0;}
+.sb-logo-img{width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.sb-logo-img img{width:26px;height:26px;object-fit:contain;}
+.sb-logo-text{font-family:'Poppins',sans-serif;font-weight:800;font-size:.95rem;color:#fff;white-space:nowrap;}
+.sb-logo-sub{font-size:.6rem;color:rgba(255,255,255,.4);font-weight:600;white-space:nowrap;}
+.sb-toggle{width:28px;height:28px;background:rgba(255,255,255,.1);border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.7);font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;}
+.sb-toggle:hover{background:rgba(255,255,255,.18);}
+
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto;overflow-x:hidden;}
+.sb-nav::-webkit-scrollbar{width:3px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
+
+.nav-group-label{font-size:.58rem;font-weight:800;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;padding:10px 10px 4px;white-space:nowrap;}
+
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 10px;
+  border-radius:10px;cursor:pointer;color:rgba(255,255,255,.6);
+  font-size:.82rem;font-weight:700;transition:.15s;margin-bottom:2px;
+  white-space:nowrap;position:relative;text-decoration:none;
+}
+.nav-item:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.95);}
+.nav-item.active{
+  background:rgba(255,255,255,.15);color:#fff;
+  border:1px solid rgba(255,255,255,.15);
+}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:55%;background:#f7941d;border-radius:0 3px 3px 0;
+}
+.nav-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0;}
+.nav-badge{
+  margin-left:auto;background:#25D366;color:#fff;
+  border-radius:20px;padding:1px 7px;font-size:.6rem;font-weight:800;
+  flex-shrink:0;
+}
+.nav-badge.red{background:#e53935;}
+
+.sb-user{
+  padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.sb-avatar{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#f7941d,#e07819);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:800;color:#fff;
+}
+.sb-user-name{font-size:.78rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-user-role{font-size:.62rem;color:rgba(255,255,255,.4);white-space:nowrap;}
+.sb-logout{
+  width:28px;height:28px;border:none;border-radius:8px;
+  background:rgba(255,0,0,.15);color:rgba(255,120,120,.8);
+  cursor:pointer;font-size:.8rem;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+}
+.sb-logout:hover{background:rgba(255,0,0,.25);}
+
+/* ── Main area ── */
+.main{
+  margin-left:240px;min-height:100vh;display:flex;flex-direction:column;
+  transition:margin-left .25s cubic-bezier(.4,0,.2,1);
+}
+.main.expanded{margin-left:68px;}
+
+/* ── Topbar ── */
+.topbar{
+  background:#fff;padding:12px 28px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:1px solid rgba(123,45,139,.08);
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 1px 20px rgba(74,16,112,.06);
+}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.page-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.1rem;color:#1a0a2e;}
+.breadcrumb{font-size:.75rem;color:#aaa;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+
+.notif-btn{
+  position:relative;width:36px;height:36px;background:#F0ECF7;
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:1px solid rgba(123,45,139,.1);font-size:.9rem;
+  transition:.2s;
+}
+.notif-btn:hover{background:#e8e0f5;}
+.notif-dot{
+  position:absolute;top:7px;right:8px;width:8px;height:8px;
+  background:#f7941d;border-radius:50%;border:2px solid #fff;
+}
+.ai-btn{
+  display:flex;align-items:center;gap:6px;padding:8px 16px;
+  background:linear-gradient(135deg,#f7941d,#e07819);
+  border:none;border-radius:20px;color:#fff;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:.78rem;cursor:pointer;transition:.2s;
+  box-shadow:0 4px 12px rgba(247,148,29,.3);
+}
+.ai-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(247,148,29,.4);}
+.view-shop-btn{
+  padding:8px 16px;background:#F0ECF7;border:1px solid rgba(123,45,139,.15);
+  border-radius:20px;color:#4A1070;font-family:'Nunito',sans-serif;font-weight:800;
+  font-size:.78rem;text-decoration:none;transition:.2s;
+}
+.view-shop-btn:hover{background:#e8e0f5;}
+.admin-badge{
+  background:#ede7f6;color:#4A1070;font-size:.75rem;font-weight:800;
+  padding:6px 14px;border-radius:20px;border:1px solid rgba(123,45,139,.15);
+}
+
+/* ── Content ── */
+.content{flex:1;padding:24px 28px;}
+
+/* ── Panels ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── Stat cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.stat-card{
+  background:#fff;border-radius:16px;padding:20px;
+  border:1px solid rgba(123,45,139,.07);
+  box-shadow:0 2px 16px rgba(74,16,112,.06);
+  position:relative;overflow:hidden;transition:.2s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(74,16,112,.1);}
+.stat-card::after{
+  content:'';position:absolute;top:-24px;right:-24px;
+  width:80px;height:80px;border-radius:50%;opacity:.08;
+}
+.stat-card.v1::after{background:#4A1070;}
+.stat-card.v2::after{background:#f7941d;}
+.stat-card.v3::after{background:#00a651;}
+.stat-card.v4::after{background:#e53935;}
+.stat-icon{
+  width:40px;height:40px;border-radius:12px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.v1 .stat-icon{background:#ede7f6;}
+.v2 .stat-icon{background:#fff3e0;}
+.v3 .stat-icon{background:#e8f5e9;}
+.v4 .stat-icon{background:#ffebee;}
+.stat-label{font-size:.72rem;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.stat-value{font-family:'Poppins',sans-serif;font-size:1.9rem;font-weight:900;color:#1a0a2e;line-height:1;}
+.stat-sub{font-size:.7rem;color:#bbb;margin-top:6px;font-weight:600;}
+.stat-trend{
+  position:absolute;top:16px;right:16px;
+  font-size:.68rem;font-weight:800;padding:3px 8px;border-radius:20px;
+}
+.trend-up{background:#e8f5e9;color:#2e7d32;}
+.trend-dn{background:#ffebee;color:#c62828;}
+
+/* ── Dashboard grid ── */
+.dash-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-bottom:18px;}
+.dash-grid-bottom{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+
+/* ── Cards ── */
+.card{
+  background:#fff;border-radius:16px;padding:22px 24px;
+  border:1px solid rgba(123,45,139,.07);
+  box-shadow:0 2px 16px rgba(74,16,112,.05);margin-bottom:20px;
+}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.card-title{font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:800;color:#1a0a2e;}
+.card-action{
+  font-size:.75rem;font-weight:800;color:#4A1070;text-decoration:none;
+  padding:5px 12px;background:#ede7f6;border-radius:20px;border:none;cursor:pointer;
+  transition:.15s;
+}
+.card-action:hover{background:#d1c4e9;}
+
+/* ── Chart ── */
+.chart-wrap{height:140px;display:flex;align-items:flex-end;gap:6px;padding-bottom:4px;}
+.chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.chart-bar{
+  width:100%;border-radius:6px 6px 0 0;
+  background:linear-gradient(180deg,#c9b3e8,#ddd5f5);
+  transition:.3s;min-height:4px;
+}
+.chart-bar.today{background:linear-gradient(180deg,#f7941d,#e07819);}
+.chart-bar.high{background:linear-gradient(180deg,#4A1070,#7B2D8B);}
+.chart-label{font-size:.6rem;color:#bbb;font-weight:700;}
+.chart-legend{display:flex;gap:16px;margin-top:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.68rem;color:#888;font-weight:700;}
+.legend-dot{width:8px;height:8px;border-radius:50%;}
+
+/* ── Recent orders table ── */
+.ord-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.ord-table th{
+  background:#f8f5fd;color:#4A1070;font-weight:800;
+  padding:10px 12px;text-align:left;white-space:nowrap;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.3px;
+}
+.ord-table td{padding:11px 12px;border-bottom:1px solid #f5f0fb;vertical-align:middle;}
+.ord-table tr:last-child td{border-bottom:none;}
+.ord-table tr:hover td{background:#faf7fe;}
+.ord-avatar{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,#4A1070,#7B2D8B);
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:.7rem;margin-right:8px;vertical-align:middle;
+}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:800;}
+.b-placed{background:#e3f2fd;color:#1565c0;}
+.b-confirmed{background:#e8f5e9;color:#2e7d32;}
+.b-processing{background:#fff8e1;color:#e65100;}
+.b-shipped{background:#e1f5fe;color:#0277bd;}
+.b-out_for_delivery{background:#f3e5f5;color:#6a1b9a;}
+.b-delivered{background:#e8f5e9;color:#1b5e20;}
+.b-cancelled{background:#ffebee;color:#b71c1c;}
+.b-returned{background:#fce4ec;color:#880e4f;}
+
+/* ── Low stock list ── */
+.ls-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid #f5f0fb;font-size:.82rem;
+}
+.ls-item:last-child{border-bottom:none;}
+.ls-name{font-weight:700;color:#1a0a2e;}
+.ls-stock{font-weight:900;font-size:.85rem;}
+
+/* ── AI Panel ── */
+.ai-panel{
+  background:linear-gradient(135deg,#f8f4ff,#ede7f6);
+  border:1px solid rgba(123,45,139,.15);border-radius:16px;padding:20px;
+}
+.ai-panel-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.ai-orb{
+  width:38px;height:38px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,#f7941d,#4A1070);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  box-shadow:0 4px 12px rgba(247,148,29,.3);
+}
+.ai-panel-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:.88rem;color:#1a0a2e;}
+.ai-panel-sub{font-size:.68rem;color:#999;font-weight:600;}
+.ai-chips{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.ai-chip{
+  background:#fff;border:1px solid rgba(123,45,139,.12);border-radius:10px;
+  padding:8px 12px;font-size:.75rem;color:#4A1070;cursor:pointer;font-weight:700;
+  transition:.15s;text-align:left;display:flex;align-items:center;gap:8px;
+}
+.ai-chip:hover{background:#ede7f6;border-color:rgba(123,45,139,.25);}
+.ai-input-wrap{display:flex;gap:8px;margin-top:4px;}
+.ai-input{
+  flex:1;padding:9px 14px;background:#fff;
+  border:1px solid rgba(123,45,139,.15);border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;color:#1a0a2e;
+}
+.ai-input:focus{border-color:#4A1070;}
+.ai-send-btn{
+  width:36px;height:36px;background:linear-gradient(135deg,#f7941d,#e07819);
+  border:none;border-radius:10px;cursor:pointer;font-size:.85rem;color:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 3px 10px rgba(247,148,29,.3);transition:.15s;
+}
+.ai-send-btn:hover{transform:translateY(-1px);}
+.ai-response{
+  background:#fff;border:1px solid rgba(123,45,139,.1);border-radius:10px;
+  padding:12px;margin-top:10px;font-size:.78rem;line-height:1.6;color:#333;
+  display:none;
+}
+.ai-typing{color:#aaa;font-style:italic;}
+
+/* ── Quick actions ── */
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.qa-card{
+  background:#fff;border:1px solid rgba(123,45,139,.08);border-radius:14px;
+  padding:16px 12px;text-align:center;cursor:pointer;transition:.2s;
+  text-decoration:none;display:block;
+}
+.qa-card:hover{background:#f8f5fd;border-color:rgba(123,45,139,.2);transform:translateY(-2px);}
+.qa-icon{
+  width:44px;height:44px;border-radius:12px;margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.qa-label{font-size:.72rem;font-weight:800;color:#4A1070;}
+
+/* ── Customers panel ── */
+.search-bar{display:flex;gap:10px;margin-bottom:16px;}
+.search-bar input,.search-bar select{
+  padding:9px 14px;border:1.5px solid #e8dff5;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;
+  transition:.2s;background:#fff;
+}
+.search-bar input{flex:1;}
+.search-bar input:focus,.search-bar select:focus{border-color:#4A1070;}
+
+/* ── Reports ── */
+.report-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* ── Tables (shared) ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.83rem;}
+th{background:#f8f5fd;color:#4A1070;font-weight:800;padding:10px 12px;text-align:left;white-space:nowrap;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;}
+td{padding:11px 12px;border-bottom:1px solid #f5f0fb;vertical-align:middle;}
+tr:hover td{background:#faf7fe;}
+
+/* ── Buttons ── */
+.btn{padding:8px 16px;border-radius:10px;border:none;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;font-size:.82rem;transition:.15s;}
+.btn-sm{padding:5px 12px;font-size:.76rem;}
+.btn-pp{background:#4A1070;color:#fff;}
+.btn-pp:hover{background:#3a0d5c;}
+.btn-ok-g{background:#e8f5e9;color:#2e7d32;}
+.btn-ok-g:hover{background:#2e7d32;color:#fff;}
+.btn-er-g{background:#ffebee;color:#c62828;}
+.btn-er-g:hover{background:#c62828;color:#fff;}
+.btn-ghost{background:#f0ecf7;color:#4A1070;}
+.btn-ghost:hover{background:#ede7f6;}
+.btn-full{
+  width:100%;padding:12px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,#4A1070,#7B2D8B);color:#fff;
+  font-family:'Poppins',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;
+  transition:.2s;
+}
+.btn-full:hover{opacity:.9;}
+
+/* ── Forms ── */
+.fgroup{margin-bottom:14px;}
+.fgroup label{display:block;font-weight:800;font-size:.75rem;color:#666;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;}
+.fgroup input,.fgroup select,.fgroup textarea{
+  width:100%;padding:10px 14px;border:1.5px solid #e8dff5;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;transition:.2s;background:#fff;
+}
+.fgroup input:focus,.fgroup select:focus,.fgroup textarea:focus{border-color:#4A1070;box-shadow:0 0 0 3px rgba(74,16,112,.08);}
+.fgroup textarea{resize:vertical;min-height:80px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#1a0a2e;color:#fff;padding:11px 24px;border-radius:50px;
+  font-size:.85rem;font-weight:700;opacity:0;transition:.3s;z-index:9999;
+  pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── Order modal ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(26,10,46,.5);
+  z-index:500;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(4px);
+}
+.modal-box{
+  background:#fff;border-radius:20px;width:100%;max-width:460px;
+  box-shadow:0 24px 64px rgba(0,0,0,.2);animation:modalIn .2s ease;
+}
+.modal-box.wide{max-width:660px;max-height:92vh;overflow-y:auto;}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.modal-head{
+  padding:18px 22px;border-bottom:1px solid #f0e8fb;
+  display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;background:#fff;border-radius:20px 20px 0 0;z-index:1;
+}
+.modal-head h3{font-family:'Poppins',sans-serif;color:#4A1070;font-size:.95rem;font-weight:800;}
+.modal-close{
+  width:32px;height:32px;background:#f0ecf7;border:none;border-radius:50%;
+  cursor:pointer;font-size:1rem;color:#4A1070;display:flex;align-items:center;justify-content:center;
+}
+.modal-body{padding:22px;}
+
+/* ── Mobile header ── */
+.mob-header{display:none;}
+.mob-bar{display:none;}
+
+/* ── Notification drawer ── */
+.notif-drawer{
+  position:fixed;top:60px;right:20px;width:300px;background:#fff;
+  border-radius:16px;border:1px solid rgba(123,45,139,.12);
+  box-shadow:0 16px 40px rgba(74,16,112,.15);z-index:400;
+  display:none;overflow:hidden;
+}
+.notif-drawer.open{display:block;animation:modalIn .15s ease;}
+.notif-item{
+  padding:12px 16px;border-bottom:1px solid #f5f0fb;
+  display:flex;gap:10px;align-items:flex-start;cursor:pointer;
+  transition:.15s;
+}
+.notif-item:hover{background:#faf7fe;}
+.notif-item:last-child{border-bottom:none;}
+.notif-dot-indicator{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.notif-text{font-size:.78rem;color:#333;line-height:1.5;}
+.notif-time{font-size:.65rem;color:#bbb;margin-top:2px;font-weight:600;}
+
+/* ── Responsive ── */
+@media(max-width:1100px){
+  .sidebar{width:68px;}
+  .sb-label,.sb-logo-text,.sb-logo-sub,.nav-group-label,.sb-user-info,.nav-badge{display:none;}
+  .main{margin-left:68px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .dash-grid{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  .sidebar{display:none!important;}
+  .main{margin-left:0!important;margin-top:54px;margin-bottom:66px;}
+  .topbar{display:none!important;}
+  .content{padding:14px 12px!important;}
+  .stats-grid{grid-template-columns:1fr 1fr!important;gap:10px;margin-bottom:14px;}
+  .stat-card{padding:14px!important;}
+  .stat-value{font-size:1.5rem!important;}
+  .dash-grid,.dash-grid-bottom,.report-row{grid-template-columns:1fr!important;}
+  .grid2{grid-template-columns:1fr!important;}
+  .card{padding:16px!important;border-radius:14px!important;}
+  .quick-grid{grid-template-columns:repeat(4,1fr);gap:8px;}
+  .qa-icon{width:36px;height:36px;font-size:1rem;}
+
+  .mob-header{
+    display:flex;position:fixed;top:0;left:0;right:0;height:54px;
+    background:linear-gradient(90deg,#4A1070,#3a0d5c);z-index:300;
+    align-items:center;padding:0 14px;gap:10px;
+    box-shadow:0 2px 16px rgba(0,0,0,.2);
+  }
+  .mob-header img{height:28px;object-fit:contain;filter:brightness(0) invert(1);}
+  .mob-hdr-title{flex:1;color:#fff;font-weight:800;font-size:.9rem;font-family:'Poppins',sans-serif;margin:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mob-hdr-right{color:rgba(255,255,255,.7);font-size:.72rem;}
+
+  .mob-bar{
+    display:block;position:fixed;bottom:0;left:0;right:0;height:62px;
+    background:#fff;border-top:1.5px solid #f0e8fb;z-index:300;
+    box-shadow:0 -2px 16px rgba(74,16,112,.08);
+  }
+  .mob-bar-inner{display:flex;height:100%;overflow-x:auto;scrollbar-width:none;}
+  .mob-bar-inner::-webkit-scrollbar{display:none;}
+  .mob-btn{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:62px;flex:1;gap:2px;border:none;background:transparent;
+    cursor:pointer;color:#aaa;padding:6px 2px;font-family:'Nunito',sans-serif;
+    transition:.15s;position:relative;
+  }
+  .mob-btn.active{color:#4A1070;}
+  .mob-btn .mi{font-size:1.2rem;line-height:1;}
+  .mob-btn .ml{font-size:.52rem;font-weight:800;white-space:nowrap;}
+  .mob-badge{
+    position:absolute;top:4px;right:8px;background:#25D366;color:#fff;
+    border-radius:50%;min-width:16px;height:16px;font-size:.58rem;
+    font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 3px;
+  }
+  #orderDetailModal .modal-box{border-radius:20px 20px 0 0;margin-top:auto;}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr!important;}
+}
+
+/* ── Page-specific additions ── */
+/* CRM */
 .crm-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
 .crm-stat{background:#fff;border-radius:14px;padding:16px 14px;box-shadow:0 2px 12px rgba(74,16,112,.06);text-align:center;border:1px solid rgba(123,45,139,.07);}
 .crm-stat p{font-size:.62rem;color:#999;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
 .crm-stat h3{font-size:1.6rem;font-weight:900;font-family:'Poppins',sans-serif;margin:0;}
-.crm-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
-.view-tabs{display:flex;gap:4px;background:#f8f5fd;border-radius:10px;padding:4px;border:1px solid rgba(123,45,139,.08);}
-.view-tab{padding:7px 16px;border-radius:7px;font-size:.8rem;font-weight:800;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
-.view-tab.active{background:#4A1070;color:#fff;}
 .kanban-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;min-height:420px;}
 .kanban-board::-webkit-scrollbar{height:5px;}
 .kanban-board::-webkit-scrollbar-thumb{background:#e0d5f5;border-radius:3px;}
@@ -67,99 +506,164 @@ function initSidebarState(){if(localStorage.getItem('kc_sb')==='0'){setTimeout((
 .kb:hover{background:#ede7f6;}
 .kb.red{background:#ffebee;color:#c62828;}
 .kb.green{background:#e8f5e9;color:#25D366;}
-.crm-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
-.crm-tbl th{background:#f8f5fd;padding:10px 12px;font-size:.7rem;font-weight:800;color:#4A1070;text-align:left;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;}
-.crm-tbl td{padding:11px 12px;font-size:.8rem;border-bottom:1px solid #f5f0fb;color:#333;vertical-align:middle;}
-.crm-tbl tr:hover td{background:#faf7fe;}
+.tag-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700;color:#fff;margin:2px;}
 .won-b{background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
 .lost-b{background:#ffebee;color:#c62828;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
-.tag-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700;color:#fff;margin:2px;}
 .lm-overlay{position:fixed;inset:0;background:rgba(26,10,46,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
 .lm-box{background:#fff;border-radius:20px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.2);}
 .lm-head{position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #f0e8fb;display:flex;justify-content:space-between;align-items:center;z-index:1;border-radius:20px 20px 0 0;}
 .note-item{background:#f8f5fd;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:.82rem;color:#444;line-height:1.6;border:1px solid rgba(123,45,139,.06);}
-.note-item small{color:#bbb;font-size:.7rem;}
-@media(max-width:768px){.crm-stats{grid-template-columns:1fr 1fr!important;}.crm-stats .crm-stat:last-child{grid-column:1/-1;}.crm-toolbar{flex-direction:column;}.lm-overlay{padding:0;align-items:flex-end;}.lm-box{border-radius:20px 20px 0 0;max-height:95vh;}.lm-grid{grid-template-columns:1fr!important;}.kanban-col{width:200px;}}
+
+/* WhatsApp */
+.inbox-layout{display:flex;height:calc(100vh - 130px);background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(123,45,139,.08);box-shadow:0 4px 24px rgba(74,16,112,.07);}
+.conv-list{width:300px;flex-shrink:0;border-right:1px solid #f5f0fb;display:flex;flex-direction:column;background:#fff;}
+.conv-items{flex:1;overflow-y:auto;}
+.conv-item{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;border-bottom:1px solid #faf7fe;transition:.1s;}
+.conv-item:hover{background:#faf7fe;}
+.conv-item.active{background:#f0e8fb;border-left:3px solid #4A1070;}
+.conv-item.unread .conv-name{font-weight:900;color:#1a0a2e;}
+.conv-avi{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1rem;flex-shrink:0;}
+.conv-info{flex:1;min-width:0;}
+.conv-name{font-size:.84rem;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.conv-last{font-size:.72rem;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.conv-time{font-size:.66rem;color:#ccc;white-space:nowrap;}
+.unread-dot{width:20px;height:20px;background:#25D366;border-radius:50%;color:#fff;font-size:.62rem;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.chat-win{flex:1;display:flex;flex-direction:column;min-width:0;background:#f0f2f5;}
+.chat-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;gap:12px;background:#f8f5fd;}
+.chat-back-btn{display:none;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#4A1070;padding:4px 8px;}
+.chat-header{padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;background:#fff;flex-shrink:0;box-shadow:0 1px 4px rgba(74,16,112,.05);}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:4px;}
+.msg-wrap{display:flex;flex-direction:column;}
+.msg-wrap.out{align-items:flex-end;}
+.msg-wrap.in{align-items:flex-start;}
+.msg-bubble{max-width:72%;padding:9px 13px 5px;border-radius:10px;font-size:.84rem;line-height:1.55;word-break:break-word;}
+.msg-bubble.in{background:#fff;border-radius:0 10px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.msg-bubble.out{background:#dcf8c6;border-radius:10px 0 10px 10px;}
+.msg-time{font-size:.62rem;color:#bbb;margin-top:3px;display:flex;align-items:center;justify-content:flex-end;gap:3px;}
+.msg-date-div{text-align:center;font-size:.7rem;color:#999;font-weight:700;background:rgba(255,255,255,.9);padding:4px 14px;border-radius:20px;align-self:center;margin:6px 0;border:1px solid rgba(123,45,139,.1);}
+.chat-input-area{padding:10px 12px;border-top:1px solid #eee;background:#fff;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+.chat-input-area textarea{flex:1;padding:10px 14px;border:1.5px solid #e8dff5;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.87rem;outline:none;resize:none;max-height:100px;line-height:1.5;background:#f8f5fd;transition:.2s;}
+.chat-input-area textarea:focus{border-color:#4A1070;background:#fff;}
+.wa-send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#25D366,#1da851);color:#fff;border:none;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(37,211,102,.3);transition:.15s;}
+.wa-send-btn:hover{transform:scale(1.05);}
+.wa-tmpl-btn{width:38px;height:38px;border-radius:50%;background:#f8f5fd;color:#4A1070;border:1.5px solid #e8dff5;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tmpl-dd{position:absolute;bottom:68px;left:8px;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(74,16,112,.15);padding:6px;min-width:275px;max-height:260px;overflow-y:auto;z-index:100;display:none;border:1px solid #f0e8fb;}
+.tmpl-dd.open{display:block;}
+.tmpl-item{padding:10px 12px;border-radius:9px;cursor:pointer;border-bottom:1px solid #faf7fe;}
+.tmpl-item:hover{background:#f8f5fd;}
+.tmpl-item-name{font-size:.8rem;font-weight:800;color:#4A1070;}
+.tmpl-item-body{font-size:.73rem;color:#888;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.contact-panel{width:240px;flex-shrink:0;border-left:1px solid #f5f0fb;padding:16px;overflow-y:auto;background:#fafafa;}
+.contact-panel h4{font-size:.68rem;font-weight:800;color:#4A1070;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-bottom:5px;border-bottom:1px solid #f0e8fb;}
+.cp-field{font-size:.8rem;color:#444;margin-bottom:7px;line-height:1.6;}
+.cp-lbl{font-size:.65rem;color:#bbb;font-weight:700;display:block;text-transform:uppercase;margin-bottom:2px;}
+
+/* Products tabs */
+.tab-bar{display:flex;gap:4px;background:#f8f5fd;border-radius:12px;padding:4px;margin-bottom:20px;border:1px solid rgba(123,45,139,.08);flex-wrap:wrap;}
+.tab-btn{padding:8px 18px;border-radius:9px;font-size:.8rem;font-weight:800;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
+.tab-btn.active{background:#4A1070;color:#fff;box-shadow:0 2px 8px rgba(74,16,112,.25);}
+.tab-btn:hover:not(.active){background:#ede7f6;color:#4A1070;}
+.color-chip{background:#ede7f6;color:#4A1070;padding:3px 10px;border-radius:20px;font-size:.76rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;margin:2px;}
+
+/* CRM view tabs */
+.view-tabs{display:flex;gap:4px;background:#f8f5fd;border-radius:10px;padding:4px;border:1px solid rgba(123,45,139,.08);}
+.view-tab{padding:7px 16px;border-radius:7px;font-size:.8rem;font-weight:800;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
+.view-tab.active{background:#4A1070;color:#fff;}
+.crm-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+.crm-tbl th{background:#f8f5fd;padding:10px 12px;font-size:.7rem;font-weight:800;color:#4A1070;text-align:left;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;}
+.crm-tbl td{padding:11px 12px;font-size:.8rem;border-bottom:1px solid #f5f0fb;color:#333;vertical-align:middle;}
+.crm-tbl tr:hover td{background:#faf7fe;}
+
+/* Mobile WA */
+@media(max-width:768px){
+  .inbox-layout{height:calc(100vh - 120px);border-radius:0;}
+  .conv-list{width:100%;border-right:none;}
+  .conv-list.hidden{display:none!important;}
+  .chat-win{display:none!important;position:fixed;inset:0;z-index:250;background:#f0f2f5;flex-direction:column;top:54px;bottom:62px;}
+  .chat-win.mob-open{display:flex!important;}
+  .chat-back-btn{display:block;}
+  .contact-panel{display:none;}
+  .crm-stats{grid-template-columns:1fr 1fr!important;}
+  .crm-stats .crm-stat:last-child{grid-column:1/-1;}
+  .lm-overlay{padding:0;align-items:flex-end;}
+  .lm-box{border-radius:20px 20px 0 0;max-height:95vh;}
+  .kanban-col{width:200px;}
+}
+
+.crm-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:18px;}
+.crm-stat{background:#fff;border-radius:13px;padding:14px 12px;box-shadow:0 2px 10px rgba(74,16,112,.06);text-align:center;border:1px solid rgba(123,45,139,.07);}
+.crm-stat p{font-size:.61rem;color:#999;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.crm-stat h3{font-size:1.5rem;font-weight:900;font-family:'Poppins',sans-serif;margin:0;}
+.crm-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:9px;}
+.view-tabs{display:flex;gap:4px;background:#f8f5fd;border-radius:9px;padding:4px;border:1px solid rgba(123,45,139,.08);}
+.view-tab{padding:6px 14px;border-radius:7px;font-size:.79rem;font-weight:800;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
+.view-tab.active{background:#4A1070;color:#fff;}
+.kanban-board{display:flex;gap:13px;overflow-x:auto;padding-bottom:14px;min-height:400px;}
+.kanban-board::-webkit-scrollbar{height:4px;}
+.kanban-board::-webkit-scrollbar-thumb{background:#e0d5f5;border-radius:3px;}
+.kanban-col{flex-shrink:0;width:220px;display:flex;flex-direction:column;}
+.k-col-head{padding:10px 13px;border-radius:11px 11px 0 0;display:flex;align-items:center;justify-content:space-between;}
+.k-col-head h4{font-size:.79rem;font-weight:800;color:#fff;margin:0;}
+.k-count{background:rgba(255,255,255,.25);color:#fff;border-radius:20px;padding:1px 7px;font-size:.69rem;font-weight:800;}
+.k-col-body{flex:1;background:#f8f5fd;border-radius:0 0 11px 11px;padding:7px;min-height:340px;transition:.15s;}
+.k-col-body.drag-over{background:#e8d5f5;border:2px dashed #4A1070;}
+.k-card{background:#fff;border-radius:11px;padding:12px;margin-bottom:7px;box-shadow:0 2px 7px rgba(74,16,112,.07);cursor:grab;border-left:3px solid #ddd;transition:.15s;}
+.k-card:hover{box-shadow:0 4px 14px rgba(74,16,112,.11);transform:translateY(-1px);}
+.kc-name{font-size:.83rem;font-weight:800;color:#1a0a2e;margin-bottom:2px;}
+.kc-phone{font-size:.71rem;color:#999;margin-bottom:6px;}
+.kc-tags{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:6px;}
+.kc-tag{padding:2px 7px;border-radius:20px;font-size:.61rem;font-weight:700;color:#fff;}
+.kc-foot{display:flex;justify-content:space-between;font-size:.64rem;color:#bbb;margin-bottom:8px;}
+.kc-acts{display:flex;gap:3px;}
+.kb{height:27px;padding:0 8px;border-radius:7px;border:none;background:#f0ecf7;color:#4A1070;font-size:.73rem;cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-family:'Nunito',sans-serif;font-weight:700;}
+.kb.red{background:#ffebee;color:#c62828;}
+.kb.green{background:#e8f5e9;color:#25D366;}
+.crm-tbl{width:100%;border-collapse:collapse;font-size:.81rem;}
+.crm-tbl th{background:#f8f5fd;padding:9px 11px;font-size:.69rem;font-weight:800;color:#4A1070;text-align:left;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;}
+.crm-tbl td{padding:10px 11px;font-size:.79rem;border-bottom:1px solid #f5f0fb;color:#333;vertical-align:middle;}
+.crm-tbl tr:hover td{background:#faf7fe;}
+.won-b{background:#e8f5e9;color:#2e7d32;padding:2px 9px;border-radius:20px;font-size:.71rem;font-weight:800;}
+.lost-b{background:#ffebee;color:#c62828;padding:2px 9px;border-radius:20px;font-size:.71rem;font-weight:800;}
+.tag-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:.67rem;font-weight:700;color:#fff;margin:2px;}
+.lm-overlay{position:fixed;inset:0;background:rgba(26,10,46,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(4px);}
+.lm-box{background:#fff;border-radius:18px;width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 56px rgba(0,0,0,.2);}
+.lm-head{position:sticky;top:0;background:#fff;padding:14px 18px;border-bottom:1px solid #f0e8fb;display:flex;justify-content:space-between;align-items:center;z-index:1;border-radius:18px 18px 0 0;}
+.note-item{background:#f8f5fd;border-radius:9px;padding:9px 13px;margin-bottom:7px;font-size:.81rem;color:#444;line-height:1.6;}
+@media(max-width:768px){.crm-stats{grid-template-columns:1fr 1fr!important;}.lm-overlay{padding:0;align-items:flex-end;}.lm-box{border-radius:18px 18px 0 0;max-height:95vh;}.kanban-col{width:195px;}}
 </style>
+<script>const API=window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
+let token=localStorage.getItem('kc_admin_token')||'',adminUser=null;
+async function apiFetch(path,method,body){method=method||'GET';const opts={method,headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})}};if(body)opts.body=JSON.stringify(body);const r=await fetch(API+path,opts);const d=await r.json().catch(function(){return{};});if(!r.ok)throw new Error(d.error||'Error '+r.status);return d;}
+function showLogin(){document.getElementById('loginScreen').style.display='flex';document.getElementById('adminApp').style.display='none';}
+function showApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminApp').style.display='flex';}
+function initAuth(cb){if(!token){showLogin();return;}fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}}).then(function(r){return r.json();}).then(function(d){if(d.user&&(d.user.role==='admin'||d.user.role==='super_admin')){adminUser=d.user;cb(d.user);}else{token='';localStorage.removeItem('kc_admin_token');showLogin();}}).catch(function(){showLogin();});}
+async function adminLogin(){var email=document.getElementById('adminEmail').value.trim(),pass=document.getElementById('adminPass').value,err=document.getElementById('loginErr');err.style.display='none';if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}try{var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});var d=await r.json();if(!r.ok)throw new Error(d.error||'Login failed');if(d.user.role!=='admin'&&d.user.role!=='super_admin')throw new Error('Not an admin account');token=d.token;adminUser=d.user;localStorage.setItem('kc_admin_token',token);window._boot(d.user);}catch(e){err.textContent=e.message;err.style.display='block';}}
+function adminLogout(){token='';adminUser=null;localStorage.removeItem('kc_admin_token');showLogin();}
+async function adminForgot(){var email=document.getElementById('forgotEmail').value.trim();if(!email){toast('Enter email');return;}try{await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});toast('Reset link sent');document.getElementById('forgotBox').style.display='none';}catch(e){toast('Error: '+e.message);}}
+function toast(msg,dur){dur=dur||2800;var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},dur);}
+function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtT(d){var diff=Date.now()-d;if(diff<86400000)return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});if(diff<604800000)return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});}
+function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data:'))return s;return window.location.origin+(s.startsWith('/')?s:'/'+s);}
+var _sbOpen=true;
+function toggleSb(){var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea'),btn=sb&&sb.querySelector('.sb-toggle');if(!sb)return;_sbOpen=!_sbOpen;sb.classList.toggle('collapsed',!_sbOpen);if(main)main.classList.toggle('expanded',!_sbOpen);if(btn)btn.textContent=_sbOpen?'◀':'▶';localStorage.setItem('kc_sb',_sbOpen?'1':'0');}
+function restoreSb(){if(localStorage.getItem('kc_sb')==='0'){setTimeout(function(){var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');if(!sb)return;sb.classList.add('collapsed');if(main)main.classList.add('expanded');_sbOpen=false;var btn=sb.querySelector('.sb-toggle');if(btn)btn.textContent='▶';},80);}}
+function setUserUI(user){setText('sbAvatar',(user.name||'A').charAt(0).toUpperCase());setText('sbUserName',user.name||'Admin');setText('sbUserRole',user.role==='super_admin'?'Super Admin':'Admin');setText('adminName','👤 '+(user.name||'Admin'));setText('mobUser',user.name||'');if(user.role==='super_admin')document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});}
+function startPage(onReady){window.addEventListener('DOMContentLoaded',function(){window._boot=function(user){adminUser=user;setUserUI(user);showApp();restoreSb();onReady(user);};initAuth(window._boot);});}</script>
 </head>
 <body>
-<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);">
-  <div style="background:#fff;border-radius:24px;padding:40px 36px;width:380px;max-width:95vw;box-shadow:0 24px 64px rgba(0,0,0,.3);">
-    <div style="text-align:center;margin-bottom:24px;"><img src="/logo-white.png" alt="KidsCart" style="height:44px;object-fit:contain;filter:invert(1) sepia(1) saturate(3) hue-rotate(10deg);"></div>
-    <h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.35rem;font-weight:800;margin-bottom:5px;">Welcome back</h2>
-    <p style="text-align:center;color:#999;font-size:.84rem;margin-bottom:24px;">Sign in to your admin panel</p>
-    <div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div>
-    <div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
-    <button class="btn-full" onclick="adminLogin()" style="margin-top:8px;">Sign In →</button>
-    <p style="text-align:center;margin-top:14px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p>
-    <div id="forgotBox" style="display:none;margin-top:10px;">
-      <div class="fgroup"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div>
-      <button class="btn-full" onclick="adminForgot()">Send Reset Link</button>
-    </div>
-    <div id="loginErr" style="display:none;color:#c62828;font-size:.82rem;text-align:center;margin-top:10px;padding:8px;background:#ffebee;border-radius:8px;"></div>
-  </div>
-</div>
-</div>
-
+<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);"><div style="background:#fff;border-radius:24px;padding:38px 34px;width:370px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.28);"><div style="text-align:center;margin-bottom:20px;"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:70px;object-fit:contain;"></div><h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.28rem;font-weight:800;margin-bottom:4px;">Welcome back</h2><p style="text-align:center;color:#999;font-size:.83rem;margin-bottom:20px;">Sign in to your admin panel</p><div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div><div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div><button class="btn-full" onclick="adminLogin()" style="margin-top:6px;">Sign In →</button><p style="text-align:center;margin-top:12px;font-size:.81rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p><div id="forgotBox" style="display:none;margin-top:8px;"><div class="fgroup"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div><button class="btn-full" onclick="adminForgot()">Send Reset Link</button></div><div id="loginErr" style="display:none;color:#c62828;font-size:.81rem;text-align:center;margin-top:9px;padding:7px;background:#ffebee;border-radius:7px;"></div></div></div>
 <div id="adminApp" style="display:none;">
-    <div class="mob-header">
-    <img src="/logo-white.png" alt="KidsCart" style="height:26px;object-fit:contain;">
-    <span class="mob-hdr-title" id="mobTitle">KidsCart Admin</span>
-    <div class="mob-hdr-right" id="mobUser"></div>
-  </div>
-  <div class="mob-bar">
-    <div class="mob-bar-inner">
-      <button class="mob-btn" onclick="location.href='/admin.html'"><span class="mi">📊</span><span class="ml">Home</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/orders.html'"><span class="mi">📦</span><span class="ml">Orders</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/products.html'"><span class="mi">👗</span><span class="ml">Products</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/whatsapp.html'"><span class="mi">📱</span><span class="ml">WhatsApp</span><span class="mob-badge" id="mobInboxBadge" style="display:none;">0</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/crm.html'"><span class="mi">🤝</span><span class="ml">CRM</span></button>
-      <button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button>
-    </div>
-  </div>
-  <div class="sidebar" id="sidebar">
-    <div class="sb-top">
-      <div class="sb-brand">
-        <img src="/logo-white.png" alt="KidsCart" style="height:30px;object-fit:contain;">
-      </div>
-      <button class="sb-toggle" onclick="toggleSidebarGlobal()" title="Collapse">◀</button>
-    </div>
-    <nav class="sb-nav">
-      <div class="nav-group-label">Main</div>
-      <a class="nav-item" href="/admin.html"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></a>
-      <a class="nav-item" href="/admin/orders.html"><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a>
-      <a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a>
-      <a class="nav-item" href="/admin/products.html#stock"><span class="nav-icon">📋</span><span class="sb-label">Stock</span></a>
-      <a class="nav-item" href="/admin/products.html#addprod"><span class="nav-icon">➕</span><span class="sb-label">Add Product</span></a>
-      <div class="nav-group-label">Marketing</div>
-      <a class="nav-item" href="/admin/products.html#banners"><span class="nav-icon">🎨</span><span class="sb-label">Banners</span></a>
-      <a class="nav-item" href="/admin/products.html#coupons"><span class="nav-icon">🎟️</span><span class="sb-label">Coupons</span></a>
-      <a class="nav-item" href="/admin.html#customers"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></a>
-      <div class="nav-group-label">Communication</div>
-      <a class="nav-item" href="/admin/whatsapp.html"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span></a>
-      <a class="nav-item" href="/admin/crm.html" class="active" style="background:rgba(255,255,255,.15);color:#fff;"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a>
-      <div class="nav-group-label">Analytics</div>
-      <a class="nav-item" href="/admin.html#reports"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></a>
-    </nav>
-    <div class="sb-user">
-      <div class="sb-avatar" id="sbAvatar">A</div>
-      <div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div>
-      <button class="sb-logout" onclick="adminLogout()" title="Logout">🚪</button>
-    </div>
-  </div>
+  <div class="mob-header"><img src="/logo-white.png" alt="KidsCart" style="height:26px;object-fit:contain;"><span class="mob-hdr-title" id="mobTitle">KidsCart</span><div class="mob-hdr-right" id="mobUser"></div></div><div class="mob-bar"><div class="mob-bar-inner"><a class="mob-btn" href="/admin.html"><span class="mi">📊</span><span class="ml">Home</span></a><a class="mob-btn" href="/admin/orders.html"><span class="mi">📦</span><span class="ml">Orders</span></a><a class="mob-btn" href="/admin/products.html"><span class="mi">👗</span><span class="ml">Products</span></a><a class="mob-btn" href="/admin/whatsapp.html"><span class="mi">📱</span><span class="ml">WhatsApp</span></a><a class="mob-btn" href="/admin/crm.html" style="color:#4A1070;font-weight:900;"><span class="mi">🤝</span><span class="ml">CRM</span></a><button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button></div></div>
+  <div class="sidebar" id="sidebar"><div class="sb-top"><div class="sb-brand"><img src="/logo-white.png" alt="KidsCart" style="height:30px;object-fit:contain;max-width:150px;"></div><button class="sb-toggle" onclick="toggleSb()">◀</button></div><nav class="sb-nav"><div class="nav-group-label">MAIN</div><a class="nav-item" href="/admin.html"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></a><a class="nav-item" href="/admin/orders.html"><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a><a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a><a class="nav-item" href="/admin/products.html#stock" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">📋</span><span class="sb-label">Stock</span></a><a class="nav-item" href="/admin/products.html#addprod" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">➕</span><span class="sb-label">Add Product</span></a><div class="nav-group-label">MARKETING</div><a class="nav-item" href="/admin/products.html#banners" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">🎨</span><span class="sb-label">Banners</span></a><a class="nav-item" href="/admin/products.html#coupons" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">🎟️</span><span class="sb-label">Coupons</span></a><a class="nav-item" href="/admin.html#customers"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></a><div class="nav-group-label">COMMUNICATION</div><a class="nav-item" href="/admin/whatsapp.html"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span></a><a class="nav-item active" href="/admin/crm.html"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a><div class="nav-group-label">ANALYTICS</div><a class="nav-item" href="/admin.html#reports"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></a><a class="nav-item super-only" style="display:none" href="/admin.html#adminusers"><span class="nav-icon">🔐</span><span class="sb-label">Admin Users</span></a></nav><div class="sb-user"><div class="sb-avatar" id="sbAvatar">A</div><div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div><button class="sb-logout" onclick="adminLogout()" title="Logout">🚪</button></div></div>
   <div class="main" id="mainArea">
     <div class="topbar">
       <h2 class="page-title" id="pageTitle">🤝 CRM</h2>
-      <div class="topbar-right">
-        <span class="admin-badge" id="adminName">Admin</span>
-        <a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a>
-      </div>
+      <div class="topbar-right"><span class="admin-badge" id="adminName">Admin</span><a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a></div>
     </div>
     <div class="content">
-
-      <!-- CRM Panel -->
-      <div class="panel active" id="crmPanel">
-        <div class="crm-stats">
+<div class="crm-stats">
           <div class="crm-stat"><p>Total Leads</p><h3 id="crmTotal">—</h3></div>
           <div class="crm-stat"><p>Open</p><h3 id="crmOpen" style="color:#4A1070">—</h3></div>
           <div class="crm-stat"><p>Won ✅</p><h3 id="crmWon" style="color:#00a651">—</h3></div>
@@ -234,12 +738,52 @@ function initSidebarState(){if(localStorage.getItem('kc_sb')==='0'){setTimeout((
 </div>
 
 <div id="toast"></div>
+
+    </div>
+  </div>
+</div>
+<div id="leadModal" class="lm-overlay" style="display:none;">
+  <div class="lm-box">
+    <div class="lm-head">
+      <h2 style="font-size:1rem;font-weight:900;color:#1a0a2e;">👤 Lead Details</h2>
+      <div style="display:flex;gap:8px;">
+        <button onclick="goToChat()" style="padding:6px 14px;background:#e8f5e9;color:#25D366;border:1px solid #25D366;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">💬 Chat</button>
+        <button onclick="closeLead()" style="background:#f0ecf7;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:#4A1070;font-size:1rem;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    </div>
+    <div id="leadModalBody" style="padding:20px;"></div>
+  </div>
+</div>
+
+<!-- ADD LEAD MODAL -->
+<div id="addLeadModal" style="display:none;position:fixed;inset:0;background:rgba(26,10,46,.5);z-index:500;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:460px;box-shadow:0 24px 64px rgba(0,0,0,.2);">
+    <div style="padding:16px 20px;border-bottom:1px solid #f0e8fb;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="font-size:1rem;font-weight:900;color:#1a0a2e;">➕ Add Lead</h2>
+      <button onclick="closeAddLead()" style="background:#f0ecf7;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:#4A1070;font-size:1rem;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+      <div class="fgroup" style="margin:0;"><label>Name</label><input id="alName" placeholder="Customer name"></div>
+      <div class="fgroup" style="margin:0;"><label>Phone *</label><input id="alPhone" placeholder="e.g. 919747867853"></div>
+      <div class="fgroup" style="margin:0;"><label>Email</label><input id="alEmail" placeholder="Email (optional)"></div>
+      <div class="fgroup" style="margin:0;"><label>Stage</label><select id="alStage"></select></div>
+      <div class="fgroup" style="margin:0;"><label>Source</label>
+        <select id="alSource"><option value="whatsapp">📱 WhatsApp</option><option value="instagram">📸 Instagram</option><option value="website">🌐 Website</option><option value="manual">✍️ Manual</option></select>
+      </div>
+      <div class="fgroup" style="margin:0;"><label>Expected Value ₹</label><input id="alValue" placeholder="0" type="number"></div>
+      <button onclick="saveNewLead()" class="btn-full">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="toast"></div>
 <script>
 let crmStages=[],crmTags=[],crmTab='kanban',dragLeadId=null,waTmpls=[];
 
-window._kcAfterLogin = function(user) {
+startPage(function(user) {
   // sidebar already in HTML
-  // was: renderSidebar('crm');
     showAdminApp();
   if(document.getElementById('adminName')) document.getElementById('adminName').textContent = '👤 '+(user.name||'Admin');
   if(document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent=(user.name||'A').charAt(0).toUpperCase();
@@ -248,7 +792,7 @@ window._kcAfterLogin = function(user) {
   if(document.getElementById('mobUser')) document.getElementById('mobUser').textContent=user.name||'';
   loadCrm();
 };
-window.addEventListener('DOMContentLoaded',()=>{document.getElementById('loginScreen').style.display='flex';KC.init(window._kcAfterLogin);});
+=>{document.getElementById('loginScreen').style.display='flex';KC.init(window._kcAfterLogin);});
 
 function showCrm(){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('crmPanel').classList.add('active');document.getElementById('pageTitle').textContent='🤝 CRM';loadCrm();}
 function showSettings(){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('crmstagesPanel').classList.add('active');document.getElementById('pageTitle').textContent='⚙️ CRM Settings';loadCrmSettings();}
@@ -296,5 +840,4 @@ async function deleteTmpl(id){await apiFetch('/admin/whatsapp/templates/'+id,'DE
 document.addEventListener('click',e=>{if(e.target.id==='leadModal')closeLead();if(e.target.id==='addLeadModal')closeAddLead();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLead();closeAddLead();}});
 </script>
-</body>
-</html>
+</body></html>

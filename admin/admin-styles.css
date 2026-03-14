@@ -438,7 +438,8 @@ tr:hover td{background:#faf7fe;}
     gap:10px;
     box-shadow:0 2px 14px rgba(0,0,0,.2);
   }
-  .mob-header img{height:26px;object-fit:contain;}
+  .mob-header img{height:34px;object-fit:contain;max-width:160px;}
+  .mob-hdr-title{display:none!important;} /* logo-only on mobile */
 
   /* ╔══════════════════════════════════════╗
      ║  MOBILE BOTTOM BAR — ALWAYS STICKY  ║

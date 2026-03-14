@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dashboard — KidsCart Admin</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/admin/admin-styles.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <script>(function(){var s=document.createElement('style');if(localStorage.getItem('kc_admin_token')){s.textContent='#loginScreen{display:none!important}#adminApp{display:flex!important}';}else{s.textContent='#adminApp{display:none!important}';}document.head.appendChild(s);})()</script>
@@ -36,8 +39,7 @@
 
   <!-- Mobile Top Header -->
   <div class="mob-header">
-    <img src="/logo-white.png" alt="KidsCart">
-    <span class="mob-hdr-title" id="mobTitle">KidsCart Admin</span>
+    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:30px;object-fit:contain;">
     <div class="mob-hdr-right" id="mobUser"></div>
   </div>
 
@@ -60,11 +62,7 @@
   <div class="sidebar" id="sidebar">
     <div class="sb-top">
       <div class="sb-brand">
-        <div class="sb-logo-img"><img src="/logo-white.png" alt="KC"></div>
-        <div>
-          <div class="sb-logo-text">KidsCart</div>
-          <div class="sb-logo-sub">Admin Panel</div>
-        </div>
+        <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:28px;object-fit:contain;max-width:140px;">
       </div>
       <button class="sb-toggle" onclick="toggleSb()">◀</button>
     </div>
@@ -429,23 +427,12 @@
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════
-   admin.html — Page JS
-   shared.js provides: apiFetch, toast, fmtDate, setText,
-   adminLogin, adminLogout, adminForgot, toggleSidebarGlobal,
-   initSidebarState, showAdminApp, showLoginScreen,
-   KC.init, token, adminUser, API
-═══════════════════════════════════════ */
-
-/* ── Sidebar alias — HTML buttons call toggleSb() ── */
+/* admin.html page JS — shared functions come from shared.js */
 function toggleSb() { toggleSidebarGlobal(); }
-
-/* ── Panel system ── */
 var PANELS = {dashboard:'Dashboard', customers:'Customers', reports:'Reports', adminusers:'Admin Users'};
 function showP(id, navEl) {
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
-  var p = document.getElementById(id + 'Panel');
-  if (p) p.classList.add('active');
+  var p = document.getElementById(id + 'Panel'); if (p) p.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   if (navEl) navEl.classList.add('active');
   setText('pageTitle', PANELS[id] || id);
@@ -455,38 +442,28 @@ function showP(id, navEl) {
   if (loaders[id]) loaders[id]();
 }
 function checkHash() {
-  var h = window.location.hash.replace('#', '');
+  var h = window.location.hash.replace('#','');
   if (h && PANELS[h]) showP(h);
 }
-
-/* ── Boot via KC.init from shared.js ── */
 function onPageReady(user) {
-  setText('sbAvatar', (user.name || 'A').charAt(0).toUpperCase());
-  setText('sbUserName', user.name || 'Admin');
-  setText('sbUserRole', user.role === 'super_admin' ? 'Super Admin' : 'Admin');
-  setText('adminName', '👤 ' + (user.name || 'Admin'));
-  setText('mobUser', user.name || '');
-  if (user.role === 'super_admin')
-    document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});
-  showAdminApp();
-  initSidebarState();
-  checkHash();
+  setText('sbAvatar', (user.name||'A').charAt(0).toUpperCase());
+  setText('sbUserName', user.name||'Admin');
+  setText('sbUserRole', user.role==='super_admin'?'Super Admin':'Admin');
+  setText('adminName', '👤 '+(user.name||'Admin'));
+  setText('mobUser', user.name||'');
+  if (user.role==='super_admin') document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});
+  showAdminApp(); initSidebarState(); checkHash();
   if (!window.location.hash) loadDash();
   setTimeout(pollWaBadge, 8000);
 }
-
 window._kcAfterLogin = onPageReady;
-
-document.addEventListener('DOMContentLoaded', function() {
-  KC.init(onPageReady);
-});
-
+document.addEventListener('DOMContentLoaded', function(){ KC.init(onPageReady); });
 window.addEventListener('hashchange', checkHash);
 document.addEventListener('click', function(e) {
   if (!e.target.closest('#notifDrawer') && !e.target.closest('.notif-btn'))
     document.getElementById('notifDrawer') && document.getElementById('notifDrawer').classList.remove('open');
-  if (e.target.id === 'orderModal') e.target.style.display = 'none';
-  if (e.target.id === 'orderDetailModal') e.target.style.display = 'none';
+  if (e.target.id==='orderModal') e.target.style.display='none';
+  if (e.target.id==='orderDetailModal') e.target.style.display='none';
 });
 
 /* ── WA Badge poll ── */

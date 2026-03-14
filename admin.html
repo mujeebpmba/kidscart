@@ -16,7 +16,7 @@
 <body>
 
 <!-- ── LOGIN ── -->
-<div id="loginScreen" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);">
+<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);">
   <div style="background:#fff;border-radius:24px;padding:44px 40px;width:380px;max-width:96vw;box-shadow:0 24px 64px rgba(0,0,0,.25);">
     <div style="text-align:center;margin-bottom:28px;">
       <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:80px;object-fit:contain;">
@@ -453,7 +453,6 @@ window._kcAfterLogin = function(user) {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('loginScreen').style.display = 'flex';
   KC.init(window._kcAfterLogin);
 });
 

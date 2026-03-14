@@ -399,12 +399,19 @@ tr:hover td{background:#faf7fe;}
   .sidebar{display:none!important;}
   .topbar{display:none!important;}
 
-  /* Main: space for top header + bottom bar */
+  /* ── LAYOUT: full-height body, content scrolls between fixed header+bar ── */
+  html,body{height:100%;overflow-x:hidden;}
+  #adminApp{display:flex;flex-direction:column;min-height:100vh;}
+
   .main{
     margin-left:0!important;
     margin-top:54px!important;
-    margin-bottom:62px!important;
-    min-height:calc(100vh - 116px);
+    margin-bottom:0!important;         /* no margin — padding-bottom handles space */
+    flex:1;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding-bottom:72px;               /* space above fixed bottom bar */
+    -webkit-overflow-scrolling:touch;  /* smooth iOS scroll */
   }
   .content{padding:14px 12px!important;}
 
@@ -422,56 +429,60 @@ tr:hover td{background:#faf7fe;}
   .crm-stats{grid-template-columns:1fr 1fr!important;}
   .crm-stats .crm-stat:last-child{grid-column:1/-1;}
 
-  /* Toast above bottom bar */
-  #toast{bottom:76px;}
+  /* CRM kanban: horizontal scroll without growing page */
+  .kanban-board{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;}
+  .kanban-col{width:200px;flex-shrink:0;}
 
-  /* ── MOBILE HEADER ── */
+  /* Toast above bottom bar */
+  #toast{bottom:76px!important;}
+
+  /* ── MOBILE HEADER — fixed top ── */
   .mob-header{
-    display:flex;
+    display:flex!important;
     position:fixed;
     top:0;left:0;right:0;
     height:54px;
     background:linear-gradient(90deg,#4A1070,#3a0d5c);
-    z-index:300;
+    z-index:400;
     align-items:center;
-    padding:0 14px;
-    gap:10px;
-    box-shadow:0 2px 14px rgba(0,0,0,.2);
+    justify-content:center;
+    padding:0 16px;
+    box-shadow:0 2px 14px rgba(0,0,0,.25);
   }
-  .mob-header img{height:34px;object-fit:contain;max-width:160px;}
-  .mob-hdr-title{display:none!important;} /* logo-only on mobile */
+  .mob-header img{height:32px;object-fit:contain;max-width:160px;}
+  .mob-hdr-title{display:none!important;}
+  .mob-hdr-right{display:none!important;}
 
   /* ╔══════════════════════════════════════╗
-     ║  MOBILE BOTTOM BAR — ALWAYS STICKY  ║
+     ║  MOBILE BOTTOM BAR — ALWAYS FIXED   ║
      ╚══════════════════════════════════════╝ */
   .mob-bar{
-    display:block;
-    position:fixed;        /* Fixed to viewport — never scrolls away */
-    bottom:0;
-    left:0;
-    right:0;
+    display:block!important;
+    position:fixed!important;
+    bottom:0!important;
+    left:0!important;
+    right:0!important;
     height:62px;
     background:#fff;
     border-top:1.5px solid #f0e8fb;
-    z-index:300;           /* Above content, below modals (500) */
+    z-index:400;
     box-shadow:0 -3px 16px rgba(74,16,112,.1);
-    /* iPhone safe area */
-    padding-bottom:env(safe-area-inset-bottom, 0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
   }
   .mob-bar-inner{
-    display:flex;
-    height:100%;
+    display:flex!important;
+    height:62px;
+    align-items:stretch;
     overflow-x:auto;
     scrollbar-width:none;
-    align-items:stretch;
   }
   .mob-bar-inner::-webkit-scrollbar{display:none;}
   .mob-btn{
-    display:flex;
+    display:flex!important;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    min-width:56px;
+    min-width:54px;
     flex:1;
     gap:2px;
     border:none;
@@ -481,34 +492,35 @@ tr:hover td{background:#faf7fe;}
     padding:6px 2px;
     font-family:'Nunito',sans-serif;
     font-size:inherit;
-    transition:.15s;
     text-decoration:none;
     position:relative;
     -webkit-tap-highlight-color:transparent;
+    transition:.1s;
   }
-  .mob-btn.active{color:var(--pp);}
-  .mob-btn:active{opacity:.7;}
-  .mob-btn .mi{font-size:1.15rem;line-height:1;}
-  .mob-btn .ml{font-size:.51rem;font-weight:800;white-space:nowrap;}
+  .mob-btn.active{color:var(--pp)!important;}
+  .mob-btn.active .mi,.mob-btn.active .ml{color:var(--pp)!important;}
+  .mob-btn:active{opacity:.6;}
+  .mob-btn .mi{font-size:1.18rem;line-height:1;}
+  .mob-btn .ml{font-size:.5rem;font-weight:800;white-space:nowrap;}
 
   /* WhatsApp mobile layout */
-  .inbox-layout{height:calc(100vh - 116px);border-radius:0;}
+  .inbox-layout{height:calc(100vh - 116px);border-radius:0;overflow:hidden;}
   .conv-list{width:100%;border-right:none;}
   .conv-list.hidden{display:none!important;}
-  .chat-win{display:none!important;position:fixed;inset:0;z-index:250;background:#f0f2f5;flex-direction:column;top:54px;bottom:62px;}
+  .chat-win{display:none!important;position:fixed;inset:0;z-index:350;background:#f0f2f5;
+    flex-direction:column;top:54px;bottom:62px;}
   .chat-win.mob-open{display:flex!important;}
   .chat-back-btn{display:block;}
   .contact-panel{display:none;}
 
-  /* CRM / Lead modal */
-  .lm-overlay{padding:0;align-items:flex-end;}
-  .lm-box{border-radius:20px 20px 0 0;max-height:95vh;}
-  .kanban-col{width:200px;}
+  /* Lead/CRM modal slides up from bottom */
+  .lm-overlay{padding:0!important;align-items:flex-end!important;}
+  .lm-box{border-radius:20px 20px 0 0!important;max-height:90vh;width:100%!important;}
 
-  /* Order detail modal slides up */
-  #orderDetailModal .modal-overlay,
-  #orderDetailModal{align-items:flex-end!important;padding:0!important;}
-  #orderDetailModal .modal-box{border-radius:20px 20px 0 0!important;margin-top:auto;}
+  /* Order modals slide up */
+  #orderModal,#orderDetailModal{align-items:flex-end!important;padding:0!important;}
+  #orderModal .modal-box,#orderDetailModal .modal-box{
+    border-radius:20px 20px 0 0!important;margin-top:auto;width:100%!important;}
 }
 
 /* ══════════════════════════════════════════

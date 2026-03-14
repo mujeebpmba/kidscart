@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Orders — KidsCart Admin</title>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin-styles.css">
 <style>
 /* ═══════════════════════════════════════════════
    KidsCart Admin v4 — Clean Single CSS Block
@@ -181,187 +181,14 @@ tr:hover td { background: #faf7fe; }
 @media(max-width:900px){#addAdminDrawer > div{grid-template-columns:1fr 1fr;}}
 @media(max-width:600px){#addAdminDrawer > div{grid-template-columns:1fr;}}
 </style>
-<link rel="stylesheet" href="/admin/admin-styles.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <script>(function(){var s=document.createElement('style');if(localStorage.getItem('kc_admin_token')){s.textContent='#loginScreen{display:none!important}#adminApp{display:flex!important}';}else{s.textContent='#adminApp{display:none!important}';}document.head.appendChild(s);})()</script>
-<script>const API=window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
-let token=localStorage.getItem('kc_admin_token')||'',adminUser=null,_onReady=null;
-
-/* apiFetch — throws only on HTTP errors, not network errors */
-async function apiFetch(path,method,body){
-  method=method||'GET';
-  var opts={method:method,headers:{'Content-Type':'application/json'}};
-  if(token)opts.headers['Authorization']='Bearer '+token;
-  if(body)opts.body=JSON.stringify(body);
-  var r=await fetch(API+path,opts);
-  var d=await r.json().catch(function(){return{};});
-  if(r.status===401||r.status===403){
-    /* Only logout on explicit auth failure */
-    token='';localStorage.removeItem('kc_admin_token');showLogin();
-    throw new Error('Session expired. Please login again.');
-  }
-  if(!r.ok)throw new Error(d.error||'Error '+r.status);
-  return d;
-}
-
-function showLogin(){
-  document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('adminApp').style.display='none';
-}
-function showApp(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('adminApp').style.display='flex';
-}
-function setUserUI(user){
-  setText('sbAvatar',(user.name||'A').charAt(0).toUpperCase());
-  setText('sbUserName',user.name||'Admin');
-  setText('sbUserRole',user.role==='super_admin'?'Super Admin':'Admin');
-  setText('adminName','👤 '+(user.name||'Admin'));
-  setText('mobUser',user.name||'');
-  if(user.role==='super_admin')
-    document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});
-}
-function bootUser(user){
-  adminUser=user;
-  setUserUI(user);
-  showApp();
-  restoreSb();
-  if(_onReady)_onReady(user);
-}
-
-async function adminLogin(){
-  var email=document.getElementById('adminEmail').value.trim();
-  var pass=document.getElementById('adminPass').value;
-  var err=document.getElementById('loginErr');
-  err.style.display='none';
-  if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}
-  var btn=document.querySelector('#loginScreen .btn-full');
-  if(btn){btn.textContent='Signing in…';btn.disabled=true;}
-  try{
-    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
-    var d=await r.json();
-    if(!r.ok)throw new Error(d.error||'Login failed');
-    if(d.user.role!=='admin'&&d.user.role!=='super_admin')throw new Error('Not an admin account');
-    token=d.token;
-    localStorage.setItem('kc_admin_token',token);
-    bootUser(d.user);
-  }catch(e){
-    err.textContent=e.message;
-    err.style.display='block';
-  }finally{
-    if(btn){btn.textContent='Sign In →';btn.disabled=false;}
-  }
-}
-function adminLogout(){
-  token='';adminUser=null;
-  localStorage.removeItem('kc_admin_token');
-  showLogin();
-}
-async function adminForgot(){
-  var email=document.getElementById('forgotEmail').value.trim();
-  if(!email){toast('Enter email');return;}
-  try{
-    await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
-    toast('Reset link sent to '+email);
-    document.getElementById('forgotBox').style.display='none';
-  }catch(e){toast('Error: '+e.message);}
-}
-function toast(msg,dur){
-  dur=dur||2800;
-  var t=document.getElementById('toast');
-  if(!t)return;t.textContent=msg;t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show');},dur);
-}
-function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
-function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
-function fmtT(d){var diff=Date.now()-d;if(diff<86400000)return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});if(diff<604800000)return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});}
-function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data:'))return s;return window.location.origin+(s.startsWith('/')?s:'/'+s);}
-var _sbOpen=true;
-function toggleSb(){
-  var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea'),btn=sb&&sb.querySelector('.sb-toggle');
-  if(!sb)return;_sbOpen=!_sbOpen;
-  sb.classList.toggle('collapsed',!_sbOpen);
-  if(main)main.classList.toggle('expanded',!_sbOpen);
-  if(btn)btn.textContent=_sbOpen?'◀':'▶';
-  localStorage.setItem('kc_sb',_sbOpen?'1':'0');
-}
-function restoreSb(){
-  if(localStorage.getItem('kc_sb')==='0'){
-    setTimeout(function(){
-      var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');
-      if(!sb)return;sb.classList.add('collapsed');
-      if(main)main.classList.add('expanded');_sbOpen=false;
-      var btn=sb.querySelector('.sb-toggle');if(btn)btn.textContent='▶';
-    },80);
-  }
-}
-
-/*
- * startPage — THE KEY AUTH FUNCTION
- *
- * Strategy: OPTIMISTIC AUTH
- * If a token exists in localStorage → show the app IMMEDIATELY, no waiting.
- * Then verify the token in the background.
- * Only call showLogin() if the server explicitly returns 401/403 (invalid token).
- * NEVER call showLogin() for network errors, timeouts, or slow responses.
- * This prevents the login flash when Railway is cold-starting.
- */
-function startPage(onReady){
-  _onReady=onReady;
-  window.addEventListener('DOMContentLoaded',function(){
-    if(!token){
-      /* No token at all → must login */
-      showLogin();
-      return;
-    }
-    /* Token exists → show app immediately (optimistic) */
-    /* Use a placeholder user until /auth/me responds */
-    var cachedName=localStorage.getItem('kc_admin_name')||'Admin';
-    var cachedRole=localStorage.getItem('kc_admin_role')||'admin';
-    var tempUser={name:cachedName,role:cachedRole};
-    bootUser(tempUser);
-    /* Verify token in background — only logout on 401/403 */
-    fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}})
-      .then(function(r){
-        if(r.status===401||r.status===403){
-          /* Token is invalid/expired → force login */
-          token='';
-          localStorage.removeItem('kc_admin_token');
-          localStorage.removeItem('kc_admin_name');
-          localStorage.removeItem('kc_admin_role');
-          showLogin();
-          return null;
-        }
-        return r.json();
-      })
-      .then(function(d){
-        if(!d)return;
-        if(d.user&&(d.user.role==='admin'||d.user.role==='super_admin')){
-          /* Update UI with real user data */
-          adminUser=d.user;
-          setUserUI(d.user);
-          localStorage.setItem('kc_admin_name',d.user.name||'Admin');
-          localStorage.setItem('kc_admin_role',d.user.role||'admin');
-        }else if(d.user){
-          /* Logged in but not admin */
-          token='';localStorage.removeItem('kc_admin_token');showLogin();
-        }
-        /* If d.user is missing (network issue) → do nothing, stay on app */
-      })
-      .catch(function(){
-        /* Network error / Railway cold start / timeout → do NOT logout */
-        /* User stays on the app with cached info */
-        console.log('Auth check failed - keeping session (network issue)');
-      });
-  });
-}
-</script>
+<script src="/admin/shared.js"></script>
 </head>
 <body>
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1e0730,#3d0d60,#2d0a47);"><div style="background:#fff;border-radius:24px;padding:40px 36px;width:380px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3);"><div style="text-align:center;margin-bottom:22px;"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:68px;object-fit:contain;"></div><h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.3rem;font-weight:800;margin-bottom:4px;">Welcome back</h2><p style="text-align:center;color:#94a3b8;font-size:.84rem;margin-bottom:22px;">Sign in to your admin panel</p><div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div><div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div><button class="btn-full" onclick="adminLogin()" style="margin-top:6px;">Sign In →</button><p style="text-align:center;margin-top:12px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p><div id="forgotBox" style="display:none;margin-top:10px;border-top:1px solid #f0e8fb;padding-top:14px;"><p style="font-size:.8rem;color:#64748b;margin-bottom:10px;">Enter your email to receive a reset link.</p><div class="fgroup"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div><button class="btn-full" onclick="adminForgot()">Send Reset Link</button></div><div id="loginErr" style="display:none;color:#c62828;font-size:.82rem;text-align:center;margin-top:10px;padding:8px;background:#ffebee;border-radius:8px;"></div></div></div>
 <div id="adminApp" style="display:none;">
-<div class="mob-header"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:30px;object-fit:contain;"><div class="mob-hdr-right" id="mobUser"></div></div><div class="mob-bar"><div class="mob-bar-inner"><a class="mob-btn" href="/admin.html"><span class="mi">📊</span><span class="ml">Home</span></a><a class="mob-btn" href="/admin/orders.html" style="color:#4A1070;font-weight:900;"><span class="mi">📦</span><span class="ml">Orders</span></a><a class="mob-btn" href="/admin/products.html"><span class="mi">👗</span><span class="ml">Products</span></a><a class="mob-btn" href="/admin/whatsapp.html"><span class="mi">📱</span><span class="ml">WhatsApp</span></a><a class="mob-btn" href="/admin/crm.html"><span class="mi">🤝</span><span class="ml">CRM</span></a><button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button></div></div>
-<div class="sidebar" id="sidebar"><div class="sb-top"><div class="sb-brand"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:28px;object-fit:contain;max-width:140px;"></div><button class="sb-toggle" onclick="toggleSb()">◀</button></div><nav class="sb-nav"><div class="nav-group-label">MAIN</div><a class="nav-item" href="/admin.html"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></a><a class="nav-item active" href="/admin/orders.html"><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a><a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a><a class="nav-item" href="/admin.html#customers"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></a><div class="nav-group-label">COMMUNICATION</div><a class="nav-item" href="/admin/whatsapp.html"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span></a><a class="nav-item" href="/admin/crm.html"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a><div class="nav-group-label">ANALYTICS</div><a class="nav-item" href="/admin.html#reports"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></a><a class="nav-item super-only" style="display:none" href="/admin.html#adminusers"><span class="nav-icon">🔐</span><span class="sb-label">Admin Users</span></a></nav><div class="sb-user"><div class="sb-avatar" id="sbAvatar">A</div><div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div><button class="sb-logout" onclick="adminLogout()">🚪</button></div></div>
+<div class="mob-header"><img src="/logo-white.png" alt="KidsCart" style="height:32px;object-fit:contain;"></div><div class="mob-bar"><div class="mob-bar-inner"><a class="mob-btn" href="/admin.html"><span class="mi">📊</span><span class="ml">Home</span></a><a class="mob-btn active" href="/admin/orders.html"><span class="mi">📦</span><span class="ml">Orders</span></a><a class="mob-btn" href="/admin/products.html"><span class="mi">👗</span><span class="ml">Products</span></a><a class="mob-btn" href="/admin/whatsapp.html"><span class="mi">📱</span><span class="ml">WhatsApp</span></a><a class="mob-btn" href="/admin/crm.html"><span class="mi">🤝</span><span class="ml">CRM</span></a><button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button></div></div>
+<div class="sidebar" id="sidebar"><div class="sb-top"><div class="sb-brand"><img src="/logo-white.png" alt="KidsCart" style="height:28px;object-fit:contain;max-width:150px;"></div><button class="sb-toggle" onclick="toggleSb()">◀</button></div><nav class="sb-nav"><div class="nav-group-label">MAIN</div><a class="nav-item" href="/admin.html"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></a><a class="nav-item active" href="/admin/orders.html" ><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a><a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a><a class="nav-item" href="/admin.html#customers"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></a><div class="nav-group-label">COMMUNICATION</div><a class="nav-item" href="/admin/whatsapp.html"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span></a><a class="nav-item" href="/admin/crm.html"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a><div class="nav-group-label">ANALYTICS</div><a class="nav-item" href="/admin.html#reports"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></a><a class="nav-item super-only" style="display:none" href="/admin.html#adminusers"><span class="nav-icon">🔐</span><span class="sb-label">Admin Users</span></a></nav><div class="sb-user"><div class="sb-avatar" id="sbAvatar">A</div><div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div><button class="sb-logout" onclick="adminLogout()">🚪</button></div></div>
 <div class="main" id="mainArea">
 <div class="topbar">
   <h2 class="page-title" id="pageTitle">Orders</h2>

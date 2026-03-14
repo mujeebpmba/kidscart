@@ -628,12 +628,27 @@ tr:hover td{background:#faf7fe;}
 @media(max-width:768px){.quick-grid{grid-template-columns:repeat(2,1fr);}.report-row{grid-template-columns:1fr;}.notif-drawer{right:8px;width:calc(100vw - 16px);}}
 </style>
 <script>const API=window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
-let token=localStorage.getItem('kc_admin_token')||'',adminUser=null;
-async function apiFetch(path,method,body){method=method||'GET';const opts={method,headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})}};if(body)opts.body=JSON.stringify(body);const r=await fetch(API+path,opts);const d=await r.json().catch(function(){return{};});if(!r.ok)throw new Error(d.error||'Error '+r.status);return d;}
+let token=localStorage.getItem('kc_admin_token')||'',adminUser=null,_onReady=null;
+async function apiFetch(path,method,body){method=method||'GET';var opts={method:method,headers:{'Content-Type':'application/json'}};if(token)opts.headers['Authorization']='Bearer '+token;if(body)opts.body=JSON.stringify(body);var r=await fetch(API+path,opts);var d=await r.json().catch(function(){return{};});if(!r.ok)throw new Error(d.error||'Error '+r.status);return d;}
 function showLogin(){document.getElementById('loginScreen').style.display='flex';document.getElementById('adminApp').style.display='none';}
 function showApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminApp').style.display='flex';}
-function initAuth(cb){if(!token){showLogin();return;}fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}}).then(function(r){return r.json();}).then(function(d){if(d.user&&(d.user.role==='admin'||d.user.role==='super_admin')){adminUser=d.user;cb(d.user);}else{token='';localStorage.removeItem('kc_admin_token');showLogin();}}).catch(function(){showLogin();});}
-async function adminLogin(){var email=document.getElementById('adminEmail').value.trim(),pass=document.getElementById('adminPass').value,err=document.getElementById('loginErr');err.style.display='none';if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}try{var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});var d=await r.json();if(!r.ok)throw new Error(d.error||'Login failed');if(d.user.role!=='admin'&&d.user.role!=='super_admin')throw new Error('Not an admin account');token=d.token;adminUser=d.user;localStorage.setItem('kc_admin_token',token);window._boot(d.user);}catch(e){err.textContent=e.message;err.style.display='block';}}
+function setUserUI(user){setText('sbAvatar',(user.name||'A').charAt(0).toUpperCase());setText('sbUserName',user.name||'Admin');setText('sbUserRole',user.role==='super_admin'?'Super Admin':'Admin');setText('adminName','👤 '+(user.name||'Admin'));setText('mobUser',user.name||'');if(user.role==='super_admin')document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});}
+function bootUser(user){adminUser=user;setUserUI(user);showApp();restoreSb();if(_onReady)_onReady(user);}
+async function adminLogin(){
+  var email=document.getElementById('adminEmail').value.trim();
+  var pass=document.getElementById('adminPass').value;
+  var err=document.getElementById('loginErr');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}
+  try{
+    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
+    var d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Login failed');
+    if(d.user.role!=='admin'&&d.user.role!=='super_admin')throw new Error('Not an admin account');
+    token=d.token;localStorage.setItem('kc_admin_token',token);
+    bootUser(d.user);
+  }catch(e){err.textContent=e.message;err.style.display='block';}
+}
 function adminLogout(){token='';adminUser=null;localStorage.removeItem('kc_admin_token');showLogin();}
 async function adminForgot(){var email=document.getElementById('forgotEmail').value.trim();if(!email){toast('Enter email');return;}try{await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});toast('Reset link sent');document.getElementById('forgotBox').style.display='none';}catch(e){toast('Error: '+e.message);}}
 function toast(msg,dur){dur=dur||2800;var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},dur);}
@@ -644,8 +659,22 @@ function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data
 var _sbOpen=true;
 function toggleSb(){var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea'),btn=sb&&sb.querySelector('.sb-toggle');if(!sb)return;_sbOpen=!_sbOpen;sb.classList.toggle('collapsed',!_sbOpen);if(main)main.classList.toggle('expanded',!_sbOpen);if(btn)btn.textContent=_sbOpen?'◀':'▶';localStorage.setItem('kc_sb',_sbOpen?'1':'0');}
 function restoreSb(){if(localStorage.getItem('kc_sb')==='0'){setTimeout(function(){var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');if(!sb)return;sb.classList.add('collapsed');if(main)main.classList.add('expanded');_sbOpen=false;var btn=sb.querySelector('.sb-toggle');if(btn)btn.textContent='▶';},80);}}
-function setUserUI(user){setText('sbAvatar',(user.name||'A').charAt(0).toUpperCase());setText('sbUserName',user.name||'Admin');setText('sbUserRole',user.role==='super_admin'?'Super Admin':'Admin');setText('adminName','👤 '+(user.name||'Admin'));setText('mobUser',user.name||'');if(user.role==='super_admin')document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});}
-function startPage(onReady){window.addEventListener('DOMContentLoaded',function(){window._boot=function(user){adminUser=user;setUserUI(user);showApp();restoreSb();onReady(user);};initAuth(window._boot);});}</script>
+function startPage(onReady){
+  _onReady=onReady;
+  window.addEventListener('DOMContentLoaded',function(){
+    if(!token){showLogin();return;}
+    fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.user&&(d.user.role==='admin'||d.user.role==='super_admin')){
+          bootUser(d.user);
+        }else{
+          token='';localStorage.removeItem('kc_admin_token');showLogin();
+        }
+      })
+      .catch(function(){showLogin();});
+  });
+}</script>
 </head>
 
 <body>

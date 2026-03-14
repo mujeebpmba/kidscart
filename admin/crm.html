@@ -5,15 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CRM — KidsCart Admin</title>
 <script>
-/* Zero-flash auth: hide login screen instantly if token exists */
-if(localStorage.getItem('kc_admin_token')){
-  document.addEventListener('DOMContentLoaded',function(){
-    var ls=document.getElementById('loginScreen');
-    if(ls)ls.style.display='none';
-  });
-  /* Even faster: inject a style tag */
-  document.write('<style>#loginScreen{display:none!important}</style>');
-}
+/* Zero-flash: hide login instantly if token exists */
+(function(){
+  if(localStorage.getItem('kc_admin_token')){
+    var s=document.createElement('style');
+    s.textContent='#loginScreen{display:none!important}';
+    document.head.appendChild(s);
+  }
+})();
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">

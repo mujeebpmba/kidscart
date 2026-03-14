@@ -452,8 +452,9 @@ function onPageReady(user) {
   setText('adminName', '👤 '+(user.name||'Admin'));
   setText('mobUser', user.name||'');
   if (user.role==='super_admin') document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});
-  showAdminApp(); initSidebarState(); checkHash();
+  checkHash();
   if (!window.location.hash) loadDash();
+  showAdminApp(); initSidebarState();
   setTimeout(pollWaBadge, 8000);
 }
 window._kcAfterLogin = onPageReady;

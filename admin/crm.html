@@ -389,19 +389,10 @@ window._kcAfterLogin = function(user) {
   if(user.role==='super_admin') document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});
   if(typeof showAdminApp==='function') showAdminApp();
   if(typeof initSidebarState==='function') initSidebarState();
-  if(typeof loadLeads==="function")loadLeads();
+  if(typeof loadCrm==="function")loadCrm();
 };
 document.addEventListener('DOMContentLoaded', function(){ KC.init(window._kcAfterLogin); });
-window._kcAfterLogin_inner = function(user) {
-  // sidebar already in HTML
-    showApp();
-  if(document.getElementById('adminName')) document.getElementById('adminName').textContent = '👤 '+(user.name||'Admin');
-  if(document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent=(user.name||'A').charAt(0).toUpperCase();
-  if(document.getElementById('sbUserName')) document.getElementById('sbUserName').textContent=user.name||'Admin';
-  if(document.getElementById('sbUserRole')) document.getElementById('sbUserRole').textContent=user.role==='super_admin'?'Super Admin':'Admin';
-  if(document.getElementById('mobUser')) document.getElementById('mobUser').textContent=user.name||'';
-  loadCrm();
-});
+// boot handled by _kcAfterLogin above
 
 function showCrm(){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('crmPanel').classList.add('active');document.getElementById('pageTitle').textContent='🤝 CRM';loadCrm();}
 function showSettings(){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('crmstagesPanel').classList.add('active');document.getElementById('pageTitle').textContent='⚙️ CRM Settings';loadCrmSettings();}

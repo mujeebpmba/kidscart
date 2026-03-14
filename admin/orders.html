@@ -172,7 +172,32 @@ tr:hover td{background:#faf7fe;}
   .mob-btn .ml{font-size:.52rem;font-weight:800;white-space:nowrap;}
 }
 @media(min-width:769px) and (max-width:1100px){.stats-grid{grid-template-columns:1fr 1fr;}.grid2{grid-template-columns:1fr 1fr;}}
-.kc-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(74,16,112,.15);border-top-color:#4A1070;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}@keyframes spin{to{transform:rotate(360deg);}}.kc-loading{display:flex;align-items:center;justify-content:center;padding:28px;color:#94a3b8;font-size:.84rem;font-weight:600;gap:8px;}.kc-loading .kc-spinner{width:20px;height:20px;border-width:2.5px;}</style>
+.kc-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(74,16,112,.15);border-top-color:#4A1070;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}.kc-loading{display:flex;align-items:center;justify-content:center;padding:28px;color:#94a3b8;font-size:.84rem;font-weight:600;gap:8px;}.kc-loading .kc-spinner{width:20px;height:20px;border-width:2.5px;}
+/* Admin Users panel responsive */
+@media(max-width:900px){#addAdminDrawer > div{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){#addAdminDrawer > div{grid-template-columns:1fr;}}
+/* Dashboard extras */
+.dash-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.qa-card{background:#fff;border:1px solid rgba(123,45,139,.08);border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:.2s;text-decoration:none;display:block;}
+.qa-card:hover{background:#f8f5fd;transform:translateY(-2px);box-shadow:0 4px 16px rgba(74,16,112,.1);}
+.qa-icon{width:40px;height:40px;border-radius:11px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.qa-label{font-size:.71rem;font-weight:800;color:#4A1070;}
+.chart-wrap{height:110px;display:flex;align-items:flex-end;gap:5px;padding-bottom:4px;}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.cb{width:100%;border-radius:5px 5px 0 0;background:#e0d5f5;min-height:3px;transition:.4s;}
+.cb.top{background:linear-gradient(180deg,#f7941d,#e07819);}
+.cb.hi{background:linear-gradient(180deg,#4A1070,#7B2D8B);}
+.chart-lbl{font-size:.57rem;color:#bbb;font-weight:700;}
+.ord-av{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#4A1070,#7B2D8B);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.64rem;margin-right:7px;vertical-align:middle;}
+.ls-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f5f0fb;font-size:.81rem;}
+.ls-item:last-child{border-bottom:none;}
+.ai-panel{background:linear-gradient(135deg,#f8f4ff,#ede7f6);border:1px solid rgba(123,45,139,.12);border-radius:16px;padding:18px;}
+.report-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:1024px){.dash-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){.dash-grid{grid-template-columns:1fr;}.quick-grid{grid-template-columns:repeat(2,1fr);}.report-row{grid-template-columns:1fr;}}
+</style>
 <script>(function(){if(localStorage.getItem("kc_admin_token")){var s=document.createElement("style");s.textContent="#loginScreen{display:none!important}";document.head.appendChild(s);}})();</script>
 <script>const API=window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
 let token=localStorage.getItem('kc_admin_token')||'',adminUser=null,_onReady=null;

@@ -3,46 +3,723 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KidsCart Admin</title>
+<title>KidsCart Admin — Dashboard</title>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin/admin-styles.css">
-<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};</script>
-<script src="/admin/shared.js"></script>
+<style>
+/* ============================================================
+   KidsCart Admin v3 — Premium UI Styles
+   Shared across all admin pages via <link rel="stylesheet">
+   ============================================================ */
 
+/* ══════════════════════════════════════════
+   KIDSCART ADMIN v3 — Premium UI
+   Light body + Dark purple sidebar
+══════════════════════════════════════════ */
+
+/* ── Reset & base ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#F0ECF7;color:#1a0a2e;min-height:100vh;}
+
+/* ── Sidebar ── */
+.sidebar{
+  position:fixed;left:0;top:0;width:240px;height:100vh;
+  background:linear-gradient(180deg,#4A1070 0%,#3a0d5c 50%,#2d0a47 100%);
+  display:flex;flex-direction:column;z-index:200;
+  transition:width .25s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+}
+.sidebar.collapsed{width:68px;}
+.sidebar.collapsed .sb-label,
+.sidebar.collapsed .sb-logo-text,
+.sidebar.collapsed .sb-logo-sub,
+.sidebar.collapsed .nav-group-label,
+.sidebar.collapsed .sb-user-info,
+.sidebar.collapsed .nav-badge{display:none;}
+
+.sb-top{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.sb-brand{display:flex;align-items:center;gap:11px;min-width:0;}
+.sb-logo-img{width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.sb-logo-img img{width:26px;height:26px;object-fit:contain;}
+.sb-logo-text{font-family:'Poppins',sans-serif;font-weight:800;font-size:.95rem;color:#fff;white-space:nowrap;}
+.sb-logo-sub{font-size:.6rem;color:rgba(255,255,255,.4);font-weight:600;white-space:nowrap;}
+.sb-toggle{width:28px;height:28px;background:rgba(255,255,255,.1);border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.7);font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;}
+.sb-toggle:hover{background:rgba(255,255,255,.18);}
+
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto;overflow-x:hidden;}
+.sb-nav::-webkit-scrollbar{width:3px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
+
+.nav-group-label{font-size:.58rem;font-weight:800;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;padding:10px 10px 4px;white-space:nowrap;}
+
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 10px;
+  border-radius:10px;cursor:pointer;color:rgba(255,255,255,.6);
+  font-size:.82rem;font-weight:700;transition:.15s;margin-bottom:2px;
+  white-space:nowrap;position:relative;text-decoration:none;
+}
+.nav-item:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.95);}
+.nav-item.active{
+  background:rgba(255,255,255,.15);color:#fff;
+  border:1px solid rgba(255,255,255,.15);
+}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:55%;background:#f7941d;border-radius:0 3px 3px 0;
+}
+.nav-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0;}
+.nav-badge{
+  margin-left:auto;background:#25D366;color:#fff;
+  border-radius:20px;padding:1px 7px;font-size:.6rem;font-weight:800;
+  flex-shrink:0;
+}
+.nav-badge.red{background:#e53935;}
+
+.sb-user{
+  padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.sb-avatar{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#f7941d,#e07819);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:800;color:#fff;
+}
+.sb-user-name{font-size:.78rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-user-role{font-size:.62rem;color:rgba(255,255,255,.4);white-space:nowrap;}
+.sb-logout{
+  width:28px;height:28px;border:none;border-radius:8px;
+  background:rgba(255,0,0,.15);color:rgba(255,120,120,.8);
+  cursor:pointer;font-size:.8rem;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+}
+.sb-logout:hover{background:rgba(255,0,0,.25);}
+
+/* ── Main area ── */
+.main{
+  margin-left:240px;min-height:100vh;display:flex;flex-direction:column;
+  transition:margin-left .25s cubic-bezier(.4,0,.2,1);
+}
+.main.expanded{margin-left:68px;}
+
+/* ── Topbar ── */
+.topbar{
+  background:#fff;padding:12px 28px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:1px solid rgba(123,45,139,.08);
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 1px 20px rgba(74,16,112,.06);
+}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.page-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.1rem;color:#1a0a2e;}
+.breadcrumb{font-size:.75rem;color:#aaa;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+
+.notif-btn{
+  position:relative;width:36px;height:36px;background:#F0ECF7;
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:1px solid rgba(123,45,139,.1);font-size:.9rem;
+  transition:.2s;
+}
+.notif-btn:hover{background:#e8e0f5;}
+.notif-dot{
+  position:absolute;top:7px;right:8px;width:8px;height:8px;
+  background:#f7941d;border-radius:50%;border:2px solid #fff;
+}
+.ai-btn{
+  display:flex;align-items:center;gap:6px;padding:8px 16px;
+  background:linear-gradient(135deg,#f7941d,#e07819);
+  border:none;border-radius:20px;color:#fff;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:.78rem;cursor:pointer;transition:.2s;
+  box-shadow:0 4px 12px rgba(247,148,29,.3);
+}
+.ai-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(247,148,29,.4);}
+.view-shop-btn{
+  padding:8px 16px;background:#F0ECF7;border:1px solid rgba(123,45,139,.15);
+  border-radius:20px;color:#4A1070;font-family:'Nunito',sans-serif;font-weight:800;
+  font-size:.78rem;text-decoration:none;transition:.2s;
+}
+.view-shop-btn:hover{background:#e8e0f5;}
+.admin-badge{
+  background:#ede7f6;color:#4A1070;font-size:.75rem;font-weight:800;
+  padding:6px 14px;border-radius:20px;border:1px solid rgba(123,45,139,.15);
+}
+
+/* ── Content ── */
+.content{flex:1;padding:24px 28px;}
+
+/* ── Panels ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── Stat cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.stat-card{
+  background:#fff;border-radius:16px;padding:20px;
+  border:1px solid rgba(123,45,139,.07);
+  box-shadow:0 2px 16px rgba(74,16,112,.06);
+  position:relative;overflow:hidden;transition:.2s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(74,16,112,.1);}
+.stat-card::after{
+  content:'';position:absolute;top:-24px;right:-24px;
+  width:80px;height:80px;border-radius:50%;opacity:.08;
+}
+.stat-card.v1::after{background:#4A1070;}
+.stat-card.v2::after{background:#f7941d;}
+.stat-card.v3::after{background:#00a651;}
+.stat-card.v4::after{background:#e53935;}
+.stat-icon{
+  width:40px;height:40px;border-radius:12px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.v1 .stat-icon{background:#ede7f6;}
+.v2 .stat-icon{background:#fff3e0;}
+.v3 .stat-icon{background:#e8f5e9;}
+.v4 .stat-icon{background:#ffebee;}
+.stat-label{font-size:.72rem;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.stat-value{font-family:'Poppins',sans-serif;font-size:1.9rem;font-weight:900;color:#1a0a2e;line-height:1;}
+.stat-sub{font-size:.7rem;color:#bbb;margin-top:6px;font-weight:600;}
+.stat-trend{
+  position:absolute;top:16px;right:16px;
+  font-size:.68rem;font-weight:800;padding:3px 8px;border-radius:20px;
+}
+.trend-up{background:#e8f5e9;color:#2e7d32;}
+.trend-dn{background:#ffebee;color:#c62828;}
+
+/* ── Dashboard grid ── */
+.dash-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-bottom:18px;}
+.dash-grid-bottom{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+
+/* ── Cards ── */
+.card{
+  background:#fff;border-radius:16px;padding:22px 24px;
+  border:1px solid rgba(123,45,139,.07);
+  box-shadow:0 2px 16px rgba(74,16,112,.05);margin-bottom:20px;
+}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.card-title{font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:800;color:#1a0a2e;}
+.card-action{
+  font-size:.75rem;font-weight:800;color:#4A1070;text-decoration:none;
+  padding:5px 12px;background:#ede7f6;border-radius:20px;border:none;cursor:pointer;
+  transition:.15s;
+}
+.card-action:hover{background:#d1c4e9;}
+
+/* ── Chart ── */
+.chart-wrap{height:140px;display:flex;align-items:flex-end;gap:6px;padding-bottom:4px;}
+.chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.chart-bar{
+  width:100%;border-radius:6px 6px 0 0;
+  background:linear-gradient(180deg,#c9b3e8,#ddd5f5);
+  transition:.3s;min-height:4px;
+}
+.chart-bar.today{background:linear-gradient(180deg,#f7941d,#e07819);}
+.chart-bar.high{background:linear-gradient(180deg,#4A1070,#7B2D8B);}
+.chart-label{font-size:.6rem;color:#bbb;font-weight:700;}
+.chart-legend{display:flex;gap:16px;margin-top:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.68rem;color:#888;font-weight:700;}
+.legend-dot{width:8px;height:8px;border-radius:50%;}
+
+/* ── Recent orders table ── */
+.ord-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.ord-table th{
+  background:#f8f5fd;color:#4A1070;font-weight:800;
+  padding:10px 12px;text-align:left;white-space:nowrap;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.3px;
+}
+.ord-table td{padding:11px 12px;border-bottom:1px solid #f5f0fb;vertical-align:middle;}
+.ord-table tr:last-child td{border-bottom:none;}
+.ord-table tr:hover td{background:#faf7fe;}
+.ord-avatar{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,#4A1070,#7B2D8B);
+  display:inline-flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:.7rem;margin-right:8px;vertical-align:middle;
+}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:800;}
+.b-placed{background:#e3f2fd;color:#1565c0;}
+.b-confirmed{background:#e8f5e9;color:#2e7d32;}
+.b-processing{background:#fff8e1;color:#e65100;}
+.b-shipped{background:#e1f5fe;color:#0277bd;}
+.b-out_for_delivery{background:#f3e5f5;color:#6a1b9a;}
+.b-delivered{background:#e8f5e9;color:#1b5e20;}
+.b-cancelled{background:#ffebee;color:#b71c1c;}
+.b-returned{background:#fce4ec;color:#880e4f;}
+
+/* ── Low stock list ── */
+.ls-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid #f5f0fb;font-size:.82rem;
+}
+.ls-item:last-child{border-bottom:none;}
+.ls-name{font-weight:700;color:#1a0a2e;}
+.ls-stock{font-weight:900;font-size:.85rem;}
+
+/* ── AI Panel ── */
+.ai-panel{
+  background:linear-gradient(135deg,#f8f4ff,#ede7f6);
+  border:1px solid rgba(123,45,139,.15);border-radius:16px;padding:20px;
+}
+.ai-panel-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.ai-orb{
+  width:38px;height:38px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,#f7941d,#4A1070);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  box-shadow:0 4px 12px rgba(247,148,29,.3);
+}
+.ai-panel-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:.88rem;color:#1a0a2e;}
+.ai-panel-sub{font-size:.68rem;color:#999;font-weight:600;}
+.ai-chips{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.ai-chip{
+  background:#fff;border:1px solid rgba(123,45,139,.12);border-radius:10px;
+  padding:8px 12px;font-size:.75rem;color:#4A1070;cursor:pointer;font-weight:700;
+  transition:.15s;text-align:left;display:flex;align-items:center;gap:8px;
+}
+.ai-chip:hover{background:#ede7f6;border-color:rgba(123,45,139,.25);}
+.ai-input-wrap{display:flex;gap:8px;margin-top:4px;}
+.ai-input{
+  flex:1;padding:9px 14px;background:#fff;
+  border:1px solid rgba(123,45,139,.15);border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;color:#1a0a2e;
+}
+.ai-input:focus{border-color:#4A1070;}
+.ai-send-btn{
+  width:36px;height:36px;background:linear-gradient(135deg,#f7941d,#e07819);
+  border:none;border-radius:10px;cursor:pointer;font-size:.85rem;color:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 3px 10px rgba(247,148,29,.3);transition:.15s;
+}
+.ai-send-btn:hover{transform:translateY(-1px);}
+.ai-response{
+  background:#fff;border:1px solid rgba(123,45,139,.1);border-radius:10px;
+  padding:12px;margin-top:10px;font-size:.78rem;line-height:1.6;color:#333;
+  display:none;
+}
+.ai-typing{color:#aaa;font-style:italic;}
+
+/* ── Quick actions ── */
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.qa-card{
+  background:#fff;border:1px solid rgba(123,45,139,.08);border-radius:14px;
+  padding:16px 12px;text-align:center;cursor:pointer;transition:.2s;
+  text-decoration:none;display:block;
+}
+.qa-card:hover{background:#f8f5fd;border-color:rgba(123,45,139,.2);transform:translateY(-2px);}
+.qa-icon{
+  width:44px;height:44px;border-radius:12px;margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.qa-label{font-size:.72rem;font-weight:800;color:#4A1070;}
+
+/* ── Customers panel ── */
+.search-bar{display:flex;gap:10px;margin-bottom:16px;}
+.search-bar input,.search-bar select{
+  padding:9px 14px;border:1.5px solid #e8dff5;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;
+  transition:.2s;background:#fff;
+}
+.search-bar input{flex:1;}
+.search-bar input:focus,.search-bar select:focus{border-color:#4A1070;}
+
+/* ── Reports ── */
+.report-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* ── Tables (shared) ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.83rem;}
+th{background:#f8f5fd;color:#4A1070;font-weight:800;padding:10px 12px;text-align:left;white-space:nowrap;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;}
+td{padding:11px 12px;border-bottom:1px solid #f5f0fb;vertical-align:middle;}
+tr:hover td{background:#faf7fe;}
+
+/* ── Buttons ── */
+.btn{padding:8px 16px;border-radius:10px;border:none;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;font-size:.82rem;transition:.15s;}
+.btn-sm{padding:5px 12px;font-size:.76rem;}
+.btn-pp{background:#4A1070;color:#fff;}
+.btn-pp:hover{background:#3a0d5c;}
+.btn-ok-g{background:#e8f5e9;color:#2e7d32;}
+.btn-ok-g:hover{background:#2e7d32;color:#fff;}
+.btn-er-g{background:#ffebee;color:#c62828;}
+.btn-er-g:hover{background:#c62828;color:#fff;}
+.btn-ghost{background:#f0ecf7;color:#4A1070;}
+.btn-ghost:hover{background:#ede7f6;}
+.btn-full{
+  width:100%;padding:12px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,#4A1070,#7B2D8B);color:#fff;
+  font-family:'Poppins',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;
+  transition:.2s;
+}
+.btn-full:hover{opacity:.9;}
+
+/* ── Forms ── */
+.fgroup{margin-bottom:14px;}
+.fgroup label{display:block;font-weight:800;font-size:.75rem;color:#666;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;}
+.fgroup input,.fgroup select,.fgroup textarea{
+  width:100%;padding:10px 14px;border:1.5px solid #e8dff5;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;transition:.2s;background:#fff;
+}
+.fgroup input:focus,.fgroup select:focus,.fgroup textarea:focus{border-color:#4A1070;box-shadow:0 0 0 3px rgba(74,16,112,.08);}
+.fgroup textarea{resize:vertical;min-height:80px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#1a0a2e;color:#fff;padding:11px 24px;border-radius:50px;
+  font-size:.85rem;font-weight:700;opacity:0;transition:.3s;z-index:9999;
+  pointer-events:none;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── Order modal ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(26,10,46,.5);
+  z-index:500;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(4px);
+}
+.modal-box{
+  background:#fff;border-radius:20px;width:100%;max-width:460px;
+  box-shadow:0 24px 64px rgba(0,0,0,.2);animation:modalIn .2s ease;
+}
+.modal-box.wide{max-width:660px;max-height:92vh;overflow-y:auto;}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.modal-head{
+  padding:18px 22px;border-bottom:1px solid #f0e8fb;
+  display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;background:#fff;border-radius:20px 20px 0 0;z-index:1;
+}
+.modal-head h3{font-family:'Poppins',sans-serif;color:#4A1070;font-size:.95rem;font-weight:800;}
+.modal-close{
+  width:32px;height:32px;background:#f0ecf7;border:none;border-radius:50%;
+  cursor:pointer;font-size:1rem;color:#4A1070;display:flex;align-items:center;justify-content:center;
+}
+.modal-body{padding:22px;}
+
+/* ── Mobile header ── */
+.mob-header{display:none;}
+.mob-bar{display:none;}
+
+/* ── Notification drawer ── */
+.notif-drawer{
+  position:fixed;top:60px;right:20px;width:300px;background:#fff;
+  border-radius:16px;border:1px solid rgba(123,45,139,.12);
+  box-shadow:0 16px 40px rgba(74,16,112,.15);z-index:400;
+  display:none;overflow:hidden;
+}
+.notif-drawer.open{display:block;animation:modalIn .15s ease;}
+.notif-item{
+  padding:12px 16px;border-bottom:1px solid #f5f0fb;
+  display:flex;gap:10px;align-items:flex-start;cursor:pointer;
+  transition:.15s;
+}
+.notif-item:hover{background:#faf7fe;}
+.notif-item:last-child{border-bottom:none;}
+.notif-dot-indicator{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.notif-text{font-size:.78rem;color:#333;line-height:1.5;}
+.notif-time{font-size:.65rem;color:#bbb;margin-top:2px;font-weight:600;}
+
+/* ── Responsive ── */
+@media(max-width:1100px){
+  .sidebar{width:68px;}
+  .sb-label,.sb-logo-text,.sb-logo-sub,.nav-group-label,.sb-user-info,.nav-badge{display:none;}
+  .main{margin-left:68px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .dash-grid{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  .sidebar{display:none!important;}
+  .main{margin-left:0!important;margin-top:54px;margin-bottom:66px;}
+  .topbar{display:none!important;}
+  .content{padding:14px 12px!important;}
+  .stats-grid{grid-template-columns:1fr 1fr!important;gap:10px;margin-bottom:14px;}
+  .stat-card{padding:14px!important;}
+  .stat-value{font-size:1.5rem!important;}
+  .dash-grid,.dash-grid-bottom,.report-row{grid-template-columns:1fr!important;}
+  .grid2{grid-template-columns:1fr!important;}
+  .card{padding:16px!important;border-radius:14px!important;}
+  .quick-grid{grid-template-columns:repeat(4,1fr);gap:8px;}
+  .qa-icon{width:36px;height:36px;font-size:1rem;}
+
+  .mob-header{
+    display:flex;position:fixed;top:0;left:0;right:0;height:54px;
+    background:linear-gradient(90deg,#4A1070,#3a0d5c);z-index:300;
+    align-items:center;padding:0 14px;gap:10px;
+    box-shadow:0 2px 16px rgba(0,0,0,.2);
+  }
+  .mob-header img{height:28px;object-fit:contain;filter:brightness(0) invert(1);}
+  .mob-hdr-title{flex:1;color:#fff;font-weight:800;font-size:.9rem;font-family:'Poppins',sans-serif;margin:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mob-hdr-right{color:rgba(255,255,255,.7);font-size:.72rem;}
+
+  .mob-bar{
+    display:block;position:fixed;bottom:0;left:0;right:0;height:62px;
+    background:#fff;border-top:1.5px solid #f0e8fb;z-index:300;
+    box-shadow:0 -2px 16px rgba(74,16,112,.08);
+  }
+  .mob-bar-inner{display:flex;height:100%;overflow-x:auto;scrollbar-width:none;}
+  .mob-bar-inner::-webkit-scrollbar{display:none;}
+  .mob-btn{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:62px;flex:1;gap:2px;border:none;background:transparent;
+    cursor:pointer;color:#aaa;padding:6px 2px;font-family:'Nunito',sans-serif;
+    transition:.15s;position:relative;
+  }
+  .mob-btn.active{color:#4A1070;}
+  .mob-btn .mi{font-size:1.2rem;line-height:1;}
+  .mob-btn .ml{font-size:.52rem;font-weight:800;white-space:nowrap;}
+  .mob-badge{
+    position:absolute;top:4px;right:8px;background:#25D366;color:#fff;
+    border-radius:50%;min-width:16px;height:16px;font-size:.58rem;
+    font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 3px;
+  }
+  #orderDetailModal .modal-box{border-radius:20px 20px 0 0;margin-top:auto;}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr!important;}
+}
+
+/* ── Page-specific additions ── */
+/* CRM */
+.crm-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.crm-stat{background:#fff;border-radius:14px;padding:16px 14px;box-shadow:0 2px 12px rgba(74,16,112,.06);text-align:center;border:1px solid rgba(123,45,139,.07);}
+.crm-stat p{font-size:.62rem;color:#999;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.crm-stat h3{font-size:1.6rem;font-weight:900;font-family:'Poppins',sans-serif;margin:0;}
+.kanban-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;min-height:420px;}
+.kanban-board::-webkit-scrollbar{height:5px;}
+.kanban-board::-webkit-scrollbar-thumb{background:#e0d5f5;border-radius:3px;}
+.kanban-col{flex-shrink:0;width:224px;display:flex;flex-direction:column;}
+.k-col-head{padding:11px 14px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between;}
+.k-col-head h4{font-size:.8rem;font-weight:800;color:#fff;margin:0;}
+.k-count{background:rgba(255,255,255,.25);color:#fff;border-radius:20px;padding:1px 8px;font-size:.7rem;font-weight:800;}
+.k-col-body{flex:1;background:#f8f5fd;border-radius:0 0 12px 12px;padding:8px;min-height:350px;transition:.15s;}
+.k-col-body.drag-over{background:#e8d5f5;border:2px dashed #4A1070;}
+.k-card{background:#fff;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 2px 8px rgba(74,16,112,.07);cursor:grab;border-left:3px solid #ddd;transition:.15s;}
+.k-card:hover{box-shadow:0 5px 16px rgba(74,16,112,.12);transform:translateY(-2px);}
+.kc-name{font-size:.84rem;font-weight:800;color:#1a0a2e;margin-bottom:3px;}
+.kc-phone{font-size:.72rem;color:#999;margin-bottom:7px;}
+.kc-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:7px;}
+.kc-tag{padding:2px 8px;border-radius:20px;font-size:.62rem;font-weight:700;color:#fff;}
+.kc-foot{display:flex;justify-content:space-between;font-size:.65rem;color:#bbb;margin-bottom:9px;}
+.kc-acts{display:flex;gap:4px;}
+.kb{height:28px;padding:0 9px;border-radius:8px;border:none;background:#f0ecf7;color:#4A1070;font-size:.74rem;cursor:pointer;display:inline-flex;align-items:center;gap:3px;font-family:'Nunito',sans-serif;font-weight:700;transition:.15s;}
+.kb:hover{background:#ede7f6;}
+.kb.red{background:#ffebee;color:#c62828;}
+.kb.green{background:#e8f5e9;color:#25D366;}
+.tag-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700;color:#fff;margin:2px;}
+.won-b{background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
+.lost-b{background:#ffebee;color:#c62828;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
+.lm-overlay{position:fixed;inset:0;background:rgba(26,10,46,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+.lm-box{background:#fff;border-radius:20px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.2);}
+.lm-head{position:sticky;top:0;background:#fff;padding:16px 20px;border-bottom:1px solid #f0e8fb;display:flex;justify-content:space-between;align-items:center;z-index:1;border-radius:20px 20px 0 0;}
+.note-item{background:#f8f5fd;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:.82rem;color:#444;line-height:1.6;border:1px solid rgba(123,45,139,.06);}
+
+/* WhatsApp */
+.inbox-layout{display:flex;height:calc(100vh - 130px);background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(123,45,139,.08);box-shadow:0 4px 24px rgba(74,16,112,.07);}
+.conv-list{width:300px;flex-shrink:0;border-right:1px solid #f5f0fb;display:flex;flex-direction:column;background:#fff;}
+.conv-items{flex:1;overflow-y:auto;}
+.conv-item{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;border-bottom:1px solid #faf7fe;transition:.1s;}
+.conv-item:hover{background:#faf7fe;}
+.conv-item.active{background:#f0e8fb;border-left:3px solid #4A1070;}
+.conv-item.unread .conv-name{font-weight:900;color:#1a0a2e;}
+.conv-avi{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1rem;flex-shrink:0;}
+.conv-info{flex:1;min-width:0;}
+.conv-name{font-size:.84rem;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.conv-last{font-size:.72rem;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.conv-time{font-size:.66rem;color:#ccc;white-space:nowrap;}
+.unread-dot{width:20px;height:20px;background:#25D366;border-radius:50%;color:#fff;font-size:.62rem;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.chat-win{flex:1;display:flex;flex-direction:column;min-width:0;background:#f0f2f5;}
+.chat-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;gap:12px;background:#f8f5fd;}
+.chat-back-btn{display:none;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#4A1070;padding:4px 8px;}
+.chat-header{padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;background:#fff;flex-shrink:0;box-shadow:0 1px 4px rgba(74,16,112,.05);}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:4px;}
+.msg-wrap{display:flex;flex-direction:column;}
+.msg-wrap.out{align-items:flex-end;}
+.msg-wrap.in{align-items:flex-start;}
+.msg-bubble{max-width:72%;padding:9px 13px 5px;border-radius:10px;font-size:.84rem;line-height:1.55;word-break:break-word;}
+.msg-bubble.in{background:#fff;border-radius:0 10px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.msg-bubble.out{background:#dcf8c6;border-radius:10px 0 10px 10px;}
+.msg-time{font-size:.62rem;color:#bbb;margin-top:3px;display:flex;align-items:center;justify-content:flex-end;gap:3px;}
+.msg-date-div{text-align:center;font-size:.7rem;color:#999;font-weight:700;background:rgba(255,255,255,.9);padding:4px 14px;border-radius:20px;align-self:center;margin:6px 0;border:1px solid rgba(123,45,139,.1);}
+.chat-input-area{padding:10px 12px;border-top:1px solid #eee;background:#fff;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+.chat-input-area textarea{flex:1;padding:10px 14px;border:1.5px solid #e8dff5;border-radius:20px;font-family:'Nunito',sans-serif;font-size:.87rem;outline:none;resize:none;max-height:100px;line-height:1.5;background:#f8f5fd;transition:.2s;}
+.chat-input-area textarea:focus{border-color:#4A1070;background:#fff;}
+.wa-send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#25D366,#1da851);color:#fff;border:none;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(37,211,102,.3);transition:.15s;}
+.wa-send-btn:hover{transform:scale(1.05);}
+.wa-tmpl-btn{width:38px;height:38px;border-radius:50%;background:#f8f5fd;color:#4A1070;border:1.5px solid #e8dff5;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tmpl-dd{position:absolute;bottom:68px;left:8px;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(74,16,112,.15);padding:6px;min-width:275px;max-height:260px;overflow-y:auto;z-index:100;display:none;border:1px solid #f0e8fb;}
+.tmpl-dd.open{display:block;}
+.tmpl-item{padding:10px 12px;border-radius:9px;cursor:pointer;border-bottom:1px solid #faf7fe;}
+.tmpl-item:hover{background:#f8f5fd;}
+.tmpl-item-name{font-size:.8rem;font-weight:800;color:#4A1070;}
+.tmpl-item-body{font-size:.73rem;color:#888;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.contact-panel{width:240px;flex-shrink:0;border-left:1px solid #f5f0fb;padding:16px;overflow-y:auto;background:#fafafa;}
+.contact-panel h4{font-size:.68rem;font-weight:800;color:#4A1070;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-bottom:5px;border-bottom:1px solid #f0e8fb;}
+.cp-field{font-size:.8rem;color:#444;margin-bottom:7px;line-height:1.6;}
+.cp-lbl{font-size:.65rem;color:#bbb;font-weight:700;display:block;text-transform:uppercase;margin-bottom:2px;}
+
+/* Products tabs */
+.tab-bar{display:flex;gap:4px;background:#f8f5fd;border-radius:12px;padding:4px;margin-bottom:20px;border:1px solid rgba(123,45,139,.08);flex-wrap:wrap;}
+.tab-btn{padding:8px 18px;border-radius:9px;font-size:.8rem;font-weight:800;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
+.tab-btn.active{background:#4A1070;color:#fff;box-shadow:0 2px 8px rgba(74,16,112,.25);}
+.tab-btn:hover:not(.active){background:#ede7f6;color:#4A1070;}
+.color-chip{background:#ede7f6;color:#4A1070;padding:3px 10px;border-radius:20px;font-size:.76rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;margin:2px;}
+
+/* CRM view tabs */
+.view-tabs{display:flex;gap:4px;background:#f8f5fd;border-radius:10px;padding:4px;border:1px solid rgba(123,45,139,.08);}
+.view-tab{padding:7px 16px;border-radius:7px;font-size:.8rem;font-weight:800;cursor:pointer;border:none;background:transparent;font-family:'Nunito',sans-serif;color:#888;transition:.2s;}
+.view-tab.active{background:#4A1070;color:#fff;}
+.crm-tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+.crm-tbl th{background:#f8f5fd;padding:10px 12px;font-size:.7rem;font-weight:800;color:#4A1070;text-align:left;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;}
+.crm-tbl td{padding:11px 12px;font-size:.8rem;border-bottom:1px solid #f5f0fb;color:#333;vertical-align:middle;}
+.crm-tbl tr:hover td{background:#faf7fe;}
+
+/* Mobile WA */
+@media(max-width:768px){
+  .inbox-layout{height:calc(100vh - 120px);border-radius:0;}
+  .conv-list{width:100%;border-right:none;}
+  .conv-list.hidden{display:none!important;}
+  .chat-win{display:none!important;position:fixed;inset:0;z-index:250;background:#f0f2f5;flex-direction:column;top:54px;bottom:62px;}
+  .chat-win.mob-open{display:flex!important;}
+  .chat-back-btn{display:block;}
+  .contact-panel{display:none;}
+  .crm-stats{grid-template-columns:1fr 1fr!important;}
+  .crm-stats .crm-stat:last-child{grid-column:1/-1;}
+  .lm-overlay{padding:0;align-items:flex-end;}
+  .lm-box{border-radius:20px 20px 0 0;max-height:95vh;}
+  .kanban-col{width:200px;}
+}
+
+/* Dashboard-specific */
+.ai-panel{background:linear-gradient(135deg,#f8f4ff,#ede7f6);border:1px solid rgba(123,45,139,.15);border-radius:16px;padding:20px;}
+.ai-panel-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.ai-orb{width:38px;height:38px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,#f7941d,#4A1070);display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 4px 12px rgba(247,148,29,.3);}
+.ai-panel-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:.88rem;color:#1a0a2e;}
+.ai-panel-sub{font-size:.68rem;color:#999;font-weight:600;}
+.ai-chips{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.ai-chip{background:#fff;border:1px solid rgba(123,45,139,.12);border-radius:10px;padding:9px 12px;font-size:.76rem;color:#4A1070;cursor:pointer;font-weight:700;transition:.15s;text-align:left;display:flex;align-items:center;gap:8px;font-family:'Nunito',sans-serif;}
+.ai-chip:hover{background:#ede7f6;border-color:rgba(123,45,139,.25);}
+.ai-input-wrap{display:flex;gap:8px;margin-top:4px;}
+.ai-input{flex:1;padding:9px 14px;background:#fff;border:1px solid rgba(123,45,139,.15);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;color:#1a0a2e;}
+.ai-input:focus{border-color:#4A1070;}
+.ai-send-btn{width:36px;height:36px;background:linear-gradient(135deg,#f7941d,#e07819);border:none;border-radius:10px;cursor:pointer;font-size:.9rem;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.ai-response{background:#fff;border:1px solid rgba(123,45,139,.1);border-radius:10px;padding:12px;margin-top:10px;font-size:.78rem;line-height:1.6;color:#333;display:none;}
+.chart-wrap{height:140px;display:flex;align-items:flex-end;gap:6px;padding-bottom:4px;}
+.chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.chart-bar{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#c9b3e8,#ddd5f5);transition:.3s;min-height:4px;}
+.chart-bar.today{background:linear-gradient(180deg,#f7941d,#e07819);}
+.chart-bar.high{background:linear-gradient(180deg,#4A1070,#7B2D8B);}
+.chart-label{font-size:.6rem;color:#bbb;font-weight:700;}
+.chart-legend{display:flex;gap:16px;margin-top:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.68rem;color:#888;font-weight:700;}
+.legend-dot{width:8px;height:8px;border-radius:50%;}
+.ord-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.ord-table th{background:#f8f5fd;color:#4A1070;font-weight:800;padding:10px 12px;text-align:left;white-space:nowrap;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;}
+.ord-table td{padding:11px 12px;border-bottom:1px solid #f5f0fb;vertical-align:middle;}
+.ord-table tr:last-child td{border-bottom:none;}
+.ord-table tr:hover td{background:#faf7fe;}
+.ord-avatar{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#4A1070,#7B2D8B);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.7rem;margin-right:8px;vertical-align:middle;}
+.dash-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-bottom:18px;}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.qa-card{background:#fff;border:1px solid rgba(123,45,139,.08);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;transition:.2s;text-decoration:none;display:block;}
+.qa-card:hover{background:#f8f5fd;border-color:rgba(123,45,139,.2);transform:translateY(-2px);}
+.qa-icon{width:44px;height:44px;border-radius:12px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.qa-label{font-size:.72rem;font-weight:800;color:#4A1070;}
+.ls-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f0fb;font-size:.82rem;}
+.ls-item:last-child{border-bottom:none;}
+.ls-name{font-weight:700;color:#1a0a2e;}
+.notif-drawer{position:fixed;top:60px;right:20px;width:300px;background:#fff;border-radius:16px;border:1px solid rgba(123,45,139,.12);box-shadow:0 16px 40px rgba(74,16,112,.15);z-index:400;display:none;overflow:hidden;}
+.notif-drawer.open{display:block;animation:modalIn .15s ease;}
+.notif-item{padding:12px 16px;border-bottom:1px solid #f5f0fb;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:.15s;}
+.notif-item:hover{background:#faf7fe;}
+.notif-dot-indicator{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.notif-text{font-size:.78rem;color:#333;line-height:1.5;}
+.notif-time{font-size:.65rem;color:#bbb;margin-top:2px;font-weight:600;}
+.report-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:1100px){.dash-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  .dash-grid{grid-template-columns:1fr;}
+  .quick-grid{grid-template-columns:repeat(2,1fr);}
+  .report-row{grid-template-columns:1fr;}
+  .notif-drawer{right:10px;width:calc(100vw - 20px);}
+}
+</style>
+<script>window._ioStub={on:():{},emit:():{},to:()=>window._ioStub,disconnect:():{}};
+// Minimal shared config - no external shared.js dependency for speed
+const API = window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
+let token=localStorage.getItem('kc_admin_token')||'';
+let adminUser=null;
+window.KC={
+  init(cb){if(token){fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}}).then(r=>r.json()).then(d=>{if(d.user&&['admin','super_admin'].includes(d.user.role)){adminUser=d.user;if(cb)cb(d.user);}else{token='';localStorage.removeItem('kc_admin_token');showLoginScreen();}}).catch(()=>showLoginScreen())}else showLoginScreen();},
+  getUser:()=>adminUser,getToken:()=>token
+};
+function showLoginScreen(){document.getElementById('loginScreen').style.display='flex';document.getElementById('adminApp').style.display='none';}
+function showAdminApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminApp').style.display='flex';}
+async function adminLogin(){
+  const email=document.getElementById('adminEmail').value.trim();
+  const pass=document.getElementById('adminPass').value;
+  const err=document.getElementById('loginErr');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='⚠️ Enter email and password';err.style.display='block';return;}
+  try{
+    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Login failed');
+    if(!['admin','super_admin'].includes(d.user.role))throw new Error('Not an admin account');
+    token=d.token;adminUser=d.user;localStorage.setItem('kc_admin_token',token);
+    bootApp(d.user);
+  }catch(e){err.textContent='❌ '+e.message;err.style.display='block';}
+}
+function adminLogout(){token='';adminUser=null;localStorage.removeItem('kc_admin_token');showLoginScreen();}
+async function adminForgot(){
+  const email=document.getElementById('forgotEmail').value.trim();
+  if(!email){toast('⚠️ Enter email');return;}
+  try{await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});toast('✅ Reset link sent to '+email);document.getElementById('forgotBox').style.display='none';}catch(e){toast('❌ '+e.message);}
+}
+async function apiFetch(path,method='GET',body=null){
+  const opts={method,headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})}};
+  if(body)opts.body=JSON.stringify(body);
+  const r=await fetch(API+path,opts);
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||'Error '+r.status);
+  return d;
+}
+function toast(msg,dur=2800){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data:'))return s;return window.location.origin+(s.startsWith('/')?s:'/'+s);}
+</script>
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
+<!-- LOGIN SCREEN - visible by default -->
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);">
-  <div style="background:#fff;border-radius:24px;padding:44px 40px;width:380px;max-width:96vw;box-shadow:0 24px 64px rgba(0,0,0,.25);">
-    <div style="text-align:center;margin-bottom:28px;">
-      <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:80px;object-fit:contain;">
+  <div style="background:#fff;border-radius:24px;padding:40px 36px;width:380px;max-width:95vw;box-shadow:0 24px 64px rgba(0,0,0,.3);">
+    <div style="text-align:center;margin-bottom:24px;">
+      <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:64px;object-fit:contain;">
     </div>
-    <h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.4rem;font-weight:800;margin-bottom:6px;">Welcome back</h2>
-    <p style="text-align:center;color:#999;font-size:.85rem;margin-bottom:28px;">Sign in to your admin panel</p>
+    <h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.35rem;font-weight:800;margin-bottom:5px;">Welcome back</h2>
+    <p style="text-align:center;color:#999;font-size:.84rem;margin-bottom:24px;">Sign in to your admin panel</p>
     <div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div>
     <div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
     <button class="btn-full" onclick="adminLogin()" style="margin-top:8px;">Sign In →</button>
-    <p style="text-align:center;margin-top:16px;font-size:.82rem;">
-      <a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a>
-    </p>
+    <p style="text-align:center;margin-top:14px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p>
     <div id="forgotBox" style="display:none;margin-top:10px;">
       <div class="fgroup"><label>Your email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div>
       <button class="btn-full" onclick="adminForgot()">Send Reset Link</button>
     </div>
-    <div id="loginErr" style="color:#c62828;font-size:.82rem;text-align:center;margin-top:12px;display:none;padding:8px;background:#ffebee;border-radius:8px;"></div>
+    <div id="loginErr" style="display:none;color:#c62828;font-size:.82rem;text-align:center;margin-top:10px;padding:8px;background:#ffebee;border-radius:8px;"></div>
   </div>
 </div>
 
-<!-- ── ADMIN APP ── -->
+<!-- ADMIN APP - hidden by default -->
 <div id="adminApp" style="display:none;">
 
-  <!-- Mobile header -->
+  <!-- Mobile top header -->
   <div class="mob-header">
-    <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
+    <img src="/logo-white.png" alt="KidsCart" style="height:28px;object-fit:contain;">
     <span class="mob-hdr-title" id="mobTitle">Dashboard</span>
     <div class="mob-hdr-right" id="mobUser"></div>
   </div>
@@ -50,16 +727,13 @@
   <!-- Mobile bottom nav -->
   <div class="mob-bar">
     <div class="mob-bar-inner">
-      <button class="mob-btn active" onclick="mobNav('dashboard',this)"><span class="mi">📊</span><span class="ml">Home</span></button>
+      <button class="mob-btn active" id="mbn-dash" onclick="mobNav('dashboard',this)"><span class="mi">📊</span><span class="ml">Home</span></button>
       <button class="mob-btn" onclick="location.href='/admin/orders.html'"><span class="mi">📦</span><span class="ml">Orders</span></button>
       <button class="mob-btn" onclick="location.href='/admin/products.html'"><span class="mi">👗</span><span class="ml">Products</span></button>
-      <button class="mob-btn" onclick="location.href='/admin/whatsapp.html'">
-        <span class="mi">📱</span><span class="ml">WhatsApp</span>
-        <span class="mob-badge" id="mobWaBadge" style="display:none;">0</span>
-      </button>
+      <button class="mob-btn" onclick="location.href='/admin/whatsapp.html'"><span class="mi">📱</span><span class="ml">WhatsApp</span><span class="mob-badge" id="mobWaBadge" style="display:none;">0</span></button>
       <button class="mob-btn" onclick="location.href='/admin/crm.html'"><span class="mi">🤝</span><span class="ml">CRM</span></button>
-      <button class="mob-btn" onclick="mobNav('customers',this)"><span class="mi">👥</span><span class="ml">Customers</span></button>
-      <button class="mob-btn" onclick="mobNav('reports',this)"><span class="mi">📈</span><span class="ml">Reports</span></button>
+      <button class="mob-btn" id="mbn-cust" onclick="mobNav('customers',this)"><span class="mi">👥</span><span class="ml">Customers</span></button>
+      <button class="mob-btn" id="mbn-rep" onclick="mobNav('reports',this)"><span class="mi">📈</span><span class="ml">Reports</span></button>
       <button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button>
     </div>
   </div>
@@ -68,254 +742,122 @@
   <div class="sidebar" id="sidebar">
     <div class="sb-top">
       <div class="sb-brand">
-        <div class="sb-logo-img">
-          <img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart">
-        </div>
-        <div>
-          <div class="sb-logo-text">KidsCart</div>
-          <div class="sb-logo-sub">Admin Panel v3</div>
-        </div>
+        <img src="/logo-white.png" alt="KidsCart" style="height:32px;object-fit:contain;filter:none;">
       </div>
       <button class="sb-toggle" onclick="toggleSidebar()" title="Collapse sidebar">◀</button>
     </div>
-
     <nav class="sb-nav">
       <div class="nav-group-label">Main</div>
-      <div class="nav-item active" id="nav-dashboard" onclick="show('dashboard',this)">
-        <span class="nav-icon">📊</span><span class="sb-label">Dashboard</span>
-      </div>
-      <a class="nav-item" href="/admin/orders.html">
-        <span class="nav-icon">📦</span><span class="sb-label">Orders</span>
-      </a>
-      <a class="nav-item" href="/admin/products.html">
-        <span class="nav-icon">👗</span><span class="sb-label">Products</span>
-      </a>
-      <a class="nav-item" href="/admin/products.html#stock">
-        <span class="nav-icon">📋</span><span class="sb-label">Stock</span>
-      </a>
-      <a class="nav-item" href="/admin/products.html#addprod">
-        <span class="nav-icon">➕</span><span class="sb-label">Add Product</span>
-      </a>
-
+      <div class="nav-item active" onclick="showPanel('dashboard',this)"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></div>
+      <a class="nav-item" href="/admin/orders.html"><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a>
+      <a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a>
+      <a class="nav-item" href="/admin/products.html#stock"><span class="nav-icon">📋</span><span class="sb-label">Stock</span></a>
+      <a class="nav-item" href="/admin/products.html#addprod"><span class="nav-icon">➕</span><span class="sb-label">Add Product</span></a>
       <div class="nav-group-label">Marketing</div>
-      <a class="nav-item" href="/admin/products.html#banners">
-        <span class="nav-icon">🎨</span><span class="sb-label">Banners</span>
-      </a>
-      <a class="nav-item" href="/admin/products.html#coupons">
-        <span class="nav-icon">🎟️</span><span class="sb-label">Coupons</span>
-      </a>
-      <div class="nav-item" id="nav-customers" onclick="show('customers',this)">
-        <span class="nav-icon">👥</span><span class="sb-label">Customers</span>
-      </div>
-
+      <a class="nav-item" href="/admin/products.html#banners"><span class="nav-icon">🎨</span><span class="sb-label">Banners</span></a>
+      <a class="nav-item" href="/admin/products.html#coupons"><span class="nav-icon">🎟️</span><span class="sb-label">Coupons</span></a>
+      <div class="nav-item" onclick="showPanel('customers',this)"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></div>
       <div class="nav-group-label">Communication</div>
-      <a class="nav-item" href="/admin/whatsapp.html">
-        <span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span>
-        <span class="nav-badge" id="waBadge" style="display:none;">0</span>
-      </a>
-      <a class="nav-item" href="/admin/crm.html">
-        <span class="nav-icon">🤝</span><span class="sb-label">CRM</span>
-      </a>
-
+      <a class="nav-item" href="/admin/whatsapp.html"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span><span id="waBadge" style="display:none;background:#25D366;color:#fff;border-radius:20px;padding:1px 7px;font-size:.6rem;font-weight:800;margin-left:auto;">0</span></a>
+      <a class="nav-item" href="/admin/crm.html"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a>
       <div class="nav-group-label">Analytics</div>
-      <div class="nav-item" id="nav-reports" onclick="show('reports',this)">
-        <span class="nav-icon">📈</span><span class="sb-label">Reports</span>
-      </div>
-
-      <div class="nav-group-label super-only" style="display:none;">Admin</div>
-      <div class="nav-item super-only" id="nav-adminusers" style="display:none;" onclick="show('adminusers',this)">
-        <span class="nav-icon">🔐</span><span class="sb-label">Admin Users</span>
-      </div>
+      <div class="nav-item" onclick="showPanel('reports',this)"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></div>
+      <div class="nav-item super-only" style="display:none;" onclick="showPanel('adminusers',this)"><span class="nav-icon">🔐</span><span class="sb-label">Admin Users</span></div>
     </nav>
-
     <div class="sb-user">
       <div class="sb-avatar" id="sbAvatar">A</div>
-      <div class="sb-user-info">
-        <div class="sb-user-name" id="sbUserName">Admin</div>
-        <div class="sb-user-role" id="sbUserRole">Admin</div>
-      </div>
+      <div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div>
       <button class="sb-logout" onclick="adminLogout()" title="Logout">🚪</button>
     </div>
   </div>
 
-  <!-- Main -->
+  <!-- Main area -->
   <div class="main" id="mainArea">
-    <!-- Topbar -->
     <div class="topbar">
-      <div class="topbar-left">
-        <h2 class="page-title" id="pageTitle">Dashboard</h2>
-      </div>
+      <h2 class="page-title" id="pageTitle">Dashboard</h2>
       <div class="topbar-right">
-        <div class="notif-btn" onclick="toggleNotifDrawer()" title="Notifications">
-          🔔<div class="notif-dot" id="notifDot" style="display:none;"></div>
-        </div>
-        <button class="ai-btn" onclick="openAiPanel()">✨ Ask AI</button>
+        <div class="notif-btn" onclick="toggleNotifDrawer()">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></div>
+        <button class="ai-btn" onclick="focusAI()">✨ Ask AI</button>
         <span class="admin-badge" id="adminName">Admin</span>
         <a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a>
       </div>
     </div>
 
-    <!-- Notification Drawer -->
+    <!-- Notification drawer -->
     <div class="notif-drawer" id="notifDrawer">
       <div style="padding:14px 16px;border-bottom:1px solid #f5f0fb;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.85rem;color:#1a0a2e;">Notifications</span>
         <button onclick="markAllRead()" style="font-size:.72rem;color:#4A1070;font-weight:700;background:none;border:none;cursor:pointer;">Mark all read</button>
       </div>
       <div id="notifList">
-        <div class="notif-item"><div class="notif-dot-indicator" style="background:#f7941d;"></div><div><div class="notif-text">New order placed — check orders</div><div class="notif-time">Just now</div></div></div>
-        <div class="notif-item"><div class="notif-dot-indicator" style="background:#25D366;"></div><div><div class="notif-text">New WhatsApp message received</div><div class="notif-time">2 min ago</div></div></div>
-        <div class="notif-item"><div class="notif-dot-indicator" style="background:#e53935;"></div><div><div class="notif-text">3 items running low on stock</div><div class="notif-time">1 hour ago</div></div></div>
+        <div class="notif-item"><div class="notif-dot-indicator" style="background:#f7941d;"></div><div><div class="notif-text">New order placed — check orders</div><div class="notif-time">Loading…</div></div></div>
       </div>
     </div>
 
     <div class="content">
 
-      <!-- ══ DASHBOARD ══ -->
+      <!-- ══ DASHBOARD PANEL ══ -->
       <div class="panel active" id="dashboardPanel">
-
-        <!-- Stat cards -->
         <div class="stats-grid">
-          <div class="stat-card v1">
-            <div class="stat-icon">📦</div>
-            <div class="stat-label">Total Orders</div>
-            <div class="stat-value" id="statOrders">—</div>
-            <div class="stat-sub">Excl. cancelled</div>
-          </div>
-          <div class="stat-card v2">
-            <div class="stat-icon">💰</div>
-            <div class="stat-label">Revenue</div>
-            <div class="stat-value" id="statRevenue">—</div>
-            <div class="stat-sub">Excl. cancelled</div>
-          </div>
-          <div class="stat-card v3">
-            <div class="stat-icon">👥</div>
-            <div class="stat-label">Customers</div>
-            <div class="stat-value" id="statCustomers">—</div>
-            <div class="stat-sub">Registered users</div>
-          </div>
-          <div class="stat-card v4">
-            <div class="stat-icon">⚠️</div>
-            <div class="stat-label">Low Stock</div>
-            <div class="stat-value" id="statLowStock">—</div>
-            <div class="stat-sub">Items ≤ 10 units</div>
-          </div>
+          <div class="stat-card v1"><div class="stat-icon">📦</div><div class="stat-label">Total Orders</div><div class="stat-value" id="statOrders">—</div><div class="stat-sub">Excl. cancelled</div></div>
+          <div class="stat-card v2"><div class="stat-icon">💰</div><div class="stat-label">Revenue</div><div class="stat-value" id="statRevenue">—</div><div class="stat-sub">Excl. cancelled</div></div>
+          <div class="stat-card v3"><div class="stat-icon">👥</div><div class="stat-label">Customers</div><div class="stat-value" id="statCustomers">—</div><div class="stat-sub">Registered users</div></div>
+          <div class="stat-card v4"><div class="stat-icon">⚠️</div><div class="stat-label">Low Stock</div><div class="stat-value" id="statLowStock">—</div><div class="stat-sub">Items ≤ 10 units</div></div>
         </div>
 
-        <!-- Quick actions -->
         <div class="card" style="margin-bottom:18px;">
-          <div class="card-head">
-            <span class="card-title">Quick Actions</span>
-          </div>
+          <div class="card-head"><span class="card-title">Quick Actions</span></div>
           <div class="quick-grid">
-            <a href="/admin/products.html#addprod" class="qa-card">
-              <div class="qa-icon" style="background:#ede7f6;">➕</div>
-              <div class="qa-label">Add Product</div>
-            </a>
-            <a href="/admin/whatsapp.html" class="qa-card">
-              <div class="qa-icon" style="background:#e8f5e9;">💬</div>
-              <div class="qa-label">WhatsApp</div>
-            </a>
-            <a href="/admin/products.html#coupons" class="qa-card">
-              <div class="qa-icon" style="background:#fff3e0;">🎟️</div>
-              <div class="qa-label">Create Coupon</div>
-            </a>
-            <a href="/admin/products.html#banners" class="qa-card">
-              <div class="qa-icon" style="background:#fce4ec;">🎨</div>
-              <div class="qa-label">Add Banner</div>
-            </a>
+            <a href="/admin/products.html#addprod" class="qa-card"><div class="qa-icon" style="background:#ede7f6;">➕</div><div class="qa-label">Add Product</div></a>
+            <a href="/admin/whatsapp.html" class="qa-card"><div class="qa-icon" style="background:#e8f5e9;">💬</div><div class="qa-label">WhatsApp</div></a>
+            <a href="/admin/products.html#coupons" class="qa-card"><div class="qa-icon" style="background:#fff3e0;">🎟️</div><div class="qa-label">Create Coupon</div></a>
+            <a href="/admin/products.html#banners" class="qa-card"><div class="qa-icon" style="background:#fce4ec;">🎨</div><div class="qa-label">Add Banner</div></a>
           </div>
         </div>
 
-        <!-- Main dashboard grid -->
         <div class="dash-grid">
-          <!-- Left: recent orders + chart -->
           <div>
-            <!-- Revenue chart -->
             <div class="card">
-              <div class="card-head">
-                <span class="card-title">Revenue — Last 7 Days</span>
-                <span id="chartTotal" style="font-size:.78rem;color:#f7941d;font-weight:800;"></span>
-              </div>
-              <div class="chart-wrap" id="revenueChart">
-                <div style="color:#bbb;font-size:.82rem;text-align:center;width:100%;padding:20px;">Loading chart…</div>
-              </div>
-              <div class="chart-legend">
-                <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(#f7941d,#e07819);"></div> Highest day</div>
-                <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(#4A1070,#7B2D8B);"></div> Other days</div>
-              </div>
+              <div class="card-head"><span class="card-title">Revenue — Last 7 Days</span><span id="chartTotal" style="font-size:.78rem;color:#f7941d;font-weight:800;"></span></div>
+              <div class="chart-wrap" id="revenueChart"><div style="color:#bbb;font-size:.82rem;text-align:center;width:100%;padding:20px;">Loading chart…</div></div>
+              <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#f7941d;"></div>Highest day</div><div class="legend-item"><div class="legend-dot" style="background:#4A1070;"></div>Other days</div></div>
             </div>
-
-            <!-- Recent orders -->
             <div class="card">
-              <div class="card-head">
-                <span class="card-title">Recent Orders</span>
-                <a href="/admin/orders.html" class="card-action">View All →</a>
-              </div>
-              <div class="tbl-wrap">
-                <table class="ord-table">
-                  <thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
-                  <tbody id="recentOrdersTable"><tr><td colspan="5" style="text-align:center;color:#bbb;padding:20px;">Loading…</td></tr></tbody>
-                </table>
-              </div>
+              <div class="card-head"><span class="card-title">Recent Orders</span><a href="/admin/orders.html" class="card-action">View All →</a></div>
+              <div class="tbl-wrap"><table class="ord-table"><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="recentOrdersTable"><tr><td colspan="5" style="text-align:center;color:#bbb;padding:20px;">Loading…</td></tr></tbody></table></div>
             </div>
           </div>
-
-          <!-- Right: AI + low stock -->
           <div style="display:flex;flex-direction:column;gap:18px;">
-
-            <!-- AI Panel -->
             <div class="ai-panel">
-              <div class="ai-panel-header">
-                <div class="ai-orb">✨</div>
-                <div>
-                  <div class="ai-panel-title">AI Assistant</div>
-                  <div class="ai-panel-sub">Ask anything about your store</div>
-                </div>
-              </div>
+              <div class="ai-panel-header"><div class="ai-orb">✨</div><div><div class="ai-panel-title">AI Assistant</div><div class="ai-panel-sub">Ask anything about your store</div></div></div>
               <div class="ai-chips">
                 <button class="ai-chip" onclick="askAI('Which products are selling the most this week?')">📦 Which products sell most?</button>
                 <button class="ai-chip" onclick="askAI('How is revenue trending compared to last week?')">📈 How is revenue trending?</button>
                 <button class="ai-chip" onclick="askAI('Which items are low on stock and need restocking?')">⚠️ What needs restocking?</button>
               </div>
-              <div class="ai-input-wrap">
-                <input class="ai-input" id="aiInput" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')askAI()">
-                <button class="ai-send-btn" onclick="askAI()">→</button>
-              </div>
+              <div class="ai-input-wrap"><input class="ai-input" id="aiInput" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')askAI()"><button class="ai-send-btn" onclick="askAI()">→</button></div>
               <div class="ai-response" id="aiResponse"></div>
             </div>
-
-            <!-- Low stock -->
             <div class="card" style="margin-bottom:0;">
-              <div class="card-head">
-                <span class="card-title">⚠️ Low Stock</span>
-                <a href="/admin/products.html#stock" class="card-action">Manage →</a>
-              </div>
+              <div class="card-head"><span class="card-title">⚠️ Low Stock</span><a href="/admin/products.html#stock" class="card-action">Manage →</a></div>
               <div id="lowStockList"><p style="text-align:center;color:#bbb;padding:20px;font-size:.82rem;">Loading…</p></div>
             </div>
-
           </div>
         </div>
       </div>
 
-      <!-- ══ CUSTOMERS ══ -->
+      <!-- ══ CUSTOMERS PANEL ══ -->
       <div class="panel" id="customersPanel">
         <div class="card">
           <div class="card-head"><span class="card-title">👥 Customers</span></div>
-          <div class="search-bar">
-            <input type="text" id="custSearch" placeholder="Search by name or email…" oninput="searchCustomers()">
-          </div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Verified</th><th>Joined</th><th>Addresses</th><th>Action</th></tr></thead>
-              <tbody id="customersTable"><tr><td colspan="7" style="text-align:center;color:#bbb;padding:24px;">Loading…</td></tr></tbody>
-            </table>
-          </div>
+          <div class="search-bar"><input type="text" id="custSearch" placeholder="Search by name or email…" oninput="searchCustomers()"></div>
+          <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Verified</th><th>Joined</th><th>Addresses</th><th>Action</th></tr></thead><tbody id="customersTable"><tr><td colspan="7" style="text-align:center;color:#bbb;padding:24px;">Loading…</td></tr></tbody></table></div>
         </div>
       </div>
 
-      <!-- ══ REPORTS ══ -->
+      <!-- ══ REPORTS PANEL ══ -->
       <div class="panel" id="reportsPanel">
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card">
           <div class="card-head"><span class="card-title">📈 Sales Report</span></div>
           <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;">
             <div class="fgroup" style="margin-bottom:0;"><label>From</label><input type="date" id="rptFrom" style="width:auto;"></div>
@@ -325,19 +867,13 @@
             <button class="btn btn-ghost" onclick="setReportRange(30)">Last 30 days</button>
           </div>
           <div class="report-row">
-            <div>
-              <div style="font-weight:800;font-size:.82rem;color:#4A1070;margin-bottom:10px;">📅 Daily Revenue</div>
-              <div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Orders</th><th>Revenue</th></tr></thead><tbody id="salesByDayTable"><tr><td colspan="3" style="text-align:center;color:#bbb;padding:16px;">Run a report</td></tr></tbody></table></div>
-            </div>
-            <div>
-              <div style="font-weight:800;font-size:.82rem;color:#4A1070;margin-bottom:10px;">🏆 Top Products</div>
-              <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Product</th><th>Units Sold</th><th>Revenue</th></tr></thead><tbody id="topProdsTable"><tr><td colspan="4" style="text-align:center;color:#bbb;padding:16px;">Run a report</td></tr></tbody></table></div>
-            </div>
+            <div><div style="font-weight:800;font-size:.82rem;color:#4A1070;margin-bottom:10px;">📅 Daily Revenue</div><div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Orders</th><th>Revenue</th></tr></thead><tbody id="salesByDayTable"><tr><td colspan="3" style="text-align:center;color:#bbb;padding:16px;">Run a report</td></tr></tbody></table></div></div>
+            <div><div style="font-weight:800;font-size:.82rem;color:#4A1070;margin-bottom:10px;">🏆 Top Products</div><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Product</th><th>Units Sold</th><th>Revenue</th></tr></thead><tbody id="topProdsTable"><tr><td colspan="4" style="text-align:center;color:#bbb;padding:16px;">Run a report</td></tr></tbody></table></div></div>
           </div>
         </div>
       </div>
 
-      <!-- ══ ADMIN USERS ══ -->
+      <!-- ══ ADMIN USERS PANEL ══ -->
       <div class="panel" id="adminusersPanel">
         <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;">
           <div class="card">
@@ -345,21 +881,13 @@
             <div class="fgroup"><label>Full Name *</label><input type="text" id="newAdminName" placeholder="John Doe"></div>
             <div class="fgroup"><label>Email *</label><input type="email" id="newAdminEmail" placeholder="admin@example.com"></div>
             <div class="fgroup"><label>Password *</label><input type="password" id="newAdminPass" placeholder="Min 8 characters"></div>
-            <div class="fgroup"><label>Role</label>
-              <select id="newAdminRole">
-                <option value="admin">Admin</option>
-                <option value="super_admin">Super Admin</option>
-              </select>
-            </div>
+            <div class="fgroup"><label>Role</label><select id="newAdminRole"><option value="admin">Admin</option><option value="super_admin">Super Admin</option></select></div>
             <button class="btn btn-pp" onclick="addAdminUser()" style="width:100%;margin-top:4px;">➕ Add Admin User</button>
-            <div id="addAdminErr" style="color:#c62828;font-size:.8rem;margin-top:8px;display:none;"></div>
+            <div id="addAdminErr" style="display:none;color:#c62828;font-size:.8rem;margin-top:8px;"></div>
           </div>
           <div class="card">
-            <div class="card-head"><span class="card-title">🔐 Admin Users</span></div>
-            <div class="tbl-wrap"><table>
-              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
-              <tbody id="adminUsersTable"><tr><td colspan="4" style="text-align:center;color:#bbb;padding:24px;">Loading…</td></tr></tbody>
-            </table></div>
+            <div class="card-head"><span class="card-title">🔐 Admin Users</span><button class="card-action" onclick="loadAdminUsers()">↻ Refresh</button></div>
+            <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody id="adminUsersTable"><tr><td colspan="4" style="text-align:center;color:#bbb;padding:24px;">Loading…</td></tr></tbody></table></div>
           </div>
         </div>
       </div>
@@ -368,47 +896,17 @@
   </div><!-- /main -->
 </div><!-- /adminApp -->
 
-<!-- Update Order Status Modal -->
+<!-- Order Status Modal -->
 <div class="modal-overlay" id="orderModal">
   <div class="modal-box">
-    <div class="modal-head">
-      <h3>📦 Update Order #<span id="modalOrderId"></span></h3>
-      <button class="modal-close" onclick="closeOrderModal()">✕</button>
-    </div>
+    <div class="modal-head"><h3>📦 Update Order #<span id="modalOrderId"></span></h3><button class="modal-close" onclick="closeOrderModal()">✕</button></div>
     <div class="modal-body">
-      <div class="fgroup"><label>Order Status</label>
-        <select id="modalStatus">
-          <option value="placed">Placed</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="processing">Processing</option>
-          <option value="shipped">Shipped</option>
-          <option value="out_for_delivery">Out for Delivery</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-          <option value="returned">Returned</option>
-        </select>
-      </div>
+      <div class="fgroup"><label>Order Status</label><select id="modalStatus"><option value="placed">Placed</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="out_for_delivery">Out for Delivery</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option><option value="returned">Returned</option></select></div>
       <div class="grid2">
-        <div class="fgroup"><label>Payment Method</label>
-          <select id="modalPayMethod">
-            <option value="cod">COD (Cash)</option>
-            <option value="upi">UPI</option>
-            <option value="card">Card</option>
-            <option value="netbanking">Net Banking</option>
-          </select>
-        </div>
-        <div class="fgroup"><label>Payment Status</label>
-          <select id="modalPayStatus">
-            <option value="pending">Pending</option>
-            <option value="paid">Paid ✅</option>
-            <option value="failed">Failed</option>
-            <option value="refunded">Refunded</option>
-          </select>
-        </div>
+        <div class="fgroup"><label>Payment Method</label><select id="modalPayMethod"><option value="cod">COD</option><option value="upi">UPI</option><option value="card">Card</option><option value="netbanking">Net Banking</option></select></div>
+        <div class="fgroup"><label>Payment Status</label><select id="modalPayStatus"><option value="pending">Pending</option><option value="paid">Paid ✅</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></div>
       </div>
-      <div class="fgroup"><label>Message to Customer (optional)</label>
-        <textarea id="modalMsg" placeholder="e.g. Your order is on the way! Tracking: XYZ123"></textarea>
-      </div>
+      <div class="fgroup"><label>Message to Customer</label><textarea id="modalMsg" placeholder="e.g. Your order is on the way!"></textarea></div>
       <input type="hidden" id="modalOrderDbId">
       <button class="btn-full" onclick="updateOrderStatus()">✅ Save Changes</button>
     </div>
@@ -417,186 +915,134 @@
 
 <!-- Order Detail Modal -->
 <div class="modal-overlay" id="orderDetailModal">
-  <div class="modal-box wide">
-    <div class="modal-head">
-      <h3>📦 Order Details</h3>
-      <button class="modal-close" onclick="closeOrderDetail()">✕</button>
-    </div>
-    <div class="modal-body" id="ordDetailBody">Loading…</div>
-  </div>
+  <div class="modal-box wide"><div class="modal-head"><h3>📦 Order Details</h3><button class="modal-close" onclick="closeOrderDetail()">✕</button></div><div class="modal-body" id="ordDetailBody">Loading…</div></div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-// ── CONFIG (shared.js provides API, apiFetch, toast, fmtDate etc.) ──────────
-let ordersData  = [];
-let custsData   = [];
+// ── BOOT ─────────────────────────────────────────────────────
 let sidebarOpen = true;
 
-// ── BOOT ─────────────────────────────────────────────────────────────────────
-window._kcAfterLogin = function(user) {
-  // Sidebar user info
+function bootApp(user) {
+  adminUser = user;
   const init = (user.name||'A').charAt(0).toUpperCase();
-  document.getElementById('sbAvatar').textContent    = init;
-  document.getElementById('sbUserName').textContent  = user.name || 'Admin';
-  document.getElementById('sbUserRole').textContent  = user.role === 'super_admin' ? 'Super Admin' : 'Admin';
-  document.getElementById('adminName').textContent   = '👤 ' + (user.name||'Admin');
-  document.getElementById('mobUser').textContent     = user.name || '';
-  // Show super-admin items
-  if (user.role === 'super_admin') {
-    document.querySelectorAll('.super-only').forEach(el => el.style.display = '');
-  }
+  document.getElementById('sbAvatar').textContent   = init;
+  document.getElementById('sbUserName').textContent = user.name||'Admin';
+  document.getElementById('sbUserRole').textContent = user.role==='super_admin'?'Super Admin':'Admin';
+  document.getElementById('adminName').textContent  = '👤 '+(user.name||'Admin');
+  document.getElementById('mobUser').textContent    = user.name||'';
+  if (user.role==='super_admin') document.querySelectorAll('.super-only').forEach(el=>el.style.display='flex');
   showAdminApp();
   loadDashboard();
-  pollWhatsAppBadge();
-};
+  setTimeout(pollWaBadge, 8000);
+}
 
 window.addEventListener('DOMContentLoaded', () => {
-  KC.init(window._kcAfterLogin);
+  KC.init(bootApp);
 });
 
-// ── SIDEBAR TOGGLE ────────────────────────────────────────────────────────────
+// ── SIDEBAR ───────────────────────────────────────────────────
 function toggleSidebar() {
-  const sb   = document.getElementById('sidebar');
-  const main = document.getElementById('mainArea');
-  const btn  = sb.querySelector('.sb-toggle');
-  sidebarOpen = !sidebarOpen;
-  sb.classList.toggle('collapsed', !sidebarOpen);
-  main.classList.toggle('expanded', !sidebarOpen);
-  btn.textContent = sidebarOpen ? '◀' : '▶';
-  localStorage.setItem('kc_sidebar', sidebarOpen ? '1' : '0');
+  const sb=document.getElementById('sidebar'), main=document.getElementById('mainArea'), btn=sb.querySelector('.sb-toggle');
+  sidebarOpen=!sidebarOpen;
+  sb.classList.toggle('collapsed',!sidebarOpen);
+  main.classList.toggle('expanded',!sidebarOpen);
+  btn.textContent=sidebarOpen?'◀':'▶';
+  localStorage.setItem('kc_sb',sidebarOpen?'1':'0');
 }
-// Restore sidebar state
-(function() {
-  const saved = localStorage.getItem('kc_sidebar');
-  if (saved === '0') {
-    setTimeout(() => {
-      const sb   = document.getElementById('sidebar');
-      const main = document.getElementById('mainArea');
-      if (sb) { sb.classList.add('collapsed'); main.classList.add('expanded'); sidebarOpen = false; sb.querySelector('.sb-toggle').textContent = '▶'; }
-    }, 50);
+(function(){
+  if(localStorage.getItem('kc_sb')==='0'){
+    setTimeout(()=>{
+      const sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');
+      if(sb){sb.classList.add('collapsed');if(main)main.classList.add('expanded');sidebarOpen=false;const btn=sb.querySelector('.sb-toggle');if(btn)btn.textContent='▶';}
+    },100);
   }
 })();
 
-// ── PANEL SWITCHER ────────────────────────────────────────────────────────────
-const panelTitles = {
-  dashboard:'Dashboard', customers:'Customers',
-  reports:'Reports & Analytics', adminusers:'Admin Users'
-};
-function show(id, navEl) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const panel = document.getElementById(id + 'Panel');
-  if (panel) panel.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if (navEl) navEl.classList.add('active');
-  const pt = document.getElementById('pageTitle');
-  if (pt) pt.textContent = panelTitles[id] || id;
-  const mt = document.getElementById('mobTitle');
-  if (mt) mt.textContent = panelTitles[id] || id;
+// ── PANELS ───────────────────────────────────────────────────
+const PANEL_TITLES = {dashboard:'Dashboard',customers:'Customers',reports:'Reports & Analytics',adminusers:'Admin Users'};
+function showPanel(id, navEl) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const p=document.getElementById(id+'Panel'); if(p) p.classList.add('active');
+  document.querySelectorAll('.nav-item,.mob-btn').forEach(n=>n.classList.remove('active'));
+  if(navEl) navEl.classList.add('active');
+  const pt=document.getElementById('pageTitle'); if(pt) pt.textContent=PANEL_TITLES[id]||id;
+  const mt=document.getElementById('mobTitle'); if(mt) mt.textContent=PANEL_TITLES[id]||id;
   window.scrollTo(0,0);
-  const loaders = {
-    dashboard:  loadDashboard,
-    customers:  loadCustomers,
-    reports:    () => setReportRange(30),
-    adminusers: loadAdminUsers,
-  };
-  if (loaders[id]) loaders[id]();
+  const loaders={dashboard:loadDashboard,customers:loadCustomers,reports:()=>setReportRange(30),adminusers:loadAdminUsers};
+  if(loaders[id]) loaders[id]();
 }
-function mobNav(id, btn) {
-  document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  show(id);
-}
+function mobNav(id,btn) { document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active'); showPanel(id); }
 
-// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
-function toggleNotifDrawer() {
-  const d = document.getElementById('notifDrawer');
-  d.classList.toggle('open');
-}
-function markAllRead() {
-  document.getElementById('notifDot').style.display = 'none';
-  document.getElementById('notifDrawer').classList.remove('open');
-  toast('✅ All notifications marked as read');
-}
-document.addEventListener('click', e => {
-  const drawer = document.getElementById('notifDrawer');
-  if (drawer && !e.target.closest('#notifDrawer') && !e.target.closest('.notif-btn')) {
-    drawer.classList.remove('open');
-  }
-  if (e.target.id === 'orderModal')       closeOrderModal();
-  if (e.target.id === 'orderDetailModal') closeOrderDetail();
+// ── NOTIFICATIONS ─────────────────────────────────────────────
+function toggleNotifDrawer() { document.getElementById('notifDrawer').classList.toggle('open'); }
+function markAllRead() { document.getElementById('notifDot').style.display='none'; document.getElementById('notifDrawer').classList.remove('open'); }
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#notifDrawer')&&!e.target.closest('.notif-btn')) document.getElementById('notifDrawer')?.classList.remove('open');
+  if(e.target.id==='orderModal') closeOrderModal();
+  if(e.target.id==='orderDetailModal') closeOrderDetail();
 });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeOrderModal();closeOrderDetail();} });
+function focusAI(){ showPanel('dashboard'); setTimeout(()=>document.getElementById('aiInput')?.focus(),100); }
 
-// ── WHATSAPP BADGE POLL ───────────────────────────────────────────────────────
-async function pollWhatsAppBadge() {
+// ── WHATSAPP BADGE ────────────────────────────────────────────
+async function pollWaBadge() {
   try {
-    const d = await apiFetch('/admin/whatsapp/inbox');
-    const n = (d.conversations||[]).reduce((s,c)=>s+(c.unreadCount||0),0);
-    const wb = document.getElementById('waBadge');
-    const mb = document.getElementById('mobWaBadge');
-    if (wb) { wb.textContent=n; wb.style.display=n>0?'inline-flex':'none'; }
-    if (mb) { mb.textContent=n; mb.style.display=n>0?'flex':'none'; }
-    if (n > 0) document.getElementById('notifDot').style.display='block';
-  } catch(e){}
-  setTimeout(pollWhatsAppBadge, 30000);
+    const d=await apiFetch('/admin/whatsapp/inbox');
+    const n=(d.conversations||[]).reduce((s,c)=>s+(c.unreadCount||0),0);
+    const wb=document.getElementById('waBadge'), mb=document.getElementById('mobWaBadge');
+    if(wb){wb.textContent=n;wb.style.display=n>0?'inline-flex':'none';}
+    if(mb){mb.textContent=n;mb.style.display=n>0?'flex':'none';}
+    if(n>0) document.getElementById('notifDot').style.display='block';
+  }catch(e){}
+  setTimeout(pollWaBadge,30000);
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+// ── DASHBOARD ─────────────────────────────────────────────────
 async function loadDashboard() {
   try {
-    const r = await apiFetch('/admin/dashboard');
-    if (!r.success) return;
-    const s = r.stats;
-    setText('statOrders',   s.activeOrders ?? s.totalOrders ?? 0);
-    setText('statRevenue',  '₹' + (s.activeRevenue ?? s.totalRevenue ?? 0).toLocaleString('en-IN'));
-    setText('statCustomers', s.totalUsers || 0);
-    setText('statLowStock',  r.lowStock?.length || 0);
-    renderDashOrders(r.recentOrders || []);
-    renderLowStock(r.lowStock || []);
-    renderRevenueChart(r.recentOrders || []);
-  } catch(e) { console.error('Dashboard:', e); }
+    const r=await apiFetch('/admin/dashboard');
+    if(!r.success) return;
+    const s=r.stats;
+    setText('statOrders', s.activeOrders??s.totalOrders??0);
+    setText('statRevenue', '₹'+(s.activeRevenue??s.totalRevenue??0).toLocaleString('en-IN'));
+    setText('statCustomers', s.totalUsers||0);
+    setText('statLowStock', r.lowStock?.length||0);
+    renderDashOrders(r.recentOrders||[]);
+    renderLowStock(r.lowStock||[]);
+    renderChart(r.recentOrders||[]);
+  }catch(e){console.error(e);}
 }
 
-function renderRevenueChart(orders) {
-  const el = document.getElementById('revenueChart');
-  if (!el) return;
-  // Build last 7 days revenue
-  const days = [];
-  for (let i=6; i>=0; i--) {
-    const d = new Date(); d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    const label = d.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3);
-    const rev = orders.filter(o => o.createdAt?.slice(0,10)===key && o.status!=='cancelled')
-                      .reduce((s,o)=>s+(o.total||0),0);
-    days.push({label,rev,key});
+function renderChart(orders) {
+  const el=document.getElementById('revenueChart'); if(!el) return;
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10);
+    const label=d.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3);
+    const rev=orders.filter(o=>o.createdAt?.slice(0,10)===key&&o.status!=='cancelled').reduce((s,o)=>s+(o.total||0),0);
+    days.push({label,rev});
   }
-  const max = Math.max(...days.map(d=>d.rev), 1);
-  const total = days.reduce((s,d)=>s+d.rev,0);
-  setText('chartTotal', '₹'+total.toLocaleString('en-IN'));
-  const maxRev = Math.max(...days.map(d=>d.rev));
-  el.innerHTML = days.map((d,i) => {
-    const pct  = Math.max((d.rev/max)*100, 4);
-    const cls  = d.rev===maxRev && d.rev>0 ? 'chart-bar today' : (pct>60?'chart-bar high':'chart-bar');
-    const tip  = '₹'+d.rev.toLocaleString('en-IN');
-    return `<div class="chart-bar-col" title="${d.label}: ${tip}">
-      <div class="${cls}" style="height:${pct}%" title="${tip}"></div>
-      <div class="chart-label">${d.label}</div>
-    </div>`;
+  const max=Math.max(...days.map(d=>d.rev),1);
+  const total=days.reduce((s,d)=>s+d.rev,0);
+  setText('chartTotal','₹'+total.toLocaleString('en-IN'));
+  const maxRev=Math.max(...days.map(d=>d.rev));
+  el.innerHTML=days.map(d=>{
+    const pct=Math.max((d.rev/max)*100,4);
+    const cls=d.rev===maxRev&&d.rev>0?'chart-bar today':pct>60?'chart-bar high':'chart-bar';
+    return`<div class="chart-bar-col" title="${d.label}: ₹${d.rev.toLocaleString('en-IN')}"><div class="${cls}" style="height:${pct}%"></div><div class="chart-label">${d.label}</div></div>`;
   }).join('');
 }
 
 function renderDashOrders(orders) {
-  const el = document.getElementById('recentOrdersTable');
-  if (!el) return;
-  if (!orders.length) { el.innerHTML='<tr><td colspan="5" style="text-align:center;color:#bbb;padding:20px;">No orders yet</td></tr>'; return; }
-  el.innerHTML = orders.slice(0,6).map(o => `
+  const el=document.getElementById('recentOrdersTable'); if(!el) return;
+  if(!orders.length){el.innerHTML='<tr><td colspan="5" style="text-align:center;color:#bbb;padding:20px;">No orders yet</td></tr>';return;}
+  el.innerHTML=orders.slice(0,6).map(o=>`
     <tr>
       <td><b style="color:#4A1070;">#${o.orderId}</b></td>
-      <td>
-        <span class="ord-avatar">${(o.user?.name||'?').charAt(0).toUpperCase()}</span>
-        ${o.user?.name||'—'}
-      </td>
+      <td><span class="ord-avatar">${(o.user?.name||'?').charAt(0).toUpperCase()}</span>${o.user?.name||'—'}</td>
       <td><b>₹${(o.total||0).toLocaleString('en-IN')}</b></td>
       <td><span class="badge b-${o.status}">${o.status}</span></td>
       <td style="white-space:nowrap;">
@@ -607,269 +1053,114 @@ function renderDashOrders(orders) {
 }
 
 function renderLowStock(items) {
-  const el = document.getElementById('lowStockList');
-  if (!el) return;
-  if (!items.length) { el.innerHTML='<p style="text-align:center;color:#00a651;padding:20px;font-size:.82rem;">✅ All products well stocked!</p>'; return; }
-  el.innerHTML = items.slice(0,8).map(p => `
-    <div class="ls-item">
-      <span class="ls-name">${p.emoji||'📦'} ${p.name}</span>
-      <span class="ls-stock" style="color:${p.totalStock===0?'#c62828':'#f7941d'};">
-        ${p.totalStock} units ${p.totalStock===0?'❌':'⚠️'}
-      </span>
-    </div>`).join('');
+  const el=document.getElementById('lowStockList'); if(!el) return;
+  if(!items.length){el.innerHTML='<p style="text-align:center;color:#00a651;padding:20px;font-size:.82rem;">✅ All products well stocked!</p>';return;}
+  el.innerHTML=items.slice(0,8).map(p=>`<div class="ls-item"><span class="ls-name">${p.emoji||'📦'} ${p.name}</span><span style="font-weight:900;color:${p.totalStock===0?'#c62828':'#f7941d'};">${p.totalStock} units ${p.totalStock===0?'❌':'⚠️'}</span></div>`).join('');
 }
 
-// ── ORDER MODALS ──────────────────────────────────────────────────────────────
-function openOrderModal(dbId, orderId, status, payMethod='cod', payStatus='pending') {
-  document.getElementById('modalOrderDbId').value    = dbId;
-  document.getElementById('modalOrderId').textContent = orderId;
-  document.getElementById('modalStatus').value       = status;
-  document.getElementById('modalPayMethod').value    = payMethod.toLowerCase();
-  document.getElementById('modalPayStatus').value    = payStatus;
-  document.getElementById('modalMsg').value          = '';
-  document.getElementById('orderModal').style.display = 'flex';
+// ── ORDER MODALS ──────────────────────────────────────────────
+function openOrderModal(dbId,orderId,status,payMethod,payStatus){
+  document.getElementById('modalOrderDbId').value=dbId;
+  document.getElementById('modalOrderId').textContent=orderId;
+  document.getElementById('modalStatus').value=status;
+  document.getElementById('modalPayMethod').value=payMethod.toLowerCase();
+  document.getElementById('modalPayStatus').value=payStatus;
+  document.getElementById('modalMsg').value='';
+  document.getElementById('orderModal').style.display='flex';
 }
-function closeOrderModal() { document.getElementById('orderModal').style.display='none'; }
-
-async function updateOrderStatus() {
-  const id      = document.getElementById('modalOrderDbId').value;
-  const status  = document.getElementById('modalStatus').value;
-  const message = document.getElementById('modalMsg').value.trim();
-  const payM    = document.getElementById('modalPayMethod').value;
-  const payS    = document.getElementById('modalPayStatus').value;
-  try {
-    await apiFetch(`/admin/orders/${id}/status`,'PUT',{status,message});
-    await apiFetch(`/admin/orders/${id}/payment`,'PUT',{method:payM,status:payS});
-    toast('✅ Order updated!'); closeOrderModal(); loadDashboard();
-  } catch(e) { toast('❌ '+e.message); }
+function closeOrderModal(){document.getElementById('orderModal').style.display='none';}
+async function updateOrderStatus(){
+  const id=document.getElementById('modalOrderDbId').value;
+  const status=document.getElementById('modalStatus').value;
+  const message=document.getElementById('modalMsg').value.trim();
+  const payM=document.getElementById('modalPayMethod').value;
+  const payS=document.getElementById('modalPayStatus').value;
+  try{await apiFetch(`/admin/orders/${id}/status`,'PUT',{status,message});await apiFetch(`/admin/orders/${id}/payment`,'PUT',{method:payM,status:payS});toast('✅ Order updated!');closeOrderModal();loadDashboard();}catch(e){toast('❌ '+e.message);}
 }
-
-async function viewOrderDetail(id) {
-  const modal = document.getElementById('orderDetailModal');
-  const body  = document.getElementById('ordDetailBody');
-  modal.style.display='flex';
-  body.innerHTML='<div style="text-align:center;padding:40px;color:#bbb;">Loading…</div>';
-  try {
-    const o     = await apiFetch('/admin/orders/'+id);
-    const order = o.order||o;
-    const items = (order.items||[]).map(i=>
-      `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f0fb;font-size:.85rem;">
-        <span>${i.emoji||'🛍️'} ${i.name} (${i.size||'—'}) ×${i.qty}</span>
-        <span style="font-weight:700;">₹${((i.price||0)*i.qty).toLocaleString('en-IN')}</span>
-      </div>`).join('');
-    const tracking=(order.tracking||[]).map(t=>
-      `<div style="display:flex;gap:10px;padding:8px 0;font-size:.82rem;">
-        <span style="color:#00a651;">●</span>
-        <div><strong>${t.status}</strong> — ${t.message||''}<br>
-        <small style="color:#bbb;">${t.time?new Date(t.time).toLocaleString('en-IN'):''}</small></div>
-      </div>`).join('');
-    body.innerHTML=`
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-        <div>
-          <div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:6px;">Customer</div>
-          <div style="font-weight:700;">${order.user?.name||'—'}</div>
-          <div style="font-size:.82rem;color:#999;">${order.user?.email||''}</div>
-          <div style="font-size:.82rem;color:#999;">${order.user?.phone||''}</div>
-        </div>
-        <div>
-          <div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:6px;">Shipping Address</div>
-          <div style="font-size:.82rem;line-height:1.7;">
-            ${order.shippingAddress?.name||''}, ${order.shippingAddress?.phone||''}<br>
-            ${order.shippingAddress?.line1||''}${order.shippingAddress?.line2?', '+order.shippingAddress.line2:''}<br>
-            ${order.shippingAddress?.city||''}, ${order.shippingAddress?.state||''} — ${order.shippingAddress?.pincode||''}
-          </div>
-        </div>
-      </div>
-      <div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:8px;">Items Ordered</div>
-      ${items}
-      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:.88rem;"><span>Subtotal</span><span>₹${(order.subtotal||0).toLocaleString('en-IN')}</span></div>
-      ${order.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;color:#00a651;"><span>Discount (${order.couponCode||''})</span><span>−₹${order.discount.toLocaleString('en-IN')}</span></div>`:''}
-      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;"><span>Delivery</span><span>${order.deliveryFee===0?'FREE':'₹'+order.deliveryFee}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:1rem;font-weight:900;border-top:2px solid #f5f0fb;">
-        <span>Total</span><span style="color:#4A1070;">₹${(order.total||0).toLocaleString('en-IN')}</span>
-      </div>
-      <div style="margin-top:16px;">
-        <div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:8px;">Tracking Timeline</div>
-        ${tracking||'<div style="color:#bbb;font-size:.82rem;">No tracking info yet</div>'}
-      </div>
-      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="background:#f8f5fd;border-radius:12px;padding:14px;font-size:.82rem;">
-          <div style="color:#999;font-size:.7rem;font-weight:800;text-transform:uppercase;">Payment</div>
-          <div style="font-weight:800;margin-top:4px;">${(order.payment?.method||'COD').toUpperCase()}</div>
-          <div style="color:${order.payment?.status==='paid'?'#00a651':'#f7941d'};">${order.payment?.status||'pending'}</div>
-        </div>
-        <div style="background:#f8f5fd;border-radius:12px;padding:14px;font-size:.82rem;">
-          <div style="color:#999;font-size:.7rem;font-weight:800;text-transform:uppercase;">Status</div>
-          <div style="font-weight:800;margin-top:4px;"><span class="badge b-${order.status}">${order.status}</span></div>
-        </div>
-      </div>
-      <div style="margin-top:16px;text-align:right;">
-        <button onclick="openOrderModal('${order._id}','${order.orderId}','${order.status}','${order.payment?.method||'cod'}','${order.payment?.status||'pending'}')" class="btn btn-pp">✏️ Update Status</button>
-      </div>`;
-  } catch(e){ body.innerHTML='<div style="color:#c62828;padding:16px;">Error: '+e.message+'</div>'; }
-}
-function closeOrderDetail() { document.getElementById('orderDetailModal').style.display='none'; }
-
-// ── CUSTOMERS ─────────────────────────────────────────────────────────────────
-async function loadCustomers() {
-  try {
-    const r = await apiFetch('/admin/users?limit=200');
-    custsData = r.users||[];
-    renderCustomers(custsData);
-  } catch(e){}
-}
-function renderCustomers(users) {
-  const el = document.getElementById('customersTable');
-  if(!users.length){el.innerHTML='<tr><td colspan="7" style="text-align:center;color:#bbb;padding:24px;">No customers yet</td></tr>';return;}
-  el.innerHTML=users.map(u=>`<tr>
-    <td><b>${u.name}</b></td>
-    <td>${u.email||'—'}</td>
-    <td>${u.phone||'—'}</td>
-    <td>${u.isVerified?'✅':'⏳'}</td>
-    <td>${fmtDate(u.createdAt)}</td>
-    <td>${u.addresses?.length||0} saved</td>
-    <td><button class="btn btn-er-g btn-sm" onclick="deleteCustomer('${u._id}','${u.name}')">🗑</button></td>
-  </tr>`).join('');
-}
-function searchCustomers() {
-  const q=document.getElementById('custSearch').value.toLowerCase();
-  renderCustomers(q?custsData.filter(u=>u.name?.toLowerCase().includes(q)||u.email?.toLowerCase().includes(q)):custsData);
-}
-async function deleteCustomer(id,name) {
-  if(!confirm(`Delete customer "${name}"?`))return;
-  try{await apiFetch('/admin/users/'+id,'DELETE');toast('🗑 Customer deleted');loadCustomers();}
-  catch(e){toast('❌ '+e.message);}
-}
-
-// ── ADMIN USERS ───────────────────────────────────────────────────────────────
-async function loadAdminUsers() {
-  try {
-    const r=await apiFetch('/admin/admins');
-    const el=document.getElementById('adminUsersTable');
-    const admins=r.admins||[];
-    if(!admins.length){el.innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:24px;">No admin users</td></tr>';return;}
-    el.innerHTML=admins.map(u=>`<tr>
-      <td><b>${u.name}</b></td><td>${u.email}</td>
-      <td><span class="badge" style="background:${u.role==='super_admin'?'#ede7f6':'#e8f5e9'};color:${u.role==='super_admin'?'#4A1070':'#2e7d32'};">${u.role}</span></td>
-      <td>${u.role!=='super_admin'?`<button class="btn btn-er-g btn-sm" onclick="deleteAdminUser('${u._id}','${u.name}')">🗑</button>`:'—'}</td>
-    </tr>`).join('');
-  } catch(e){toast('❌ '+e.message);}
-}
-async function addAdminUser() {
-  const name=document.getElementById('newAdminName').value.trim();
-  const email=document.getElementById('newAdminEmail').value.trim();
-  const password=document.getElementById('newAdminPass').value;
-  const role=document.getElementById('newAdminRole').value;
-  const errEl=document.getElementById('addAdminErr');
-  errEl.style.display='none';
-  if(!name||!email||!password){errEl.textContent='⚠️ All fields required';errEl.style.display='block';return;}
-  if(password.length<8){errEl.textContent='⚠️ Password min 8 characters';errEl.style.display='block';return;}
+async function viewOrderDetail(id){
+  const modal=document.getElementById('orderDetailModal'),body=document.getElementById('ordDetailBody');
+  modal.style.display='flex';body.innerHTML='<div style="text-align:center;padding:40px;color:#bbb;">Loading…</div>';
   try{
-    await apiFetch('/admin/admins','POST',{name,email,password,role});
-    toast('✅ Admin user added!');
-    document.getElementById('newAdminName').value='';
-    document.getElementById('newAdminEmail').value='';
-    document.getElementById('newAdminPass').value='';
-    loadAdminUsers();
-  }catch(e){errEl.textContent='❌ '+e.message;errEl.style.display='block';}
+    const o=await apiFetch('/admin/orders/'+id),order=o.order||o;
+    const items=(order.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f5f0fb;font-size:.84rem;"><span>${i.emoji||'🛍️'} ${i.name} (${i.size||'—'}) ×${i.qty}</span><span style="font-weight:700;">₹${((i.price||0)*i.qty).toLocaleString('en-IN')}</span></div>`).join('');
+    body.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;"><div><div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:6px;">Customer</div><div style="font-weight:700;">${order.user?.name||'—'}</div><div style="font-size:.82rem;color:#999;">${order.user?.email||''}</div><div style="font-size:.82rem;color:#999;">${order.user?.phone||''}</div></div><div><div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:6px;">Shipping</div><div style="font-size:.82rem;line-height:1.7;">${order.shippingAddress?.name||''}, ${order.shippingAddress?.phone||''}<br>${order.shippingAddress?.line1||''}<br>${order.shippingAddress?.city||''}, ${order.shippingAddress?.state||''} — ${order.shippingAddress?.pincode||''}</div></div></div>
+    <div style="font-size:.7rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:8px;">Items</div>${items}
+    <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:.88rem;"><span>Subtotal</span><span>₹${(order.subtotal||0).toLocaleString('en-IN')}</span></div>
+    ${order.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;color:#00a651;"><span>Discount</span><span>−₹${order.discount.toLocaleString('en-IN')}</span></div>`:''}
+    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;"><span>Delivery</span><span>${order.deliveryFee===0?'FREE':'₹'+order.deliveryFee}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:1rem;font-weight:900;border-top:2px solid #f5f0fb;"><span>Total</span><span style="color:#4A1070;">₹${(order.total||0).toLocaleString('en-IN')}</span></div>
+    <div style="margin-top:14px;text-align:right;"><button onclick="openOrderModal('${order._id}','${order.orderId}','${order.status}','${order.payment?.method||'cod'}','${order.payment?.status||'pending'}')" class="btn btn-pp">✏️ Update Status</button></div>`;
+  }catch(e){body.innerHTML='<div style="color:#c62828;padding:16px;">Error: '+e.message+'</div>';}
 }
-async function deleteAdminUser(id,name) {
-  if(!confirm(`Delete admin "${name}"?`))return;
-  try{await apiFetch('/admin/admins/'+id,'DELETE');toast('🗑 Admin user deleted');loadAdminUsers();}
-  catch(e){toast('❌ '+e.message);}
-}
+function closeOrderDetail(){document.getElementById('orderDetailModal').style.display='none';}
 
-// ── REPORTS ───────────────────────────────────────────────────────────────────
-function setReportRange(days) {
-  const to=new Date();const from=new Date();from.setDate(from.getDate()-days);
-  document.getElementById('rptFrom').value=from.toISOString().slice(0,10);
-  document.getElementById('rptTo').value=to.toISOString().slice(0,10);
-  loadReports();
+// ── CUSTOMERS ─────────────────────────────────────────────────
+let custsData=[];
+async function loadCustomers(){
+  try{const r=await apiFetch('/admin/users?limit=200');custsData=r.users||[];renderCustomers(custsData);}catch(e){}
 }
-async function loadReports() {
-  const from=document.getElementById('rptFrom').value;
-  const to=document.getElementById('rptTo').value;
+function renderCustomers(users){
+  const el=document.getElementById('customersTable');
+  if(!users.length){el.innerHTML='<tr><td colspan="7" style="text-align:center;color:#bbb;padding:24px;">No customers</td></tr>';return;}
+  el.innerHTML=users.map(u=>`<tr><td><b>${u.name}</b></td><td>${u.email||'—'}</td><td>${u.phone||'—'}</td><td>${u.isVerified?'✅':'⏳'}</td><td>${fmtDate(u.createdAt)}</td><td>${u.addresses?.length||0} saved</td><td><button class="btn btn-er-g btn-sm" onclick="deleteCustomer('${u._id}','${u.name}')">🗑</button></td></tr>`).join('');
+}
+function searchCustomers(){const q=document.getElementById('custSearch').value.toLowerCase();renderCustomers(q?custsData.filter(u=>u.name?.toLowerCase().includes(q)||u.email?.toLowerCase().includes(q)):custsData);}
+async function deleteCustomer(id,name){if(!confirm(`Delete "${name}"?`))return;try{await apiFetch('/admin/users/'+id,'DELETE');toast('🗑 Deleted');loadCustomers();}catch(e){toast('❌ '+e.message);}}
+
+// ── ADMIN USERS ───────────────────────────────────────────────
+async function loadAdminUsers(){
+  try{
+    const r=await apiFetch('/admin/admins'),el=document.getElementById('adminUsersTable'),admins=r.admins||[];
+    if(!admins.length){el.innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:24px;">No admin users</td></tr>';return;}
+    el.innerHTML=admins.map(u=>`<tr><td><b>${u.name}</b></td><td>${u.email}</td><td><span class="badge" style="background:${u.role==='super_admin'?'#ede7f6':'#e8f5e9'};color:${u.role==='super_admin'?'#4A1070':'#2e7d32'};">${u.role}</span></td><td>${u.role!=='super_admin'?`<button class="btn btn-er-g btn-sm" onclick="deleteAdminUser('${u._id}','${u.name}')">🗑</button>`:'—'}</td></tr>`).join('');
+  }catch(e){toast('❌ '+e.message);}
+}
+async function addAdminUser(){
+  const name=document.getElementById('newAdminName').value.trim(),email=document.getElementById('newAdminEmail').value.trim(),password=document.getElementById('newAdminPass').value,role=document.getElementById('newAdminRole').value,err=document.getElementById('addAdminErr');
+  err.style.display='none';
+  if(!name||!email||!password){err.textContent='⚠️ All fields required';err.style.display='block';return;}
+  if(password.length<8){err.textContent='⚠️ Password min 8 chars';err.style.display='block';return;}
+  try{await apiFetch('/admin/admins','POST',{name,email,password,role});toast('✅ Admin added!');document.getElementById('newAdminName').value='';document.getElementById('newAdminEmail').value='';document.getElementById('newAdminPass').value='';loadAdminUsers();}catch(e){err.textContent='❌ '+e.message;err.style.display='block';}
+}
+async function deleteAdminUser(id,name){if(!confirm(`Delete admin "${name}"?`))return;try{await apiFetch('/admin/admins/'+id,'DELETE');toast('🗑 Deleted');loadAdminUsers();}catch(e){toast('❌ '+e.message);}}
+
+// ── REPORTS ───────────────────────────────────────────────────
+function setReportRange(days){const to=new Date(),from=new Date();from.setDate(from.getDate()-days);document.getElementById('rptFrom').value=from.toISOString().slice(0,10);document.getElementById('rptTo').value=to.toISOString().slice(0,10);loadReports();}
+async function loadReports(){
+  const from=document.getElementById('rptFrom').value,to=document.getElementById('rptTo').value;
   if(!from||!to){toast('⚠️ Select date range');return;}
   try{
     const r=await apiFetch(`/admin/reports/sales?from=${from}&to=${to}`);
-    const day=document.getElementById('salesByDayTable');
-    const top=document.getElementById('topProdsTable');
-    const sd=r.salesByDay||[];
-    const tp=r.topProducts||[];
+    const sd=r.salesByDay||[],tp=r.topProducts||[];
+    const day=document.getElementById('salesByDayTable'),top=document.getElementById('topProdsTable');
     if(!sd.length){day.innerHTML='<tr><td colspan="3" style="text-align:center;color:#bbb;padding:16px;">No data</td></tr>';}
-    else{
-      const totR=sd.reduce((a,b)=>a+b.revenue,0);
-      const totO=sd.reduce((a,b)=>a+b.orders,0);
-      day.innerHTML=sd.map(d=>`<tr><td>${d._id}</td><td>${d.orders}</td><td>₹${d.revenue.toLocaleString('en-IN')}</td></tr>`).join('')+
-        `<tr style="background:#f8f5fd;font-weight:900;"><td>Total</td><td>${totO}</td><td>₹${totR.toLocaleString('en-IN')}</td></tr>`;
-    }
+    else{const totR=sd.reduce((a,b)=>a+b.revenue,0),totO=sd.reduce((a,b)=>a+b.orders,0);day.innerHTML=sd.map(d=>`<tr><td>${d._id}</td><td>${d.orders}</td><td>₹${d.revenue.toLocaleString('en-IN')}</td></tr>`).join('')+`<tr style="background:#f8f5fd;font-weight:900;"><td>Total</td><td>${totO}</td><td>₹${totR.toLocaleString('en-IN')}</td></tr>`;}
     if(!tp.length){top.innerHTML='<tr><td colspan="4" style="text-align:center;color:#bbb;padding:16px;">No data</td></tr>';}
     else top.innerHTML=tp.map((p,i)=>`<tr><td>${i+1}</td><td>${p._id}</td><td><b>${p.sold}</b></td><td>₹${(p.revenue||0).toLocaleString('en-IN')}</td></tr>`).join('');
   }catch(e){toast('❌ '+e.message);}
 }
 
-// ── AI ASSISTANT ──────────────────────────────────────────────────────────────
-let aiConversation = [];
-
-function openAiPanel() {
-  show('dashboard', document.getElementById('nav-dashboard'));
-  setTimeout(() => {
-    document.getElementById('aiInput')?.focus();
-    document.getElementById('aiResponse').scrollIntoView({behavior:'smooth',block:'center'});
-  }, 100);
+// ── AI ASSISTANT ──────────────────────────────────────────────
+let aiConversation=[];
+async function askAI(preset){
+  const input=document.getElementById('aiInput'),respDiv=document.getElementById('aiResponse');
+  const question=preset||input?.value?.trim();
+  if(!question)return;
+  if(input)input.value='';
+  respDiv.style.display='block';
+  respDiv.innerHTML='<span style="color:#aaa;font-style:italic;">✨ Thinking…</span>';
+  let ctx='You are an AI assistant for KidsCart, a kids fashion e-commerce store in India. ';
+  try{const r=await apiFetch('/admin/dashboard');const s=r.stats||{};ctx+=`Store stats: ${s.activeOrders||0} orders, revenue ₹${(s.activeRevenue||0).toLocaleString('en-IN')}, ${s.totalUsers||0} customers, ${r.lowStock?.length||0} low stock items. `;if(r.lowStock?.length)ctx+=`Low stock: ${r.lowStock.slice(0,3).map(p=>p.name).join(', ')}. `;}catch(e){}
+  aiConversation.push({role:'user',content:question});
+  if(aiConversation.length>8)aiConversation=aiConversation.slice(-6);
+  try{
+    const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:ctx+'Give concise, actionable answers in under 100 words.',messages:aiConversation})});
+    const data=await response.json();
+    const reply=data.content?.[0]?.text||'Sorry, no response.';
+    aiConversation.push({role:'assistant',content:reply});
+    respDiv.innerHTML=reply.replace(/\n/g,'<br>');
+  }catch(e){respDiv.innerHTML='<span style="color:#c62828;">AI unavailable. Try again.</span>';}
 }
-
-async function askAI(presetQuestion) {
-  const input   = document.getElementById('aiInput');
-  const respDiv = document.getElementById('aiResponse');
-  const question = presetQuestion || input?.value?.trim();
-  if (!question) return;
-  if (input) input.value = '';
-
-  respDiv.style.display = 'block';
-  respDiv.innerHTML = '<span class="ai-typing">✨ Thinking…</span>';
-
-  // Gather store context from dashboard data
-  let context = 'You are an AI assistant for KidsCart, a kids fashion e-commerce store in India. ';
-  try {
-    const r = await apiFetch('/admin/dashboard');
-    const s = r.stats || {};
-    context += `Current store stats: ${s.activeOrders||0} active orders, revenue ₹${(s.activeRevenue||0).toLocaleString('en-IN')}, ${s.totalUsers||0} customers, ${r.lowStock?.length||0} low stock items. `;
-    if (r.lowStock?.length) context += `Low stock items: ${r.lowStock.slice(0,5).map(p=>p.name+'('+p.totalStock+' units)').join(', ')}. `;
-    if (r.recentOrders?.length) context += `Recent orders: ${r.recentOrders.slice(0,3).map(o=>'#'+o.orderId+' ₹'+o.total+' '+o.status).join(', ')}. `;
-  } catch(e){}
-
-  aiConversation.push({ role:'user', content: question });
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: context + 'Give concise, actionable answers. Use ₹ for currency. Keep responses under 150 words unless asked for detail.',
-        messages: aiConversation
-      })
-    });
-    const data = await response.json();
-    const reply = data.content?.[0]?.text || 'Sorry, I could not get a response.';
-    aiConversation.push({ role:'assistant', content: reply });
-    // Keep conversation short
-    if (aiConversation.length > 10) aiConversation = aiConversation.slice(-8);
-    respDiv.innerHTML = reply.replace(/\n/g,'<br>');
-  } catch(e) {
-    respDiv.innerHTML = '<span style="color:#c62828;">Could not connect to AI. Please try again.</span>';
-  }
-}
-
-// Keyboard shortcut
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeOrderModal(); closeOrderDetail();
-    document.getElementById('notifDrawer')?.classList.remove('open');
-  }
-});
 </script>
 </body>
 </html>

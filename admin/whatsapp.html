@@ -9,8 +9,34 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/admin/admin-styles.css">
-<script>window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};</script>
-<script src="/admin/shared.js"></script>
+<script>
+window._ioStub={on:()=>{},emit:()=>{},to:()=>window._ioStub,disconnect:()=>{}};
+// Inline fast auth - no external shared.js for login
+const API=window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
+let token=localStorage.getItem('kc_admin_token')||'';
+let adminUser=null;
+async function apiFetch(path,method='GET',body=null){const opts={method,headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{})}};if(body)opts.body=JSON.stringify(body);const r=await fetch(API+path,opts);const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Error '+r.status);return d;}
+function toast(msg,dur=2800){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtT(d){const diff=Date.now()-d;if(diff<86400000)return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});if(diff<604800000)return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});}
+function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data:'))return s;return window.location.origin+(s.startsWith('/')?s:'/'+s);}
+function showLoginScreen(){document.getElementById('loginScreen').style.display='flex';document.getElementById('adminApp').style.display='none';}
+function showAdminApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminApp').style.display='flex';}
+async function adminLogin(){
+  const email=document.getElementById('adminEmail').value.trim(),pass=document.getElementById('adminPass').value,err=document.getElementById('loginErr');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='⚠️ Enter email and password';err.style.display='block';return;}
+  try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Login failed');if(!['admin','super_admin'].includes(d.user.role))throw new Error('Not an admin');token=d.token;adminUser=d.user;localStorage.setItem('kc_admin_token',token);if(window._kcAfterLogin)window._kcAfterLogin(d.user);}catch(e){err.textContent='❌ '+e.message;err.style.display='block';}
+}
+function adminLogout(){token='';adminUser=null;localStorage.removeItem('kc_admin_token');showLoginScreen();}
+async function adminForgot(){const email=document.getElementById('forgotEmail').value.trim();if(!email){toast('⚠️ Enter email');return;}try{await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});toast('✅ Reset link sent');document.getElementById('forgotBox').style.display='none';}catch(e){toast('❌ '+e.message);}}
+window.KC={init(cb){if(token){apiFetch('/auth/me').then(d=>{if(d.user&&['admin','super_admin'].includes(d.user.role)){adminUser=d.user;if(cb)cb(d.user);}else{token='';localStorage.removeItem('kc_admin_token');showLoginScreen();}}).catch(()=>showLoginScreen());}else showLoginScreen();},getUser:()=>adminUser,getToken:()=>token};
+// Sidebar collapse
+let _sbOpen=true;
+function toggleSidebarGlobal(){const sb=document.getElementById('sidebar'),main=document.getElementById('mainArea'),btn=sb?.querySelector('.sb-toggle');if(!sb)return;_sbOpen=!_sbOpen;sb.classList.toggle('collapsed',!_sbOpen);if(main)main.classList.toggle('expanded',!_sbOpen);if(btn)btn.textContent=_sbOpen?'◀':'▶';localStorage.setItem('kc_sb',_sbOpen?'1':'0');}
+function initSidebarState(){if(localStorage.getItem('kc_sb')==='0'){setTimeout(()=>{const sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');if(sb){sb.classList.add('collapsed');if(main)main.classList.add('expanded');_sbOpen=false;const btn=sb.querySelector('.sb-toggle');if(btn)btn.textContent='▶';}},100);}}
+</script>
 <style>
 .inbox-layout{display:flex;height:calc(100vh - 130px);background:#fff;border-radius:16px;overflow:hidden;border:1px solid rgba(123,45,139,.08);box-shadow:0 4px 24px rgba(74,16,112,.07);}
 .conv-list{width:300px;flex-shrink:0;border-right:1px solid #f5f0fb;display:flex;flex-direction:column;background:#fff;}
@@ -85,22 +111,69 @@
 </head>
 <body>
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);">
-  <div style="background:#fff;border-radius:24px;padding:44px 40px;width:380px;max-width:96vw;box-shadow:0 24px 64px rgba(0,0,0,.25);">
-    <div style="text-align:center;margin-bottom:28px;"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:80px;object-fit:contain;"></div>
-    <h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.4rem;font-weight:800;margin-bottom:6px;">Welcome back</h2>
-    <p style="text-align:center;color:#999;font-size:.85rem;margin-bottom:28px;">Sign in to your admin panel</p>
+  <div style="background:#fff;border-radius:24px;padding:40px 36px;width:380px;max-width:95vw;box-shadow:0 24px 64px rgba(0,0,0,.3);">
+    <div style="text-align:center;margin-bottom:24px;"><img src="/logo-white.png" alt="KidsCart" style="height:44px;object-fit:contain;filter:invert(1) sepia(1) saturate(3) hue-rotate(10deg);"></div>
+    <h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.35rem;font-weight:800;margin-bottom:5px;">Welcome back</h2>
+    <p style="text-align:center;color:#999;font-size:.84rem;margin-bottom:24px;">Sign in to your admin panel</p>
     <div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div>
     <div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
     <button class="btn-full" onclick="adminLogin()" style="margin-top:8px;">Sign In →</button>
-    <p style="text-align:center;margin-top:16px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p>
-    <div id="forgotBox" style="display:none;margin-top:10px;"><div class="fgroup"><label>Your email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div><button class="btn-full" onclick="adminForgot()">Send Reset Link</button></div>
-    <div id="loginErr" style="color:#c62828;font-size:.82rem;text-align:center;margin-top:12px;display:none;padding:8px;background:#ffebee;border-radius:8px;"></div>
+    <p style="text-align:center;margin-top:14px;font-size:.82rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p>
+    <div id="forgotBox" style="display:none;margin-top:10px;">
+      <div class="fgroup"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div>
+      <button class="btn-full" onclick="adminForgot()">Send Reset Link</button>
+    </div>
+    <div id="loginErr" style="display:none;color:#c62828;font-size:.82rem;text-align:center;margin-top:10px;padding:8px;background:#ffebee;border-radius:8px;"></div>
   </div>
+</div>
 </div>
 
 <div id="adminApp" style="display:none;">
-  <div id="mobMount"></div>
-  <div id="sidebarMount"></div>
+    <div class="mob-header">
+    <img src="/logo-white.png" alt="KidsCart" style="height:26px;object-fit:contain;">
+    <span class="mob-hdr-title" id="mobTitle">KidsCart Admin</span>
+    <div class="mob-hdr-right" id="mobUser"></div>
+  </div>
+  <div class="mob-bar">
+    <div class="mob-bar-inner">
+      <button class="mob-btn" onclick="location.href='/admin.html'"><span class="mi">📊</span><span class="ml">Home</span></button>
+      <button class="mob-btn" onclick="location.href='/admin/orders.html'"><span class="mi">📦</span><span class="ml">Orders</span></button>
+      <button class="mob-btn" onclick="location.href='/admin/products.html'"><span class="mi">👗</span><span class="ml">Products</span></button>
+      <button class="mob-btn" onclick="location.href='/admin/whatsapp.html'"><span class="mi">📱</span><span class="ml">WhatsApp</span><span class="mob-badge" id="mobInboxBadge" style="display:none;">0</span></button>
+      <button class="mob-btn" onclick="location.href='/admin/crm.html'"><span class="mi">🤝</span><span class="ml">CRM</span></button>
+      <button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button>
+    </div>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <div class="sb-brand">
+        <img src="/logo-white.png" alt="KidsCart" style="height:30px;object-fit:contain;">
+      </div>
+      <button class="sb-toggle" onclick="toggleSidebarGlobal()" title="Collapse">◀</button>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-group-label">Main</div>
+      <a class="nav-item" href="/admin.html"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></a>
+      <a class="nav-item" href="/admin/orders.html"><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a>
+      <a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a>
+      <a class="nav-item" href="/admin/products.html#stock"><span class="nav-icon">📋</span><span class="sb-label">Stock</span></a>
+      <a class="nav-item" href="/admin/products.html#addprod"><span class="nav-icon">➕</span><span class="sb-label">Add Product</span></a>
+      <div class="nav-group-label">Marketing</div>
+      <a class="nav-item" href="/admin/products.html#banners"><span class="nav-icon">🎨</span><span class="sb-label">Banners</span></a>
+      <a class="nav-item" href="/admin/products.html#coupons"><span class="nav-icon">🎟️</span><span class="sb-label">Coupons</span></a>
+      <a class="nav-item" href="/admin.html#customers"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></a>
+      <div class="nav-group-label">Communication</div>
+      <a class="nav-item" href="/admin/whatsapp.html" class="active" style="background:rgba(255,255,255,.15);color:#fff;"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span></a>
+      <a class="nav-item" href="/admin/crm.html"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a>
+      <div class="nav-group-label">Analytics</div>
+      <a class="nav-item" href="/admin.html#reports"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></a>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-avatar" id="sbAvatar">A</div>
+      <div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div>
+      <button class="sb-logout" onclick="adminLogout()" title="Logout">🚪</button>
+    </div>
+  </div>
   <div class="main" id="mainArea">
     <div class="topbar">
       <h2 class="page-title">📱 WhatsApp Inbox</h2>
@@ -159,10 +232,14 @@
 let activePhone=null,allConvs=[],convFilter='all',waTmpls=[];
 
 window._kcAfterLogin = function(user) {
-  document.getElementById('sidebarMount').innerHTML = renderSidebar('inbox');
-  initSidebarState();
+  // sidebar already in HTML
+  // was: renderSidebar('inbox');
   showAdminApp();
-  document.getElementById('adminName').textContent = '👤 '+(user.name||'Admin');
+  if(document.getElementById('adminName')) document.getElementById('adminName').textContent = '👤 '+(user.name||'Admin');
+  if(document.getElementById('sbAvatar')) document.getElementById('sbAvatar').textContent=(user.name||'A').charAt(0).toUpperCase();
+  if(document.getElementById('sbUserName')) document.getElementById('sbUserName').textContent=user.name||'Admin';
+  if(document.getElementById('sbUserRole')) document.getElementById('sbUserRole').textContent=user.role==='super_admin'?'Super Admin':'Admin';
+  if(document.getElementById('mobUser')) document.getElementById('mobUser').textContent=user.name||'';
   loadInbox();
 };
 window.addEventListener('DOMContentLoaded',()=>{document.getElementById('loginScreen').style.display='flex';KC.init(window._kcAfterLogin);});

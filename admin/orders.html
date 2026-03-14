@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Orders — KidsCart Admin</title>
+<script>
+/* Zero-flash auth: hide login screen instantly if token exists */
+if(localStorage.getItem('kc_admin_token')){
+  document.addEventListener('DOMContentLoaded',function(){
+    var ls=document.getElementById('loginScreen');
+    if(ls)ls.style.display='none';
+  });
+  /* Even faster: inject a style tag */
+  document.write('<style>#loginScreen{display:none!important}</style>');
+}
+</script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -591,24 +602,30 @@ tr:hover td{background:#faf7fe;}
   .kanban-col{width:200px;}
 }
 </style>
-<script>const API=window.location.hostname==='localhost'?'http://localhost:5000/api':'https://kidscart-production.up.railway.app/api';
-let token=localStorage.getItem('kc_admin_token')||'',adminUser=null,_onReady=null;
+<script>
+/* ── KidsCart Admin Shared JS ── */
+const API=window.location.hostname==='localhost'
+  ?'http://localhost:5000/api'
+  :'https://kidscart-production.up.railway.app/api';
+let token=localStorage.getItem('kc_admin_token')||'';
+let adminUser=null;
+let _onReady=null;
 
-/* apiFetch — throws only on HTTP errors, not network errors */
+/* apiFetch — NEVER calls showLogin automatically.
+   Throws on error so callers handle it. */
 async function apiFetch(path,method,body){
   method=method||'GET';
   var opts={method:method,headers:{'Content-Type':'application/json'}};
   if(token)opts.headers['Authorization']='Bearer '+token;
   if(body)opts.body=JSON.stringify(body);
-  var r=await fetch(API+path,opts);
-  var d=await r.json().catch(function(){return{};});
-  if(r.status===401||r.status===403){
-    /* Only logout on explicit auth failure */
-    token='';localStorage.removeItem('kc_admin_token');showLogin();
-    throw new Error('Session expired. Please login again.');
+  try{
+    var r=await fetch(API+path,opts);
+    var d=await r.json().catch(function(){return{};});
+    if(!r.ok)throw new Error(d.error||'Error '+r.status);
+    return d;
+  }catch(e){
+    throw e;
   }
-  if(!r.ok)throw new Error(d.error||'Error '+r.status);
-  return d;
 }
 
 function showLogin(){
@@ -635,26 +652,28 @@ function bootUser(user){
   restoreSb();
   if(_onReady)_onReady(user);
 }
-
 async function adminLogin(){
   var email=document.getElementById('adminEmail').value.trim();
   var pass=document.getElementById('adminPass').value;
   var err=document.getElementById('loginErr');
+  var btn=document.querySelector('#loginScreen .btn-full');
   err.style.display='none';
   if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}
-  var btn=document.querySelector('#loginScreen .btn-full');
   if(btn){btn.textContent='Signing in…';btn.disabled=true;}
   try{
-    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
+    var r=await fetch(API+'/auth/login',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email,password:pass})});
     var d=await r.json();
     if(!r.ok)throw new Error(d.error||'Login failed');
     if(d.user.role!=='admin'&&d.user.role!=='super_admin')throw new Error('Not an admin account');
     token=d.token;
     localStorage.setItem('kc_admin_token',token);
+    localStorage.setItem('kc_admin_name',d.user.name||'Admin');
+    localStorage.setItem('kc_admin_role',d.user.role||'admin');
     bootUser(d.user);
   }catch(e){
-    err.textContent=e.message;
-    err.style.display='block';
+    err.textContent=e.message;err.style.display='block';
   }finally{
     if(btn){btn.textContent='Sign In →';btn.disabled=false;}
   }
@@ -662,14 +681,18 @@ async function adminLogin(){
 function adminLogout(){
   token='';adminUser=null;
   localStorage.removeItem('kc_admin_token');
+  localStorage.removeItem('kc_admin_name');
+  localStorage.removeItem('kc_admin_role');
   showLogin();
 }
 async function adminForgot(){
   var email=document.getElementById('forgotEmail').value.trim();
   if(!email){toast('Enter email');return;}
   try{
-    await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
-    toast('Reset link sent to '+email);
+    await fetch(API+'/auth/forgot-password',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email})});
+    toast('Reset link sent');
     document.getElementById('forgotBox').style.display='none';
   }catch(e){toast('Error: '+e.message);}
 }
@@ -685,7 +708,8 @@ function fmtT(d){var diff=Date.now()-d;if(diff<86400000)return d.toLocaleTimeStr
 function fixImgSrc(s){if(!s)return'';if(s.startsWith('http')||s.startsWith('data:'))return s;return window.location.origin+(s.startsWith('/')?s:'/'+s);}
 var _sbOpen=true;
 function toggleSb(){
-  var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea'),btn=sb&&sb.querySelector('.sb-toggle');
+  var sb=document.getElementById('sidebar'),main=document.getElementById('mainArea');
+  var btn=sb&&sb.querySelector('.sb-toggle');
   if(!sb)return;_sbOpen=!_sbOpen;
   sb.classList.toggle('collapsed',!_sbOpen);
   if(main)main.classList.toggle('expanded',!_sbOpen);
@@ -704,68 +728,63 @@ function restoreSb(){
 }
 
 /*
- * startPage — THE KEY AUTH FUNCTION
+ * startPage(onReady)
  *
- * Strategy: OPTIMISTIC AUTH
- * If a token exists in localStorage → show the app IMMEDIATELY, no waiting.
- * Then verify the token in the background.
- * Only call showLogin() if the server explicitly returns 401/403 (invalid token).
- * NEVER call showLogin() for network errors, timeouts, or slow responses.
- * This prevents the login flash when Railway is cold-starting.
+ * ZERO FLASH strategy:
+ * An inline <script> in <head> already hid loginScreen if token exists.
+ * Here we just verify and boot.
+ *
+ * IF token → show app immediately → verify in background → only logout on 401
+ * IF no token → show login
+ * NEVER logout on network errors or slow responses.
  */
 function startPage(onReady){
   _onReady=onReady;
   window.addEventListener('DOMContentLoaded',function(){
     if(!token){
-      /* No token at all → must login */
       showLogin();
       return;
     }
-    /* Token exists → show app immediately (optimistic) */
-    /* Use a placeholder user until /auth/me responds */
-    var cachedName=localStorage.getItem('kc_admin_name')||'Admin';
-    var cachedRole=localStorage.getItem('kc_admin_role')||'admin';
-    var tempUser={name:cachedName,role:cachedRole};
-    bootUser(tempUser);
-    /* Verify token in background — only logout on 401/403 */
+    /* Show app immediately with cached user info */
+    var name=localStorage.getItem('kc_admin_name')||'Admin';
+    var role=localStorage.getItem('kc_admin_role')||'admin';
+    bootUser({name:name,role:role});
+
+    /* Background verify — ONLY logout on explicit 401/403 */
     fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}})
       .then(function(r){
         if(r.status===401||r.status===403){
-          /* Token is invalid/expired → force login */
           token='';
-          localStorage.removeItem('kc_admin_token');
-          localStorage.removeItem('kc_admin_name');
-          localStorage.removeItem('kc_admin_role');
+          ['kc_admin_token','kc_admin_name','kc_admin_role'].forEach(function(k){localStorage.removeItem(k);});
           showLogin();
           return null;
         }
-        return r.json();
+        return r.json().catch(function(){return null;});
       })
       .then(function(d){
-        if(!d)return;
-        if(d.user&&(d.user.role==='admin'||d.user.role==='super_admin')){
-          /* Update UI with real user data */
+        if(!d||!d.user)return; /* Network error or no user — stay logged in */
+        if(d.user.role==='admin'||d.user.role==='super_admin'){
           adminUser=d.user;
           setUserUI(d.user);
           localStorage.setItem('kc_admin_name',d.user.name||'Admin');
-          localStorage.setItem('kc_admin_role',d.user.role||'admin');
-        }else if(d.user){
-          /* Logged in but not admin */
-          token='';localStorage.removeItem('kc_admin_token');showLogin();
+          localStorage.setItem('kc_admin_role',d.user.role);
+        }else{
+          /* User exists but not admin role */
+          token='';
+          ['kc_admin_token','kc_admin_name','kc_admin_role'].forEach(function(k){localStorage.removeItem(k);});
+          showLogin();
         }
-        /* If d.user is missing (network issue) → do nothing, stay on app */
       })
       .catch(function(){
-        /* Network error / Railway cold start / timeout → do NOT logout */
-        /* User stays on the app with cached info */
-        console.log('Auth check failed - keeping session (network issue)');
+        /* Network error — do NOT logout. Stay on app. */
       });
   });
-}</script>
+}
+</script>
 </head>
 <body>
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2d0a47,#4A1070,#1a0a2e);"><div style="background:#fff;border-radius:24px;padding:38px 34px;width:370px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.28);"><div style="text-align:center;margin-bottom:20px;"><img src="https://res.cloudinary.com/dhqjytd0e/image/upload/v1772393179/Kids_Cart_Brand_Identity_AW2_1_-01_phqsob.png" alt="KidsCart" style="height:70px;object-fit:contain;"></div><h2 style="text-align:center;font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1.28rem;font-weight:800;margin-bottom:4px;">Welcome back</h2><p style="text-align:center;color:#999;font-size:.83rem;margin-bottom:20px;">Sign in to your admin panel</p><div class="fgroup"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@kidscart.kids" autocomplete="username"></div><div class="fgroup"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div><button class="btn-full" onclick="adminLogin()" style="margin-top:6px;">Sign In →</button><p style="text-align:center;margin-top:12px;font-size:.81rem;"><a href="#" onclick="document.getElementById('forgotBox').style.display=document.getElementById('forgotBox').style.display==='none'?'block':'none'" style="color:#4A1070;font-weight:700;">Forgot password?</a></p><div id="forgotBox" style="display:none;margin-top:8px;"><div class="fgroup"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@kidscart.kids"></div><button class="btn-full" onclick="adminForgot()">Send Reset Link</button></div><div id="loginErr" style="display:none;color:#c62828;font-size:.81rem;text-align:center;margin-top:9px;padding:7px;background:#ffebee;border-radius:7px;"></div></div></div>
-<div id="adminApp" style="display:none;">
+<div id="adminApp" style="display:none">
   <div class="mob-header"><img src="/logo-white.png" alt="KidsCart" style="height:26px;object-fit:contain;"><span class="mob-hdr-title" id="mobTitle">KidsCart</span><div class="mob-hdr-right" id="mobUser"></div></div><div class="mob-bar"><div class="mob-bar-inner"><a class="mob-btn" href="/admin.html"><span class="mi">📊</span><span class="ml">Home</span></a><a class="mob-btn" href="/admin/orders.html" style="color:#4A1070;font-weight:900;"><span class="mi">📦</span><span class="ml">Orders</span></a><a class="mob-btn" href="/admin/products.html"><span class="mi">👗</span><span class="ml">Products</span></a><a class="mob-btn" href="/admin/whatsapp.html"><span class="mi">📱</span><span class="ml">WhatsApp</span></a><a class="mob-btn" href="/admin/crm.html"><span class="mi">🤝</span><span class="ml">CRM</span></a><button class="mob-btn" onclick="adminLogout()"><span class="mi">🚪</span><span class="ml">Logout</span></button></div></div>
   <div class="sidebar" id="sidebar"><div class="sb-top"><div class="sb-brand"><img src="/logo-white.png" alt="KidsCart" style="height:30px;object-fit:contain;max-width:150px;"></div><button class="sb-toggle" onclick="toggleSb()">◀</button></div><nav class="sb-nav"><div class="nav-group-label">MAIN</div><a class="nav-item" href="/admin.html"><span class="nav-icon">📊</span><span class="sb-label">Dashboard</span></a><a class="nav-item active" href="/admin/orders.html"><span class="nav-icon">📦</span><span class="sb-label">Orders</span></a><a class="nav-item" href="/admin/products.html"><span class="nav-icon">👗</span><span class="sb-label">Products</span></a><a class="nav-item" href="/admin/products.html#stock" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">📋</span><span class="sb-label">Stock</span></a><a class="nav-item" href="/admin/products.html#addprod" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">➕</span><span class="sb-label">Add Product</span></a><div class="nav-group-label">MARKETING</div><a class="nav-item" href="/admin/products.html#banners" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">🎨</span><span class="sb-label">Banners</span></a><a class="nav-item" href="/admin/products.html#coupons" style="padding-left:32px;font-size:.8rem;"><span class="nav-icon">🎟️</span><span class="sb-label">Coupons</span></a><a class="nav-item" href="/admin.html#customers"><span class="nav-icon">👥</span><span class="sb-label">Customers</span></a><div class="nav-group-label">COMMUNICATION</div><a class="nav-item" href="/admin/whatsapp.html"><span class="nav-icon">📱</span><span class="sb-label">WhatsApp</span></a><a class="nav-item" href="/admin/crm.html"><span class="nav-icon">🤝</span><span class="sb-label">CRM</span></a><div class="nav-group-label">ANALYTICS</div><a class="nav-item" href="/admin.html#reports"><span class="nav-icon">📈</span><span class="sb-label">Reports</span></a><a class="nav-item super-only" style="display:none" href="/admin.html#adminusers"><span class="nav-icon">🔐</span><span class="sb-label">Admin Users</span></a></nav><div class="sb-user"><div class="sb-avatar" id="sbAvatar">A</div><div class="sb-user-info"><div class="sb-user-name" id="sbUserName">Admin</div><div class="sb-user-role" id="sbUserRole">Admin</div></div><button class="sb-logout" onclick="adminLogout()" title="Logout">🚪</button></div></div>
   <div class="main" id="mainArea">

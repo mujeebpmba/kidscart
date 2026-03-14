@@ -961,11 +961,48 @@ function startPage(onReady){
 <div class="topbar"><h2 class="page-title" id="pageTitle">CRM</h2><div class="topbar-right"><button class="notif-btn" onclick="document.getElementById('notifDrawer').classList.toggle('open')" id="notifBtn">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></button><span class="admin-badge" id="adminName">Admin</span><a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a></div></div>
 <div id="notifDrawer" style="position:fixed;top:58px;right:18px;width:280px;background:#fff;border-radius:14px;border:1px solid rgba(123,45,139,.12);box-shadow:0 12px 32px rgba(74,16,112,.13);z-index:400;display:none;overflow:hidden;"><div style="padding:12px 14px;border-bottom:1px solid #f5f0fb;display:flex;justify-content:space-between;align-items:center;"><span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.84rem;color:#1a0a2e;">Notifications</span><button onclick="document.getElementById('notifDot').style.display='none';document.getElementById('notifDrawer').classList.remove('open')" style="font-size:.71rem;color:#4A1070;font-weight:700;background:none;border:none;cursor:pointer;">Mark read</button></div><div id="notifList"><div style="padding:14px;color:#bbb;font-size:.8rem;text-align:center;">No new notifications</div></div></div>
 <div class="content">
-<div id="listView" style="display:none;"><div style="overflow-x:auto;"><table class="crm-tbl"><thead><tr><th>Name / Phone</th><th>Stage</th><th>Tags</th><th>Source</th><th>Last Seen</th><th>Status</th><th>Actions</th></tr></thead><tbody id="crmTBody"></tbody></table></div></div>
-      </div>
-
-      <!-- Settings Panel -->
-      <div class="panel" id="crmstagesPanel">
+<div class="panel active" id="crmPanel">
+  <!-- Stats -->
+  <div class="crm-stats">
+    <div class="crm-stat"><p>Total</p><h3 id="crmTotal" style="color:#4A1070;">-</h3></div>
+    <div class="crm-stat"><p>Won</p><h3 id="crmWon" style="color:#00a651;">-</h3></div>
+    <div class="crm-stat"><p>Lost</p><h3 id="crmLost" style="color:#c62828;">-</h3></div>
+    <div class="crm-stat"><p>Conversion</p><h3 id="crmConv" style="color:#f7941d;">-</h3></div>
+    <div class="crm-stat"><p>Active Chats</p><h3 id="crmChats" style="color:#7B2D8B;">-</h3></div>
+  </div>
+  <!-- Toolbar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+    <div class="view-tabs">
+      <button class="view-tab active" id="kanbanView" onclick="switchCrmView('kanban',this)">🗂 Kanban</button>
+      <button class="view-tab" id="listViewBtn" onclick="switchCrmView('list',this)">📋 List</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="text" id="crmSearch" placeholder="Search leads..." oninput="filterCrmLeads()" style="padding:7px 12px;border:1.5px solid #e8dff5;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;width:180px;">
+      <select id="crmStageFilter" onchange="filterCrmLeads()" style="padding:7px 10px;border:1.5px solid #e8dff5;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;">
+        <option value="">All Stages</option>
+      </select>
+      <select id="crmTagFilter" onchange="filterCrmLeads()" style="padding:7px 10px;border:1.5px solid #e8dff5;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;">
+        <option value="">All Tags</option>
+      </select>
+      <button class="btn btn-pp btn-sm" onclick="document.getElementById('addLeadModal').style.display='flex'">+ Add Lead</button>
+    </div>
+  </div>
+  <!-- Kanban Board -->
+  <div class="kanban-board" id="kanbanBoard"></div>
+  <!-- List View -->
+  <div id="listView" style="display:none;">
+    <div style="overflow-x:auto;">
+      <table class="crm-tbl">
+        <thead><tr>
+          <th>Name / Phone</th><th>Stage</th><th>Tags</th>
+          <th>Source</th><th>Last Seen</th><th>Status</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="crmTBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="panel" id="crmstagesPanel">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
           <button onclick="showCrm()" class="btn btn-ghost">← Back to CRM</button>
           <h3 style="font-family:'Poppins',sans-serif;color:#1a0a2e;font-size:1rem;font-weight:800;">⚙️ CRM Settings</h3>
@@ -974,6 +1011,12 @@ function startPage(onReady){
         <div class="card"><div class="card-head"><span class="card-title">🏷️ Tags</span><button onclick="openAddTag()" class="btn btn-pp btn-sm">+ Add Tag</button></div><div id="tagsList"></div></div>
         <div class="card"><div class="card-head"><span class="card-title">⚡ Quick Reply Templates</span><button onclick="openAddTmpl()" class="btn btn-pp btn-sm">+ Add</button></div><div id="tmplsList"></div></div>
       </div>
+
+    </div>
+  </div>
+</div>
+</div>
+</div>
 
     </div>
   </div>

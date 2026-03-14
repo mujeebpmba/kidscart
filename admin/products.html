@@ -961,6 +961,31 @@ function startPage(onReady){
 <div class="topbar"><h2 class="page-title" id="pageTitle">Products</h2><div class="topbar-right"><button class="notif-btn" onclick="document.getElementById('notifDrawer').classList.toggle('open')" id="notifBtn">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></button><span class="admin-badge" id="adminName">Admin</span><a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a></div></div>
 <div id="notifDrawer" style="position:fixed;top:58px;right:18px;width:280px;background:#fff;border-radius:14px;border:1px solid rgba(123,45,139,.12);box-shadow:0 12px 32px rgba(74,16,112,.13);z-index:400;display:none;overflow:hidden;"><div style="padding:12px 14px;border-bottom:1px solid #f5f0fb;display:flex;justify-content:space-between;align-items:center;"><span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.84rem;color:#1a0a2e;">Notifications</span><button onclick="document.getElementById('notifDot').style.display='none';document.getElementById('notifDrawer').classList.remove('open')" style="font-size:.71rem;color:#4A1070;font-weight:700;background:none;border:none;cursor:pointer;">Mark read</button></div><div id="notifList"><div style="padding:14px;color:#bbb;font-size:.8rem;text-align:center;">No new notifications</div></div></div>
 <div class="content">
+<div class="panel active" id="productsPanel">
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">Product Catalog</span>
+      <button class="card-action" onclick="switchTab('addprod')">+ Add Product</button>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="prodSearch" placeholder="Search products..." oninput="filterProds()">
+      <select id="prodCatFilter" onchange="filterProds()">
+        <option value="">All Categories</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>PRODUCT</th><th>PRICE</th><th>MRP</th><th>MARGIN</th>
+          <th>STOCK</th><th>RATING</th><th>STATUS</th><th>COD</th><th>ACTIONS</th>
+        </tr></thead>
+        <tbody id="productsTable">
+          <tr><td colspan="9"><div class="kc-loading"><span class="kc-spinner"></span>Loading products...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 <!-- ADD/EDIT PRODUCT PANEL -->
       <div class="panel" id="addprodPanel">
         <div class="card">

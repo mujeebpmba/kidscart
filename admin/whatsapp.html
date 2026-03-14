@@ -960,11 +960,23 @@ function startPage(onReady){
 <div class="main" id="mainArea">
 <div class="topbar"><h2 class="page-title" id="pageTitle">WhatsApp Inbox</h2><div class="topbar-right"><button class="notif-btn" onclick="document.getElementById('notifDrawer').classList.toggle('open')" id="notifBtn">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></button><span class="admin-badge" id="adminName">Admin</span><a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a></div></div>
 <div id="notifDrawer" style="position:fixed;top:58px;right:18px;width:280px;background:#fff;border-radius:14px;border:1px solid rgba(123,45,139,.12);box-shadow:0 12px 32px rgba(74,16,112,.13);z-index:400;display:none;overflow:hidden;"><div style="padding:12px 14px;border-bottom:1px solid #f5f0fb;display:flex;justify-content:space-between;align-items:center;"><span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.84rem;color:#1a0a2e;">Notifications</span><button onclick="document.getElementById('notifDot').style.display='none';document.getElementById('notifDrawer').classList.remove('open')" style="font-size:.71rem;color:#4A1070;font-weight:700;background:none;border:none;cursor:pointer;">Mark read</button></div><div id="notifList"><div style="padding:14px;color:#bbb;font-size:.8rem;text-align:center;">No new notifications</div></div></div>
-<div class="content">
-</div>
-
-        <!-- Chat window -->
-        <div class="chat-win" id="chatWin">
+<div class="content" style="padding:16px 24px;">
+<div class="inbox-layout">
+  <!-- Conversation List -->
+  <div class="conv-list" id="convListPanel">
+    <div class="conv-search-wrap">
+      <input type="text" placeholder="Search conversations..." oninput="filterConvs(this.value)">
+    </div>
+    <div class="conv-filter">
+      <button class="active" onclick="setConvFilter('all',this)">All</button>
+      <button onclick="setConvFilter('unread',this)">Unread</button>
+    </div>
+    <div class="conv-items" id="convList">
+      <div class="kc-loading"><span class="kc-spinner"></span>Loading...</div>
+    </div>
+  </div>
+  <!-- Chat Window -->
+  <div class="chat-win" id="chatWin">
           <div class="chat-empty-state" id="chatEmpty">
             <span style="font-size:3.5rem;">💬</span>
             <p style="font-weight:700;color:#888;">Select a conversation</p>
@@ -1038,5 +1050,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('#tmplDD')&&!e.target
 </body></html
 </div>
 </div>
+</div>
+</div>
+
 </div>
 >

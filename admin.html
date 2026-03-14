@@ -1083,7 +1083,7 @@ function showP(id,navEl){
   if(navEl)navEl.classList.add('active');
   setText('pageTitle',PANELS[id]||id);
   setText('mobTitle',PANELS[id]||id);
-  window.scrollTo(0,0);
+  setTimeout(function(){window.scrollTo({top:0,behavior:"instant"});},0);
   var loaders={dashboard:loadDash,customers:loadCusts,reports:function(){setRptRange(30);},adminusers:loadAdmins};
   if(loaders[id])loaders[id]();
 }

@@ -431,63 +431,13 @@
 <script>
 /* ═══════════════════════════════════════
    admin.html — Page JS
-   shared.js is loaded in <head> and provides:
-   apiFetch, toast, fmtDate, setText, adminLogout, toggleSb, restoreSb, startPage
+   All shared functions (apiFetch, toast, fmtDate, setText, adminLogin,
+   adminLogout, adminForgot, toggleSb, restoreSb / initSidebarState,
+   token, adminUser, API) are provided by shared.js loaded in <head>.
 ═══════════════════════════════════════ */
 
-/* ── Auth bootstrap ── */
-var _onReady = null;
-function startPage(onReady) {
-  _onReady = onReady;
-  window.addEventListener('DOMContentLoaded', function() {
-    if (!token) { showLogin(); return; }
-    var name = localStorage.getItem('kc_admin_name') || 'Admin';
-    var role = localStorage.getItem('kc_admin_role') || 'admin';
-    bootUser({name:name, role:role});
-    fetch(API + '/auth/me', {headers:{'Authorization':'Bearer ' + token}})
-      .then(function(r) {
-        if (r.status === 401 || r.status === 403) { token=''; ['kc_admin_token','kc_admin_name','kc_admin_role'].forEach(function(k){localStorage.removeItem(k);}); showLogin(); return null; }
-        return r.json().catch(function(){return null;});
-      })
-      .then(function(d) {
-        if (!d || !d.user) return;
-        if (d.user.role === 'admin' || d.user.role === 'super_admin') {
-          adminUser = d.user;
-          setUserUI(d.user);
-          localStorage.setItem('kc_admin_name', d.user.name || 'Admin');
-          localStorage.setItem('kc_admin_role', d.user.role);
-        } else {
-          token = ''; ['kc_admin_token','kc_admin_name','kc_admin_role'].forEach(function(k){localStorage.removeItem(k);}); showLogin();
-        }
-      })
-      .catch(function(){/* network error — stay logged in */});
-  });
-}
-
-function showLogin() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('adminApp').style.display = 'none';
-}
-function showApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('adminApp').style.display = 'flex';
-}
-function setUserUI(user) {
-  setText('sbAvatar', (user.name || 'A').charAt(0).toUpperCase());
-  setText('sbUserName', user.name || 'Admin');
-  setText('sbUserRole', user.role === 'super_admin' ? 'Super Admin' : 'Admin');
-  setText('adminName', '👤 ' + (user.name || 'Admin'));
-  setText('mobUser', user.name || '');
-  if (user.role === 'super_admin')
-    document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});
-}
-function bootUser(user) {
-  adminUser = user;
-  setUserUI(user);
-  showApp();
-  restoreSb();
-  if (_onReady) _onReady(user);
-}
+/* ── Sidebar alias — HTML buttons call toggleSb() ── */
+function toggleSb() { toggleSidebarGlobal(); }
 
 /* ── Panel system ── */
 var PANELS = {dashboard:'Dashboard', customers:'Customers', reports:'Reports', adminusers:'Admin Users'};
@@ -508,111 +458,38 @@ function checkHash() {
   if (h && PANELS[h]) showP(h);
 }
 
-/* ── Sidebar toggle ── */
-var _sbOpen = true;
-function toggleSb() {
-  var sb = document.getElementById('sidebar'), main = document.getElementById('mainArea');
-  var btn = sb && sb.querySelector('.sb-toggle');
-  if (!sb) return;
-  _sbOpen = !_sbOpen;
-  sb.classList.toggle('collapsed', !_sbOpen);
-  if (main) main.classList.toggle('expanded', !_sbOpen);
-  if (btn) btn.textContent = _sbOpen ? '◀' : '▶';
-  localStorage.setItem('kc_sb', _sbOpen ? '1' : '0');
-}
-function restoreSb() {
-  if (localStorage.getItem('kc_sb') === '0') {
-    setTimeout(function(){
-      var sb = document.getElementById('sidebar'), main = document.getElementById('mainArea');
-      if (!sb) return;
-      sb.classList.add('collapsed');
-      if (main) main.classList.add('expanded');
-      _sbOpen = false;
-      var btn = sb.querySelector('.sb-toggle');
-      if (btn) btn.textContent = '▶';
-    }, 80);
-  }
-}
-
-/* ── Auth helpers ── */
-var token = localStorage.getItem('kc_admin_token') || '';
-var adminUser = null;
-function apiFetch(path, method, body) {
-  method = method || 'GET';
-  var opts = {method:method, headers:{'Content-Type':'application/json'}};
-  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
-  if (body) opts.body = JSON.stringify(body);
-  return fetch(API + path, opts)
-    .then(function(r){
-      return r.json().catch(function(){return{};}).then(function(d){
-        if (!r.ok) throw new Error(d.error || 'Error ' + r.status);
-        return d;
-      });
-    });
-}
-function adminLogin() {
-  var email = document.getElementById('adminEmail').value.trim();
-  var pass = document.getElementById('adminPass').value;
-  var err = document.getElementById('loginErr');
-  var btn = document.querySelector('#loginScreen .btn-full');
-  err.style.display = 'none';
-  if (!email || !pass) {err.textContent='Enter email and password';err.style.display='block';return;}
-  if (btn) {btn.textContent='Signing in…';btn.disabled=true;}
-  fetch(API + '/auth/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})})
-    .then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||'Login failed');return d;});})
-    .then(function(d){
-      if (d.user.role!=='admin'&&d.user.role!=='super_admin') throw new Error('Not an admin account');
-      token = d.token;
-      localStorage.setItem('kc_admin_token',token);
-      localStorage.setItem('kc_admin_name',d.user.name||'Admin');
-      localStorage.setItem('kc_admin_role',d.user.role||'admin');
-      bootUser(d.user);
-    })
-    .catch(function(e){err.textContent=e.message;err.style.display='block';})
-    .finally(function(){if(btn){btn.textContent='Sign In →';btn.disabled=false;}});
-}
-function adminLogout() {
-  token='';adminUser=null;
-  localStorage.removeItem('kc_admin_token');
-  localStorage.removeItem('kc_admin_name');
-  localStorage.removeItem('kc_admin_role');
-  showLogin();
-}
-function adminForgot() {
-  var email = document.getElementById('forgotEmail').value.trim();
-  if (!email) {toast('Enter email');return;}
-  fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})})
-    .then(function(){toast('Reset link sent');document.getElementById('forgotBox').style.display='none';})
-    .catch(function(e){toast('Error: '+e.message);});
-}
-function toast(msg,dur){
-  dur=dur||2800;
-  var t=document.getElementById('toast');
-  if(!t)return;t.textContent=msg;t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show');},dur);
-}
-function setText(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
-function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
-
-/* ── Start ── */
-startPage(function(user) {
+/* ── Boot: use KC.init from shared.js ── */
+function onPageReady(user) {
+  // Update sidebar user info
+  setText('sbAvatar', (user.name || 'A').charAt(0).toUpperCase());
+  setText('sbUserName', user.name || 'Admin');
+  setText('sbUserRole', user.role === 'super_admin' ? 'Super Admin' : 'Admin');
+  setText('adminName', '👤 ' + (user.name || 'Admin'));
+  setText('mobUser', user.name || '');
+  // Show super-admin-only items
+  if (user.role === 'super_admin')
+    document.querySelectorAll('.super-only').forEach(function(el){el.style.removeProperty('display');});
+  // Show app, restore sidebar, load content
+  showAdminApp();
+  initSidebarState();
   checkHash();
   if (!window.location.hash) loadDash();
   setTimeout(pollWaBadge, 8000);
+}
+
+/* Override shared.js _kcAfterLogin so login button also boots this page */
+window._kcAfterLogin = onPageReady;
+
+document.addEventListener('DOMContentLoaded', function() {
+  KC.init(onPageReady);
 });
+
 window.addEventListener('hashchange', checkHash);
 document.addEventListener('click', function(e) {
   if (!e.target.closest('#notifDrawer') && !e.target.closest('.notif-btn'))
     document.getElementById('notifDrawer') && document.getElementById('notifDrawer').classList.remove('open');
   if (e.target.id === 'orderModal') e.target.style.display = 'none';
   if (e.target.id === 'orderDetailModal') e.target.style.display = 'none';
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    document.getElementById('orderModal').style.display = 'none';
-    document.getElementById('orderDetailModal').style.display = 'none';
-  }
-  if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'adminPass') adminLogin();
 });
 
 /* ── WA Badge poll ── */

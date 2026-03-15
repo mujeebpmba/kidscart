@@ -182,8 +182,10 @@
               <div class="qa-icon" style="background:#ede7f6;">➕</div>
               <div class="qa-label">Add Product</div>
             </a>
-            <a href="/admin/whatsapp.html" class="qa-card">
-              <div class="qa-icon" style="background:#e8f5e9;">💬</div>
+            <a href="/admin/whatsapp.html" class="qa-card" style="position:relative;">
+              <div class="qa-icon" style="background:#e8f5e9;position:relative;">💬
+                <span id="qaWaBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#25D366;color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:.58rem;font-weight:900;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #fff;"></span>
+              </div>
               <div class="qa-label">WhatsApp</div>
             </a>
             <a href="/admin/products.html#coupons" class="qa-card">
@@ -474,7 +476,7 @@ function onPageReady(user) {
   // Remove the zero-flash panel-hiding style so panels can show normally
   var zf = document.querySelector('style');
   if (zf && zf.textContent.indexOf('panel') !== -1) zf.remove();
-  setTimeout(pollWaBadge, 8000);
+  pollWaBadge(); // start immediately
 }
 window._kcAfterLogin = onPageReady;
 document.addEventListener('DOMContentLoaded', function(){ KC.init(onPageReady); });
@@ -491,10 +493,17 @@ async function pollWaBadge() {
   try {
     var d = await apiFetch('/admin/whatsapp/inbox');
     var n = (d.conversations||[]).reduce(function(s,c){return s+(c.unreadCount||0);},0);
-    var wb = document.getElementById('waBadge'), mb = document.getElementById('mobWaBadge');
+    // Sidebar badge
+    var wb = document.getElementById('waBadge');
     if (wb) {wb.textContent=n;wb.style.display=n>0?'inline-flex':'none';}
+    // Mobile bottom bar badge
+    var mb = document.getElementById('mobWaBadge');
     if (mb) {mb.textContent=n;mb.style.display=n>0?'flex':'none';}
-    if (n > 0) document.getElementById('notifDot').style.display = 'block';
+    // Dashboard quick action card badge
+    var qb = document.getElementById('qaWaBadge');
+    if (qb) {qb.textContent=n;qb.style.display=n>0?'inline-flex':'none';}
+    // Top notification dot
+    if (n > 0) { var nd=document.getElementById('notifDot'); if(nd) nd.style.display='block'; }
   } catch(e) {}
   setTimeout(pollWaBadge, 30000);
 }

@@ -230,6 +230,22 @@ tr:hover td { background: #faf7fe; }
 .cp-field{font-size:.78rem;color:#444;margin-bottom:5px;line-height:1.6;}
 .cp-lbl{font-size:.63rem;color:#bbb;font-weight:700;display:block;text-transform:uppercase;margin-bottom:1px;}
 @media(max-width:768px){.inbox-layout{height:calc(100vh - 118px);border-radius:0;}.conv-list{width:100%;border-right:none;}.conv-list.hidden{display:none!important;}.chat-win{display:none!important;position:fixed;inset:0;z-index:250;background:#f0f2f5;flex-direction:column;top:54px;bottom:62px;}.chat-win.mob-open{display:flex!important;}.chat-back-btn{display:block;}.contact-panel{display:none;}}
+
+/* ── Enhanced chat input ── */
+.wa-attach-btn{width:34px;height:34px;border-radius:50%;background:#f8f5fd;color:var(--pp);border:1.5px solid #e8dff5;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.wa-attach-btn:hover{background:#ede7f6;}
+.wa-voice-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--pp),var(--pp2));color:#fff;border:none;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.wa-voice-btn:hover{transform:scale(1.05);}
+.wa-voice-btn.recording{background:linear-gradient(135deg,#c62828,#e53935);animation:pulse 1s infinite;}
+#sendTextBtn{display:none;} /* hidden until text is typed */
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+/* ── Image preview in chat ── */
+.msg-img{max-width:220px;border-radius:10px;cursor:pointer;display:block;}
+.img-sending{opacity:.6;filter:blur(1px);}
+
+/* ── Upload progress ── */
+.upload-progress{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#f8f5fd;border-radius:10px;font-size:.78rem;color:#4A1070;font-weight:700;}
 </style>
 <script>(function(){var s=document.createElement('style');if(localStorage.getItem('kc_admin_token')){s.textContent='#loginScreen{display:none!important}#adminApp{display:flex!important}';}else{s.textContent='#adminApp{display:none!important}';}document.head.appendChild(s);})()</script>
 <script src="/admin/shared.js"></script>
@@ -277,10 +293,25 @@ tr:hover td { background: #faf7fe; }
             <div class="chat-msgs" id="chatMsgs"></div>
             <div style="position:relative;">
               <div class="tmpl-dd" id="tmplDD"></div>
-              <div class="chat-input-area">
-                <button class="wa-tmpl-btn" onclick="toggleTmpls()" title="Quick replies">⚡</button>
-                <textarea id="msgInput" rows="1" placeholder="Type a message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}" oninput="autoResizeTA(this)"></textarea>
-                <button class="wa-send-btn" onclick="sendWaMsg()">➤</button>
+              <!-- Hidden file input for image -->
+              <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="handleImgAttach(this)">
+              <div class="chat-input-area" id="chatInputArea">
+                <button class="wa-tmpl-btn" onclick="toggleTmpls()" title="Templates ⚡">⚡</button>
+                <button class="wa-attach-btn" onclick="document.getElementById('imgFileInput').click()" title="Send photo 📷">📷</button>
+                <textarea id="msgInput" rows="1" placeholder="Type a message…"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}"
+                  oninput="autoResizeTA(this);toggleSendVoice(this)"></textarea>
+                <!-- Send text (shown when text typed) -->
+                <button class="wa-send-btn" id="sendTextBtn" onclick="sendWaMsg()" title="Send">➤</button>
+                <!-- Voice note (shown when no text) -->
+                <button class="wa-voice-btn" id="voiceBtn" onclick="toggleVoiceRecord()" title="Voice note 🎙️">🎙️</button>
+              </div>
+              <!-- Recording indicator -->
+              <div id="recordingBar" style="display:none;align-items:center;gap:10px;padding:8px 14px;background:#fff3f3;border-top:1px solid #ffcdd2;font-size:.82rem;color:#c62828;font-weight:700;">
+                <span style="width:10px;height:10px;background:#c62828;border-radius:50%;animation:pulse 1s infinite;display:inline-block;"></span>
+                Recording… <span id="recTimer">0:00</span>
+                <button onclick="cancelVoice()" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:1rem;">✕</button>
+                <button onclick="stopAndSendVoice()" style="background:#c62828;color:#fff;border:none;border-radius:20px;padding:4px 14px;font-size:.78rem;font-weight:700;cursor:pointer;">Send 📤</button>
               </div>
             </div>
           </div>
@@ -332,8 +363,178 @@ function closeMobileChat(){activePhone=null;document.getElementById('convListPan
 async function loadMsgs(phone){const el=document.getElementById('chatMsgs');if(!el)return;try{const d=await apiFetch('/admin/whatsapp/messages/'+encodeURIComponent(phone));const msgs=d.messages||[];el.innerHTML='';let lastD='';msgs.forEach(m=>{const ds=new Date(m.timestamp).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});if(ds!==lastD){el.innerHTML+=`<div class="msg-date-div">${ds}</div>`;lastD=ds;}el.innerHTML+=mkBubble(m);});el.scrollTop=el.scrollHeight;}catch(e){console.error('msgs:',e);}}
 function mkBubble(m){const dir=m.direction==='outbound'?'out':'in';const t=new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});const tick=dir==='out'?(m.status==='read'?'<span style="color:#4A90D9">✓✓</span>':m.status==='delivered'?'<span style="color:#ccc">✓✓</span>':'<span style="color:#ccc">✓</span>'):'';const body=(m.type&&m.type!=='text')?`<em style="color:#bbb;font-size:.76rem;">[${m.type}] ${m.body||''}</em>`:(m.body||'');return`<div class="msg-wrap ${dir}"><div class="msg-bubble ${dir}">${body}<div class="msg-time">${t} ${tick}</div></div></div>`;}
 function appendMsg(m){const el=document.getElementById('chatMsgs');if(!el)return;el.innerHTML+=mkBubble(m);el.scrollTop=el.scrollHeight;}
-async function sendWaMsg(){const inp=document.getElementById('msgInput');const txt=inp?.value?.trim();if(!txt||!activePhone)return;inp.value='';inp.style.height='auto';appendMsg({direction:'outbound',body:txt,timestamp:new Date(),status:'sent'});try{await apiFetch('/admin/whatsapp/send','POST',{phone:activePhone,text:txt});refreshConvs();}catch(e){toast('❌ Send failed: '+e.message);}}
+
+/* ── Show send vs voice button based on text ── */
+function toggleSendVoice(ta){
+  const hasText = ta.value.trim().length > 0;
+  document.getElementById('sendTextBtn').style.display = hasText ? 'flex' : 'none';
+  document.getElementById('voiceBtn').style.display    = hasText ? 'none' : 'flex';
+}
+
+/* ── Send text message ── */
+async function sendWaMsg(){
+  const inp = document.getElementById('msgInput');
+  const txt = inp?.value?.trim();
+  if(!txt || !activePhone) return;
+  inp.value = ''; inp.style.height = 'auto';
+  toggleSendVoice(inp);
+  appendMsg({direction:'outbound', body:txt, timestamp:new Date(), status:'sent'});
+  try { await apiFetch('/admin/whatsapp/send','POST',{phone:activePhone, text:txt}); refreshConvs(); }
+  catch(e){ toast('❌ Send failed: '+e.message); }
+}
+
+/* ── Send image ── */
+async function handleImgAttach(input){
+  if(!input.files[0] || !activePhone) return;
+  const file = input.files[0];
+  input.value = '';
+  // Show preview bubble immediately
+  const tempId = 'img_' + Date.now();
+  const localUrl = URL.createObjectURL(file);
+  const el = document.getElementById('chatMsgs');
+  el.innerHTML += `<div class="msg-wrap out" id="${tempId}">
+    <div class="msg-bubble out">
+      <div class="upload-progress">⏳ Uploading image…</div>
+      <div class="msg-time">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div></div>`;
+  el.scrollTop = el.scrollHeight;
+  try {
+    // Upload to Cloudinary via existing endpoint
+    const fd = new FormData();
+    fd.append('images', file);
+    const r = await fetch(API + '/admin/upload', {
+      method:'POST',
+      headers:{Authorization:'Bearer ' + token},
+      body: fd
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'Upload failed');
+    const imgUrl = fixImgSrc((d.urls||[])[0] || d.url || '');
+    if(!imgUrl) throw new Error('No URL returned');
+    // Replace temp bubble with image
+    const tmp = document.getElementById(tempId);
+    if(tmp) tmp.querySelector('.msg-bubble').innerHTML =
+      `<img src="${imgUrl}" class="msg-img" onclick="window.open('${imgUrl}','_blank')">
+       <div class="msg-time">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>`;
+    // Send via WhatsApp
+    await apiFetch('/admin/whatsapp/send','POST',{phone:activePhone, type:'image', imageUrl:imgUrl});
+    refreshConvs();
+    toast('✅ Image sent!');
+  } catch(e) {
+    const tmp = document.getElementById(tempId);
+    if(tmp) tmp.querySelector('.msg-bubble').innerHTML = `<em style="color:#c62828;font-size:.76rem;">❌ ${e.message}</em>`;
+    toast('❌ ' + e.message);
+  }
+}
+
+/* ── Voice note recording ── */
+let mediaRecorder = null, audioChunks = [], recInterval = null, recSeconds = 0;
+
+function toggleVoiceRecord(){
+  if(mediaRecorder && mediaRecorder.state === 'recording'){ stopAndSendVoice(); return; }
+  startVoiceRecord();
+}
+
+async function startVoiceRecord(){
+  if(!activePhone){ toast('Open a conversation first'); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream, {mimeType:'audio/webm'});
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.start();
+    // UI
+    document.getElementById('recordingBar').style.display = 'flex';
+    document.getElementById('voiceBtn').classList.add('recording');
+    document.getElementById('chatInputArea').style.display = 'none';
+    recSeconds = 0;
+    recInterval = setInterval(()=>{
+      recSeconds++;
+      const m = Math.floor(recSeconds/60), s = recSeconds%60;
+      document.getElementById('recTimer').textContent = m+':'+(s<10?'0':'')+s;
+      if(recSeconds >= 120) stopAndSendVoice(); // max 2 min
+    }, 1000);
+  } catch(e){ toast('❌ Mic access denied. Please allow microphone.'); }
+}
+
+async function stopAndSendVoice(){
+  if(!mediaRecorder) return;
+  clearInterval(recInterval);
+  document.getElementById('recordingBar').style.display = 'none';
+  document.getElementById('chatInputArea').style.display = 'flex';
+  document.getElementById('voiceBtn').classList.remove('recording');
+
+  mediaRecorder.stop();
+  mediaRecorder.stream.getTracks().forEach(t=>t.stop());
+
+  mediaRecorder.onstop = async () => {
+    const blob = new Blob(audioChunks, {type:'audio/webm'});
+    audioChunks = [];
+    // Show sending bubble
+    const el = document.getElementById('chatMsgs');
+    const tempId = 'aud_' + Date.now();
+    el.innerHTML += `<div class="msg-wrap out" id="${tempId}">
+      <div class="msg-bubble out"><div class="upload-progress">⏳ Sending voice note…</div>
+      <div class="msg-time">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div></div>`;
+    el.scrollTop = el.scrollHeight;
+    try {
+      // Upload audio
+      const fd = new FormData();
+      fd.append('images', blob, 'voice.webm');
+      const r = await fetch(API + '/admin/upload', {
+        method:'POST',
+        headers:{Authorization:'Bearer ' + token},
+        body: fd
+      });
+      const d = await r.json();
+      if(!r.ok) throw new Error(d.error||'Upload failed');
+      const audioUrl = fixImgSrc((d.urls||[])[0] || d.url || '');
+      if(!audioUrl) throw new Error('No URL');
+      const tmp = document.getElementById(tempId);
+      if(tmp) tmp.querySelector('.msg-bubble').innerHTML =
+        `<audio controls src="${audioUrl}" style="max-width:200px;"></audio>
+         <div class="msg-time">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>`;
+      await apiFetch('/admin/whatsapp/send','POST',{phone:activePhone, type:'audio', audioUrl:audioUrl});
+      refreshConvs(); toast('✅ Voice note sent!');
+    } catch(e){
+      const tmp = document.getElementById(tempId);
+      if(tmp) tmp.querySelector('.msg-bubble').innerHTML = `<em style="color:#c62828;font-size:.76rem;">❌ ${e.message}</em>`;
+      toast('❌ Voice: '+e.message);
+    }
+  };
+}
+
+function cancelVoice(){
+  if(mediaRecorder){ mediaRecorder.stop(); mediaRecorder.stream.getTracks().forEach(t=>t.stop()); mediaRecorder=null; }
+  clearInterval(recInterval);
+  audioChunks = [];
+  document.getElementById('recordingBar').style.display = 'none';
+  document.getElementById('chatInputArea').style.display = 'flex';
+  document.getElementById('voiceBtn').classList.remove('recording');
+}
+
+/* ── mkBubble: support image and audio types ── */
+function mkBubble(m){
+  const dir = m.direction==='outbound'?'out':'in';
+  const t = new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const tick = dir==='out'?(m.status==='read'?'<span style="color:#4A90D9">✓✓</span>':m.status==='delivered'?'<span style="color:#ccc">✓✓</span>':'<span style="color:#ccc">✓</span>'):'';
+  let body = '';
+  if(m.type==='image' && (m.imageUrl||m.mediaUrl)){
+    const url = m.imageUrl||m.mediaUrl;
+    body = `<img src="${url}" class="msg-img" onclick="window.open('${url}','_blank')" onerror="this.style.opacity='.3'">`;
+  } else if(m.type==='audio' && (m.audioUrl||m.mediaUrl)){
+    body = `<audio controls src="${m.audioUrl||m.mediaUrl}" style="max-width:200px;"></audio>`;
+  } else if(m.type && m.type!=='text'){
+    body = `<em style="color:#bbb;font-size:.76rem;">[${m.type}] ${m.body||''}</em>`;
+  } else {
+    body = m.body||'';
+  }
+  return `<div class="msg-wrap ${dir}"><div class="msg-bubble ${dir}">${body}<div class="msg-time">${t} ${tick}</div></div></div>`;
+}
+
 function autoResizeTA(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+
 async function loadWaTmpls(){try{const d=await apiFetch('/admin/whatsapp/templates');waTmpls=d.templates||[];}catch(e){}}
 function toggleTmpls(){const dd=document.getElementById('tmplDD');if(!dd)return;dd.classList.toggle('open');if(dd.classList.contains('open')){dd.innerHTML=waTmpls.length?waTmpls.map(t=>`<div class="tmpl-item" onclick="useTmpl(${JSON.stringify(t.body)})"><div class="tmpl-item-name">⚡ ${t.name}</div><div class="tmpl-item-body">${t.body}</div></div>`).join(''):'<div style="padding:14px;color:#bbb;font-size:.8rem;">No templates. Add in CRM → Settings.</div>';}}
 function useTmpl(body){document.getElementById('msgInput').value=body;document.getElementById('tmplDD').classList.remove('open');document.getElementById('msgInput').focus();}
@@ -343,11 +544,5 @@ function addToCrm(phone){location.href='/admin/crm.html';}
 function syncMobBadge(){const total=allConvs.reduce((s,cv)=>s+(cv.unreadCount||0),0);const mb=document.getElementById('mobInboxBadge');if(mb){mb.textContent=total;mb.style.display=total>0?'flex':'none';}}
 document.addEventListener('click',e=>{if(!e.target.closest('#tmplDD')&&!e.target.closest('.wa-tmpl-btn'))document.getElementById('tmplDD')?.classList.remove('open');});
 </script>
-</body></html
-</div>
-</div>
-</div>
-</div>
-
-</div>
->
+</body>
+</html>

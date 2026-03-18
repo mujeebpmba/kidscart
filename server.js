@@ -2447,6 +2447,48 @@ app.get('/api/admin/whatsapp/debug-account', adminAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Temporary public WA template checker (remove after debugging) ──
+app.get('/api/wa-tmpl-check', async (req, res) => {
+  try {
+    if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ error: 'WA env vars not set', WA_PHONE_ID: !!WA_PHONE_ID, WA_TOKEN: !!WA_TOKEN });
+
+    // Get phone number info
+    const r1 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,name,display_phone_number`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const phoneInfo = await r1.json();
+
+    // Try fetching templates directly on phone number ID
+    const r2 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/message_templates?limit=20&fields=name,status,language,category`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const tmplOnPhone = await r2.json();
+
+    // Get the token owner (to find WABA ID)
+    const r3 = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const meInfo = await r3.json();
+
+    // Try using meInfo.id as WABA
+    let tmplOnWaba = null;
+    if (meInfo.id && meInfo.id !== WA_PHONE_ID) {
+      const r4 = await fetch(`https://graph.facebook.com/v19.0/${meInfo.id}/message_templates?limit=20&fields=name,status,language,category`, {
+        headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+      });
+      tmplOnWaba = await r4.json();
+    }
+
+    res.json({
+      phone_id: WA_PHONE_ID,
+      phone_info: phoneInfo,
+      me: meInfo,
+      templates_via_phone_id: tmplOnPhone,
+      templates_via_me_id: tmplOnWaba
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Socket.io admin room ──
 io.on('connection', socket => {
   socket.on('join_admin', () => {

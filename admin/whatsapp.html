@@ -656,8 +656,7 @@ function ncLoadTmplParams(idx){
   if(idx===''||idx===null)return;
   const t=ncMetaTemplates[parseInt(idx)];if(!t)return;
   const bodyComp=(t.components||[]).find(c=>c.type==='BODY');
-  if(bodyComp?.text){preview.style.display='block';preview.innerHTML='<strong style="font-size:.7rem;color:#4A1070;display:block;margin-bottom:4px;">TEMPLATE PREVIEW</strong>'+bodyComp.text.replace(/
-/g,'<br>');}
+  if(bodyComp?.text){preview.style.display='block';preview.innerHTML='<strong style="font-size:.7rem;color:#4A1070;display:block;margin-bottom:4px;">TEMPLATE PREVIEW</strong>'+bodyComp.text.replace(/\n/g,'<br>');}
   const paramCount=((bodyComp?.text||'').match(/\{\{\d+\}\}/g)||[]).length;
   if(!paramCount)return;
   const smartLabels=['Customer name','Order ID (e.g. KC2024001)','Amount (e.g. 1299)','Status / message','Extra info'];
@@ -714,8 +713,7 @@ async function openSendTemplateModal(phone){
       const smartL=['Customer name','Order ID','Amount','Status','Extra info'];
       return `<div style="border:1.5px solid #e8dff5;border-radius:10px;padding:12px;margin-bottom:8px;">
         <div style="font-weight:800;font-size:.82rem;color:#4A1070;margin-bottom:4px;">⚡ ${t.name}</div>
-        <div style="font-size:.75rem;color:#888;margin-bottom:8px;background:#faf7fe;padding:8px;border-radius:7px;">${(bc?.text||'No body').replace(/
-/g,'<br>')}</div>
+        <div style="font-size:.75rem;color:#888;margin-bottom:8px;background:#faf7fe;padding:8px;border-radius:7px;">${(bc?.text||'No body').replace(/\n/g,'<br>')}</div>
         ${pCount?Array.from({length:pCount},(_,j)=>`<input type="text" placeholder="{{${j+1}}} — ${smartL[j]||'Param '+(j+1)}" id="tmplP_${i}_${j}" style="width:100%;padding:6px 10px;border:1.5px solid #e8dff5;border-radius:7px;font-family:'Nunito',sans-serif;font-size:.8rem;margin-bottom:4px;outline:none;">`).join(''):''}
         <button class="btn btn-pp btn-sm" style="margin-top:4px;" onclick="sendApprovedTemplate(${i})">Send This Template</button>
       </div>`;

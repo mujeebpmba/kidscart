@@ -111,6 +111,20 @@ const uploadBanner = multer({
   }
 });
 
+// ── Cloudinary storage for voice notes and media (audio/video) ──
+const mediaCloudStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'kidscart/media',
+    resource_type: 'auto',   // allows audio, video, image
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'mp3', 'ogg', 'webm', 'wav', 'mp4', 'm4a'],
+  }
+});
+const uploadMedia = multer({
+  storage: mediaCloudStorage,
+  limits: { fileSize: 16 * 1024 * 1024 }, // 16MB for audio
+});
+
 // ── RAZORPAY ──────────────────────────────────────────────
 const razorpay = new Razorpay({
   key_id:     process.env.RAZORPAY_KEY_ID,
@@ -251,6 +265,9 @@ async function waOrderNotify(phone, name, orderId, status, total) {
 
 // Upsert Lead + Conversation from an inbound WhatsApp number
 async function upsertWaContact(phone, name = '') {
+  // Normalize phone: remove any spaces/dashes, keep as-is (Meta sends correct format)
+  phone = String(phone).replace(/[\s-]/g, '');
+
   // Ensure default CRM stage exists
   let stage = await CrmStage.findOne({ order: 0 });
 
@@ -259,14 +276,18 @@ async function upsertWaContact(phone, name = '') {
   if (!lead) {
     lead = await Lead.create({ phone, name: name || phone, source: 'whatsapp', stage: stage?._id });
     console.log('📋 New CRM Lead created:', phone);
-  } else if (name && !lead.name) {
+  } else if (name && lead.name === phone) {
+    // Update name if it was just the phone number before
     lead.name = name; await lead.save();
   }
 
-  // Upsert Conversation
+  // Upsert Conversation - also update name if we have it now
   let conv = await WaConversation.findOne({ phone });
   if (!conv) {
     conv = await WaConversation.create({ phone, lead: lead._id, contactName: name || phone });
+  } else if (name && (!conv.contactName || conv.contactName === phone)) {
+    await WaConversation.findByIdAndUpdate(conv._id, { contactName: name });
+    conv.contactName = name;
   }
 
   return { lead, conv };
@@ -1445,10 +1466,17 @@ app.put('/api/admin/products/:id/stock', adminAuth, async (req, res) => {
 
 // FIXED: Product image upload now goes to Cloudinary
 app.post('/api/admin/upload', adminAuth, (req, res, next) => {
+  // Try image upload first, fall back to media upload for audio/video
   uploadProducts.array('images', 10)(req, res, err => {
-    if (err) return res.status(400).json({ error: err.message || 'Upload failed' });
-    if (!req.files?.length) return res.status(400).json({ error: 'No files uploaded' });
-    res.json({ success: true, urls: req.files.map(f => f.path) }); // f.path = Cloudinary URL
+    if (!err && req.files?.length) {
+      return res.json({ success: true, urls: req.files.map(f => f.path) });
+    }
+    // If image upload failed (e.g. audio file), try media upload
+    uploadMedia.array('images', 10)(req, res, err2 => {
+      if (err2) return res.status(400).json({ error: err2.message || 'Upload failed' });
+      if (!req.files?.length) return res.status(400).json({ error: 'No files uploaded' });
+      res.json({ success: true, urls: req.files.map(f => f.path) });
+    });
   });
 });
 
@@ -2338,13 +2366,53 @@ app.post('/api/admin/whatsapp/broadcast', adminAuth, async (req, res) => {
 app.get('/api/admin/whatsapp/meta-templates', adminAuth, async (req, res) => {
   try {
     if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ templates: [] });
-    const wabaRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/message_templates?limit=100`, {
+
+    // Step 1: Get the WABA ID from the phone number ID
+    const phoneRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,name,display_phone_number,verified_name,quality_rating,account_mode,certificate`, {
       headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
     });
-    const wabaData = await wabaRes.json();
-    const approved = (wabaData.data || []).filter(t => t.status === 'APPROVED');
-    res.json({ templates: approved });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+    const phoneData = await phoneRes.json();
+    console.log('WA Phone data:', JSON.stringify(phoneData));
+
+    // Step 2: Get WABA ID - try multiple approaches
+    let wabaId = phoneData.id; // fallback: use phone number ID itself
+
+    // Try to get the actual WABA ID
+    const bizRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,waba_id`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const bizData = await bizRes.json();
+    if (bizData.waba_id) wabaId = bizData.waba_id;
+
+    // Step 3: Fetch templates using WABA ID
+    const tmplRes = await fetch(`https://graph.facebook.com/v19.0/${wabaId}/message_templates?limit=100&fields=name,status,language,components,category`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const tmplData = await tmplRes.json();
+    console.log('WA Templates raw:', JSON.stringify(tmplData).slice(0, 300));
+
+    // Include APPROVED and ACTIVE templates (Meta uses both terms)
+    const approved = (tmplData.data || []).filter(t =>
+      ['APPROVED', 'ACTIVE', 'Active'].includes(t.status)
+    );
+
+    // If no templates via WABA ID, try direct phone number ID approach
+    if (!approved.length && tmplData.error) {
+      const fallbackRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/message_templates?limit=100`, {
+        headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+      });
+      const fallbackData = await fallbackRes.json();
+      const fallbackApproved = (fallbackData.data || []).filter(t =>
+        ['APPROVED', 'ACTIVE', 'Active'].includes(t.status)
+      );
+      return res.json({ templates: fallbackApproved, debug: { wabaId, phoneId: WA_PHONE_ID } });
+    }
+
+    res.json({ templates: approved, debug: { wabaId, phoneId: WA_PHONE_ID } });
+  } catch(e) {
+    console.error('meta-templates error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── Socket.io admin room ──

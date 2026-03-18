@@ -671,10 +671,10 @@ async function stopAndSendVoice(){
       </div></div>`;
     el.scrollTop = el.scrollHeight;
     try {
-      // Upload audio
+      // Upload audio via dedicated audio endpoint
       const fd = new FormData();
-      fd.append('images', blob, 'voice.webm');
-      const r = await fetch(API + '/admin/upload', {
+      fd.append('audio', blob, 'voice.webm');
+      const r = await fetch(API + '/admin/upload-audio', {
         method:'POST',
         headers:{Authorization:'Bearer ' + token},
         body: fd

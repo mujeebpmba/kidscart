@@ -2369,7 +2369,7 @@ app.get('/api/admin/whatsapp/meta-templates', adminAuth, async (req, res) => {
 
     // Use the WABA_ID env var if set, otherwise use the env var WA_WABA_ID
     // You can set WA_WABA_ID in Railway variables
-    const WABA_ID = process.env.WA_WABA_ID || WA_PHONE_ID;
+    const WABA_ID = (process.env.WA_WABA_ID || WA_PHONE_ID).trim().replace(/^=+/, '');
 
     const tmplRes = await fetch(
       `https://graph.facebook.com/v19.0/${WABA_ID}/message_templates?limit=100&fields=name,status,language,components,category`,

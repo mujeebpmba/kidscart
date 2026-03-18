@@ -126,6 +126,10 @@ const WA_TOKEN    = process.env.WA_ACCESS_TOKEN;
 const WA_PHONE_ID = process.env.WA_PHONE_NUMBER_ID;
 const WA_VERIFY   = process.env.WA_VERIFY_TOKEN || 'kidscart_wa_verify_2026';
 
+// Admin WA numbers for notifications (set in Railway env: ADMIN_WA_NUMBERS=918848703272,917012631235)
+const ADMIN_WA_NUMBERS = (process.env.ADMIN_WA_NUMBERS || '')
+  .split(',').map(n => n.trim()).filter(Boolean);
+
 async function waSend(to, text) {
   if (!WA_TOKEN || !WA_PHONE_ID) { console.error('❌ WhatsApp env vars not set'); return null; }
   try {
@@ -164,6 +168,85 @@ async function waSendTemplate(to, templateName, params = []) {
     const d = await r.json();
     return r.ok ? d.messages?.[0]?.id : null;
   } catch(e) { return null; }
+}
+
+// ── Send media (image/audio/video) via Meta media API ──
+async function waSendMedia(to, mediaUrl, type = 'image', caption = '') {
+  if (!WA_TOKEN || !WA_PHONE_ID) return null;
+  try {
+    const fileRes = await fetch(mediaUrl);
+    const fileBuffer = await fileRes.arrayBuffer();
+    let mime = 'application/octet-stream';
+    if (mediaUrl.includes('.webm'))  mime = 'audio/webm';
+    else if (mediaUrl.includes('.ogg'))   mime = 'audio/ogg; codecs=opus';
+    else if (mediaUrl.includes('.mp3'))   mime = 'audio/mpeg';
+    else if (mediaUrl.includes('.png'))   mime = 'image/png';
+    else if (mediaUrl.includes('.jpg') || mediaUrl.includes('.jpeg')) mime = 'image/jpeg';
+    else if (type === 'image')  mime = 'image/jpeg';
+    else if (type === 'audio')  mime = 'audio/webm';
+
+    const form = new FormData();
+    form.append('messaging_product', 'whatsapp');
+    form.append('file', new Blob([fileBuffer], { type: mime }),
+      type === 'audio' ? 'voice.webm' : `media.${mime.split('/')[1].split(';')[0]}`);
+    const uploadRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/media`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` },
+      body: form
+    });
+    const uploadData = await uploadRes.json();
+    if (!uploadRes.ok) { console.error('WA media upload error:', JSON.stringify(uploadData)); return null; }
+    const mediaId = uploadData.id;
+    if (!mediaId) return null;
+
+    const msgBody = { messaging_product: 'whatsapp', recipient_type: 'individual', to, type };
+    if (type === 'image')    msgBody.image    = { id: mediaId, caption };
+    if (type === 'audio')    msgBody.audio    = { id: mediaId };
+    if (type === 'video')    msgBody.video    = { id: mediaId, caption };
+    if (type === 'document') msgBody.document = { id: mediaId, caption, filename: 'document.pdf' };
+
+    const sendRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(msgBody)
+    });
+    const sendData = await sendRes.json();
+    if (sendRes.ok) return sendData.messages?.[0]?.id;
+    console.error('WA media send error:', JSON.stringify(sendData));
+    return null;
+  } catch(e) { console.error('waSendMedia exception:', e.message); return null; }
+}
+
+// ── Notify both admin WA numbers ──
+async function notifyAdmins(text) {
+  for (const num of ADMIN_WA_NUMBERS) {
+    await waSend(num, text).catch(() => {});
+  }
+}
+
+// ── WA OTP helper ──
+async function waOTP(phone, otp, name) {
+  return waSend(phone,
+    `🔐 *KidsCart OTP*\n\nHi ${name || 'there'}! Your one-time password is:\n\n*${otp}*\n\nValid for 10 minutes. Never share this with anyone.`
+  );
+}
+
+// ── WA order notification helper ──
+async function waOrderNotify(phone, name, orderId, status, total) {
+  if (!phone) return;
+  const msgs = {
+    placed:           `📦 Hi ${name}! Your KidsCart order *#${orderId}* has been placed. Total: ₹${total}. We'll confirm shortly!`,
+    confirmed:        `✅ Hi ${name}! Your KidsCart order *#${orderId}* is confirmed! Total: ₹${total}. Preparing now. 🛍️`,
+    processing:       `⚙️ Hi ${name}! Your KidsCart order *#${orderId}* is being packed. Dispatching soon!`,
+    shipped:          `🚚 Hi ${name}! Your KidsCart order *#${orderId}* has been shipped! Delivery in 2–3 days. Thank you! 💜`,
+    out_for_delivery: `🏍️ Hi ${name}! Your KidsCart order *#${orderId}* is out for delivery today! Keep your phone handy.`,
+    delivered:        `🎉 Hi ${name}! Your KidsCart order *#${orderId}* has been delivered. Hope your little ones love it! 💜`,
+    cancelled:        `❌ Hi ${name}! Your KidsCart order *#${orderId}* has been cancelled. Refund (if any) in 5–7 days.`,
+    returned:         `↩️ Hi ${name}! Your KidsCart return for order *#${orderId}* has been initiated.`,
+  };
+  const msg = msgs[status];
+  if (!msg) return;
+  return waSend(phone, msg);
 }
 
 // Upsert Lead + Conversation from an inbound WhatsApp number
@@ -652,6 +735,15 @@ const WaTemplateSchema = new mongoose.Schema({
   createdAt:{ type: Date, default: Date.now }
 });
 
+const WaBotSessionSchema = new mongoose.Schema({
+  phone:        { type: String, required: true, unique: true },
+  state:        { type: String, default: 'idle' },
+  humanHandoff: { type: Boolean, default: false },
+  handoffAt:    Date,
+  lastBotMsgAt: Date,
+  updatedAt:    { type: Date, default: Date.now }
+});
+
 const User     = mongoose.model('User',     UserSchema);
 const Product  = mongoose.model('Product',  ProductSchema);
 const Order    = mongoose.model('Order',    OrderSchema);
@@ -666,6 +758,7 @@ const Lead           = mongoose.model('Lead',            LeadSchema);
 const WaConversation = mongoose.model('WaConversation',  WaConversationSchema);
 const WaMessage      = mongoose.model('WaMessage',       WaMessageSchema);
 const WaTemplate     = mongoose.model('WaTemplate',      WaTemplateSchema);
+const WaBotSession   = mongoose.model('WaBotSession',     WaBotSessionSchema);
 
 // ── HELPERS ───────────────────────────────────────────────
 const genOTP     = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -763,7 +856,7 @@ app.post('/api/auth/login', rateLimitMW(10, 60000), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// OTP – EMAIL ONLY (WhatsApp OTP coming soon)
+// OTP – Email + WhatsApp
 app.post('/api/auth/send-otp', rateLimitMW(5, 60000), async (req, res) => {
   try {
     const { email } = req.body;
@@ -775,7 +868,10 @@ app.post('/api/auth/send-otp', rateLimitMW(5, 60000), async (req, res) => {
     const otp = genOTP();
     user.otp = otp; user.otpExpiry = new Date(Date.now() + 10 * 60000);
     await user.save();
+    // Always send email OTP
     await emailOTP(email, otp, user.name).catch(e => console.error('Email OTP:', e.message));
+    // Also send WA OTP if user has phone (silent fail — email is primary)
+    if (user.phone) waOTP(user.phone, otp, user.name).catch(() => {});
     res.json({ success: true, message: 'OTP sent to ' + email });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1031,8 +1127,8 @@ app.post('/api/payment/verify', auth, async (req, res) => {
     const orderId = genOrderId();
     const ord = await Order.create({
       orderId, user: req.user._id, items: oi, shippingAddress,
-      payment: { method: 'online', status: 'paid', transactionId: razorpay_payment_id },
-      status: 'confirmed', // auto-confirmed on payment ✅
+      payment: { method: 'upi', status: 'paid', transactionId: razorpay_payment_id },
+      status: 'confirmed',
       subtotal, discount, deliveryFee: fee, total, couponCode, notes,
       tracking: [
         { status: 'placed',    message: 'Order placed successfully!' },
@@ -1041,9 +1137,13 @@ app.post('/api/payment/verify', auth, async (req, res) => {
       estimatedDelivery: new Date(Date.now() + 5 * 24 * 3600000)
     });
 
-    // Send emails
     const u = await User.findById(req.user._id);
+    // Email to customer (existing)
     if (u?.email) emailOrderConfirm(u.email, u.name, { ...ord.toObject(), items: oi }).catch(() => {});
+    // WA to customer
+    const custPhone = u?.phone || shippingAddress?.phone;
+    if (custPhone) waOrderNotify(custPhone, u?.name || 'Customer', ord.orderId, 'confirmed', ord.total).catch(() => {});
+    // Email to admin (existing)
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@kidscart.kids';
     sendEmail(adminEmail, `💳 Paid Order #${ord.orderId} — ₹${ord.total}`,
       emailWrap('New PAID Order! 💳',
@@ -1053,11 +1153,13 @@ app.post('/api/payment/verify', auth, async (req, res) => {
            <tr style="background:#faf6ff"><td style="padding:8px;color:#888">Customer</td><td style="padding:8px">${u?.name} (${u?.email})</td></tr>
            <tr><td style="padding:8px;color:#888">Items</td><td style="padding:8px">${oi.map(i=>i.name+' ×'+i.qty).join(', ')}</td></tr>
            <tr style="background:#faf6ff"><td style="padding:8px;color:#888">Total</td><td style="padding:8px;font-weight:800;color:#7B2D8B">₹${ord.total}</td></tr>
-           <tr><td style="padding:8px;color:#888">Payment ID</td><td style="padding:8px;color:#2e7d32;font-weight:800">${razorpay_payment_id} ✅</td></tr>
+           <tr><td style="padding:8px;color:#888">Payment</td><td style="padding:8px;color:#2e7d32;font-weight:800">UPI — ${razorpay_payment_id} ✅</td></tr>
          </table>
          <p style="margin-top:16px"><a href="https://kidscart.kids/admin.html" style="background:#7B2D8B;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:800">Open Admin Panel →</a></p>`
       )
     ).catch(() => {});
+    // WA to both admin numbers
+    notifyAdmins(`💳 New PAID order!\n#${ord.orderId} — ₹${ord.total}\nCustomer: ${u?.name || 'Unknown'}\nUPI: ${razorpay_payment_id}\nItems: ${oi.map(i=>i.name+' ×'+i.qty).join(', ')}`).catch(() => {});
 
     res.status(201).json({ success: true, order: ord });
   } catch (e) {
@@ -1143,7 +1245,12 @@ app.post('/api/orders', auth, async (req, res) => {
     });
     const u = await User.findById(req.user._id);
     if (u?.email) emailOrderConfirm(u.email, u.name, { ...ord.toObject(), items: oi }).catch(() => {});
-    // Notify admin of new order
+    // WA to customer
+    const custPhoneCOD = u?.phone || shippingAddress?.phone;
+    if (custPhoneCOD) waOrderNotify(custPhoneCOD, u?.name || 'Customer', ord.orderId, 'placed', ord.total).catch(() => {});
+    // WA to both admin numbers
+    notifyAdmins(`🛍️ New COD order!\n#${ord.orderId} — ₹${ord.total}\nCustomer: ${u?.name || 'Unknown'} | ${shippingAddress.phone}\nItems: ${oi.map(i=>i.name+' ×'+i.qty).join(', ')}\nShip to: ${shippingAddress.city}`).catch(() => {});
+    // Email to admin (existing)
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@kidscart.kids';
     sendEmail(adminEmail, `🛍️ New Order #${ord.orderId} — ₹${ord.total}`,
       emailWrap('New Order Received! 🛍️',
@@ -1379,13 +1486,17 @@ app.get('/api/admin/orders', adminAuth, async (req, res) => {
 app.put('/api/admin/orders/:id/status', adminAuth, async (req, res) => {
   try {
     const { status, message } = req.body;
-    const o = await Order.findById(req.params.id).populate('user', 'name email');
+    const o = await Order.findById(req.params.id).populate('user', 'name email phone');
     if (!o) return res.status(404).json({ error: 'Order not found' });
     o.status = status;
     o.tracking.push({ status, message: message || `Order ${status}` });
     if (status === 'delivered') { o.deliveredAt = new Date(); o.payment.status = 'paid'; }
     await o.save();
+    // Email (existing — untouched)
     if (o.user?.email) emailOrderStatus(o.user.email, o.user.name, o.orderId, status, message).catch(() => {});
+    // WA to customer
+    const custPhone = o.user?.phone || o.shippingAddress?.phone;
+    if (custPhone) waOrderNotify(custPhone, o.user?.name || 'Customer', o.orderId, status, o.total).catch(() => {});
     res.json({ success: true, order: o });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1670,11 +1781,152 @@ app.post('/api/webhook/whatsapp', async (req, res) => {
           io.to('admin').emit('inbox_update', { phone, unreadCount: conv.unreadCount + 1, lastMessage: body_text });
 
           console.log(`📱 WA inbound from ${phone}: ${body_text.slice(0,50)}`);
+
+          // Notify admin numbers via WA (don't notify if message is from admin itself)
+          if (!ADMIN_WA_NUMBERS.includes(phone)) {
+            notifyAdmins(`📱 New WhatsApp!\nFrom: ${profileName || phone}\n${phone}\nMsg: ${body_text.slice(0,80)}\n\nReply: kidscart.kids/admin/whatsapp.html`).catch(() => {});
+          }
+
+          // Bot engine
+          handleBotMessage(phone, profileName, body_text, msgType).catch(e =>
+            console.error('Bot error:', e.message)
+          );
         }
       }
     }
   } catch(e) { console.error('WA webhook error:', e.message); }
 });
+
+// ── Bot engine ──
+async function handleBotMessage(phone, name, text, msgType) {
+  if (ADMIN_WA_NUMBERS.includes(phone)) return;
+  let session = await WaBotSession.findOne({ phone });
+  if (!session) session = await WaBotSession.create({ phone, state: 'idle' });
+
+  // Human handoff — bot silent for 30 min after admin replies
+  if (session.humanHandoff) {
+    const thirtyMin = 30 * 60 * 1000;
+    if (session.handoffAt && (Date.now() - new Date(session.handoffAt).getTime()) < thirtyMin) return;
+    session.humanHandoff = false;
+    await session.save();
+  }
+
+  const lowerText = (text || '').toLowerCase().trim();
+
+  // Handle interactive button replies
+  if (msgType === 'interactive') {
+    const btnId = text.toLowerCase();
+    if (btnId === 'track_order') {
+      await WaBotSession.findOneAndUpdate({ phone }, { state: 'track_order' });
+      await waSend(phone, `📦 *Order Tracking*\n\nPlease enter your *Order ID* (e.g. KC2024001) or your registered *phone number* and we'll find your orders.`);
+      return;
+    }
+    if (btnId === 'browse') {
+      await WaBotSession.findOneAndUpdate({ phone }, { state: 'browse' });
+      await waSend(phone, `🛍️ *Shop KidsCart*\n\n👗 *Girls* — Frocks, dresses, ethnic\n👖 *Boys* — Casuals, ethnic, party\n🍼 *Baby* — Rompers, sets 0–24M\n🎀 *Party Wear* — Birthday & occasions\n🌸 *Ethnic* — Lehenga, kurta sets\n\nShop now: https://kidscart.kids\n\nReply *MENU* to go back.`);
+      return;
+    }
+    if (btnId === 'support') {
+      await WaBotSession.findOneAndUpdate({ phone }, { state: 'support' });
+      await waSend(phone, `💬 *Support*\n\nOur team will assist you shortly!\n\n📧 admin@kidscart.kids\n📞 +91 94975 96110\n\nDescribe your issue and we'll get back to you. 💜`);
+      notifyAdmins(`🆘 Support request from ${name || phone}. Open admin WhatsApp panel!`).catch(() => {});
+      return;
+    }
+  }
+
+  // MENU state — text replies
+  if (session.state === 'menu') {
+    if (lowerText.includes('track') || lowerText === '1') {
+      await WaBotSession.findOneAndUpdate({ phone }, { state: 'track_order' });
+      await waSend(phone, `📦 *Order Tracking*\n\nEnter your *Order ID* (e.g. KC2024001) or registered *phone number*.`);
+      return;
+    }
+    if (lowerText.includes('shop') || lowerText.includes('browse') || lowerText === '2') {
+      await WaBotSession.findOneAndUpdate({ phone }, { state: 'browse' });
+      await waSend(phone, `🛍️ *Shop KidsCart*\n\n👗 Girls 👖 Boys 🍼 Baby 🎀 Party 🌸 Ethnic\n\nVisit: https://kidscart.kids\n\nReply *MENU* to go back.`);
+      return;
+    }
+    if (lowerText.includes('support') || lowerText === '3') {
+      await WaBotSession.findOneAndUpdate({ phone }, { state: 'support' });
+      await waSend(phone, `💬 Our team will assist you shortly! Describe your issue below. 💜`);
+      notifyAdmins(`🆘 Support from ${name || phone}. Check WhatsApp admin panel!`).catch(() => {});
+      return;
+    }
+  }
+
+  // TRACK ORDER state
+  if (session.state === 'track_order') {
+    if (lowerText === 'menu' || lowerText === 'back') { await sendWelcomeMenu(phone, name); return; }
+    let orders = [];
+    const orderIdMatch = text.match(/KC[A-Z0-9]+/i);
+    if (orderIdMatch) {
+      const ord = await Order.findOne({ orderId: { $regex: new RegExp(orderIdMatch[0], 'i') } }).populate('user', 'name phone');
+      if (ord) orders = [ord];
+    } else {
+      const cleanPhone = text.replace(/\D/g, '');
+      if (cleanPhone.length >= 10) {
+        const u = await User.findOne({ phone: { $regex: cleanPhone.slice(-10) } });
+        if (u) orders = await Order.find({ user: u._id }).sort({ createdAt: -1 }).limit(3);
+      }
+    }
+    if (!orders.length) {
+      await waSend(phone, `❌ No orders found for "${text.slice(0,30)}".\n\nTry your Order ID (e.g. KC2024001) or registered phone number.\n\nReply *MENU* for main menu.`);
+      return;
+    }
+    const se = { placed:'📋', confirmed:'✅', processing:'⚙️', shipped:'🚚', out_for_delivery:'🏍️', delivered:'🎉', cancelled:'❌', returned:'↩️' };
+    const reply = orders.map(o => `${se[o.status]||'📦'} *Order #${o.orderId}*\nStatus: *${o.status.toUpperCase()}*\nTotal: ₹${o.total}\nDate: ${new Date(o.createdAt).toLocaleDateString('en-IN')}`).join('\n\n');
+    await waSend(phone, `📦 *Your Orders*\n\n${reply}\n\nNeed help? Reply *SUPPORT*\nMain menu? Reply *MENU*`);
+    return;
+  }
+
+  // SUPPORT state — let admin handle, bot stays quiet
+  if (session.state === 'support') {
+    if (lowerText === 'menu' || lowerText === 'back') { await sendWelcomeMenu(phone, name); return; }
+    return; // Admin handles
+  }
+
+  // Default / greeting — show welcome menu
+  const greetWords = ['hi', 'hello', 'hey', 'start', 'menu', 'help', 'hai', 'hii'];
+  const isGreeting = greetWords.some(w => lowerText.includes(w)) || lowerText.length <= 4;
+  if (session.state === 'idle' || isGreeting || lowerText === 'menu') {
+    await sendWelcomeMenu(phone, name);
+    return;
+  }
+
+  await waSend(phone, `Hi ${name || 'there'}! 👋 Reply *MENU* to see what I can help you with, or type *SUPPORT* to talk to our team.`);
+}
+
+async function sendWelcomeMenu(phone, name) {
+  await WaBotSession.findOneAndUpdate({ phone }, { state: 'menu', lastBotMsgAt: new Date() }, { upsert: true });
+  try {
+    const r = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp', recipient_type: 'individual', to: phone,
+        type: 'interactive',
+        interactive: {
+          type: 'button',
+          header: { type: 'text', text: '👋 Welcome to KidsCart!' },
+          body: { text: `Hi ${name || 'there'}! 🛍️ India's favourite kids fashion store. How can I help?` },
+          footer: { text: 'kidscart.kids | Free delivery above ₹999' },
+          action: {
+            buttons: [
+              { type: 'reply', reply: { id: 'track_order', title: '📦 Track My Order' } },
+              { type: 'reply', reply: { id: 'browse',      title: '🛍️ Shop Now' } },
+              { type: 'reply', reply: { id: 'support',     title: '💬 Support' } }
+            ]
+          }
+        }
+      })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(d));
+  } catch(e) {
+    console.log('Interactive buttons unavailable, using text menu:', e.message);
+    await waSend(phone, `👋 Hi ${name || 'there'}! Welcome to *KidsCart* 🛍️\n\nWhat can I help you with?\n\n1️⃣ 📦 Track my order\n2️⃣ 🛍️ Shop / Browse\n3️⃣ 💬 Support & Help\n\n_Reply with 1, 2, or 3_`);
+  }
+}
 
 // ══════════════════════════════════════════════════════════
 // WHATSAPP SEND API
@@ -1682,33 +1934,43 @@ app.post('/api/webhook/whatsapp', async (req, res) => {
 
 app.post('/api/admin/whatsapp/send', adminAuth, async (req, res) => {
   try {
-    const { phone, text } = req.body;
-    if (!phone || !text?.trim()) return res.status(400).json({ error: 'phone and text required' });
-
-    const waId = await waSend(phone, text.trim());
-    if (!waId) return res.status(502).json({ error: 'Failed to send via WhatsApp API. Check WA env vars.' });
+    const { phone, text, type, imageUrl, audioUrl, videoUrl, mediaUrl } = req.body;
+    if (!phone) return res.status(400).json({ error: 'phone required' });
 
     const { lead, conv } = await upsertWaContact(phone);
+    let waId, msgType, msgBody, msgMediaUrl;
+
+    if (type === 'image' && (imageUrl || mediaUrl)) {
+      msgType = 'image'; msgMediaUrl = imageUrl || mediaUrl;
+      waId = await waSendMedia(phone, msgMediaUrl, 'image', text || '');
+      msgBody = '[Image]';
+    } else if (type === 'audio' && (audioUrl || mediaUrl)) {
+      msgType = 'audio'; msgMediaUrl = audioUrl || mediaUrl;
+      waId = await waSendMedia(phone, msgMediaUrl, 'audio');
+      msgBody = '[Voice Message]';
+    } else if (type === 'video' && (videoUrl || mediaUrl)) {
+      msgType = 'video'; msgMediaUrl = videoUrl || mediaUrl;
+      waId = await waSendMedia(phone, msgMediaUrl, 'video', text || '');
+      msgBody = '[Video]';
+    } else {
+      if (!text?.trim()) return res.status(400).json({ error: 'text required' });
+      msgType = 'text'; msgBody = text.trim();
+      waId = await waSend(phone, text.trim());
+    }
+
+    if (!waId) return res.status(502).json({ error: 'Failed to send via WhatsApp API. Check WA env vars.' });
+
+    // Mark human handoff — pause bot for 30 min when admin replies
+    await WaBotSession.findOneAndUpdate({ phone }, { humanHandoff: true, handoffAt: new Date(), state: 'idle' }, { upsert: true });
 
     const waMsg = await WaMessage.create({
-      waMessageId: waId,
-      conversation: conv._id,
-      lead: lead._id,
-      phone,
-      direction: 'outbound',
-      type: 'text',
-      body: text.trim(),
-      status: 'sent',
-      sentBy: req.admin?.name || 'Admin',
-      timestamp: new Date()
+      waMessageId: waId, conversation: conv._id, lead: lead._id, phone,
+      direction: 'outbound', type: msgType, body: msgBody, mediaUrl: msgMediaUrl,
+      status: 'sent', sentBy: req.user?.name || 'Admin', timestamp: new Date()
     });
 
-    await WaConversation.findByIdAndUpdate(conv._id, {
-      lastMessage: text.trim(),
-      lastMessageAt: new Date()
-    });
-
-    io.to('admin').emit('wa_message_sent', { phone, body: text.trim(), waMessageId: waId, msgId: waMsg._id });
+    await WaConversation.findByIdAndUpdate(conv._id, { lastMessage: msgBody, lastMessageAt: new Date() });
+    io.to('admin').emit('wa_message_sent', { phone, body: msgBody, type: msgType, mediaUrl: msgMediaUrl, waMessageId: waId, msgId: waMsg._id });
 
     res.json({ success: true, messageId: waId, msg: waMsg });
   } catch(e) { res.status(500).json({ error: e.message }); }
@@ -1755,9 +2017,25 @@ app.put('/api/admin/whatsapp/read/:phone', adminAuth, async (req, res) => {
 // Send template message
 app.post('/api/admin/whatsapp/template', adminAuth, async (req, res) => {
   try {
-    const { phone, templateName, params } = req.body;
-    const waId = await waSendTemplate(phone, templateName, params || []);
-    if (!waId) return res.status(502).json({ error: 'Template send failed' });
+    const { phone, templateName, params, lang } = req.body;
+    const waId = await waSendTemplate(phone, templateName, params || [], lang || 'en');
+    if (!waId) return res.status(502).json({ error: 'Template send failed. Check template name and that it is approved in Meta.' });
+
+    // Save to DB so it appears in chat
+    const { lead, conv } = await upsertWaContact(phone);
+    const waMsg = await WaMessage.create({
+      waMessageId: waId, conversation: conv._id, lead: lead._id, phone,
+      direction: 'outbound', type: 'template',
+      body: `[Template: ${templateName}]`,
+      status: 'sent', sentBy: req.user?.name || 'Admin', timestamp: new Date()
+    });
+    await WaConversation.findByIdAndUpdate(conv._id, {
+      lastMessage: `[Template: ${templateName}]`, lastMessageAt: new Date()
+    });
+    // Pause bot when admin sends template
+    await WaBotSession.findOneAndUpdate({ phone }, { humanHandoff: true, handoffAt: new Date() }, { upsert: true });
+    io.to('admin').emit('wa_message_sent', { phone, body: `[Template: ${templateName}]`, type: 'template', waMessageId: waId, msgId: waMsg._id });
+
     res.json({ success: true, messageId: waId });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -1994,6 +2272,78 @@ app.get('/api/admin/crm/stats', adminAuth, async (req, res) => {
       stageCounts,
       totalUnread: totalUnread[0]?.total || 0
     });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── New contact / start conversation ──
+app.post('/api/admin/whatsapp/new-contact', adminAuth, async (req, res) => {
+  try {
+    const { phone, name, message } = req.body;
+    if (!phone) return res.status(400).json({ error: 'phone required' });
+    const cleanPhone = phone.replace(/\D/g, '');
+    const fullPhone  = cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone.slice(-10);
+    const { lead, conv } = await upsertWaContact(fullPhone, name || fullPhone);
+    let waId = null;
+    if (message?.trim()) {
+      waId = await waSend(fullPhone, message.trim());
+      if (waId) {
+        await WaMessage.create({ waMessageId: waId, conversation: conv._id, lead: lead._id, phone: fullPhone, direction: 'outbound', type: 'text', body: message.trim(), status: 'sent', sentBy: req.user?.name || 'Admin', timestamp: new Date() });
+        await WaConversation.findByIdAndUpdate(conv._id, { lastMessage: message.trim(), lastMessageAt: new Date() });
+      }
+    }
+    await WaBotSession.findOneAndUpdate({ phone: fullPhone }, { humanHandoff: true, handoffAt: new Date(), state: 'idle' }, { upsert: true });
+    res.json({ success: true, phone: fullPhone, conv, lead, messageSent: !!waId });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Get bot session status ──
+app.get('/api/admin/whatsapp/bot-session/:phone', adminAuth, async (req, res) => {
+  try {
+    const phone = decodeURIComponent(req.params.phone);
+    const session = await WaBotSession.findOne({ phone });
+    res.json({ session: session || { phone, state: 'idle', humanHandoff: false } });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Resume bot ──
+app.post('/api/admin/whatsapp/bot-resume/:phone', adminAuth, async (req, res) => {
+  try {
+    const phone = decodeURIComponent(req.params.phone);
+    await WaBotSession.findOneAndUpdate({ phone }, { humanHandoff: false, state: 'idle' }, { upsert: true });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Broadcast ──
+app.post('/api/admin/whatsapp/broadcast', adminAuth, async (req, res) => {
+  try {
+    const { phones, message, templateName, templateParams } = req.body;
+    if (!phones?.length) return res.status(400).json({ error: 'phones array required' });
+    if (!message && !templateName) return res.status(400).json({ error: 'message or templateName required' });
+    let sent = 0, failed = 0;
+    for (const phone of phones) {
+      try {
+        const waId = templateName
+          ? await waSendTemplate(phone, templateName, templateParams || [])
+          : await waSend(phone, message);
+        if (waId) sent++; else failed++;
+        await new Promise(r => setTimeout(r, 200));
+      } catch(e) { failed++; }
+    }
+    res.json({ success: true, sent, failed, total: phones.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── List approved Meta templates from Meta API ──
+app.get('/api/admin/whatsapp/meta-templates', adminAuth, async (req, res) => {
+  try {
+    if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ templates: [] });
+    const wabaRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/message_templates?limit=100`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const wabaData = await wabaRes.json();
+    const approved = (wabaData.data || []).filter(t => t.status === 'APPROVED');
+    res.json({ templates: approved });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

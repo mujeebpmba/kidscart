@@ -111,18 +111,10 @@ const uploadBanner = multer({
   }
 });
 
-// ── Cloudinary storage for voice notes and media (audio/video) ──
-const mediaCloudStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'kidscart/media',
-    resource_type: 'auto',   // allows audio, video, image
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'mp3', 'ogg', 'webm', 'wav', 'mp4', 'm4a'],
-  }
-});
+// ── Memory storage for audio/video — uploaded directly via Cloudinary SDK ──
 const uploadMedia = multer({
-  storage: mediaCloudStorage,
-  limits: { fileSize: 16 * 1024 * 1024 }, // 16MB for audio
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 16 * 1024 * 1024 },
 });
 
 // ── RAZORPAY ──────────────────────────────────────────────
@@ -1485,16 +1477,30 @@ app.put('/api/admin/products/:id/stock', adminAuth, async (req, res) => {
 
 // FIXED: Product image upload now goes to Cloudinary
 app.post('/api/admin/upload', adminAuth, (req, res, next) => {
-  // Try image upload first, fall back to media upload for audio/video
-  uploadProducts.array('images', 10)(req, res, err => {
+  // Try image upload first
+  uploadProducts.array('images', 10)(req, res, async err => {
     if (!err && req.files?.length) {
       return res.json({ success: true, urls: req.files.map(f => f.path) });
     }
-    // If image upload failed (e.g. audio file), try media upload
-    uploadMedia.array('images', 10)(req, res, err2 => {
+    // Image upload failed — try as audio/video using memory storage + direct Cloudinary
+    uploadMedia.array('images', 10)(req, res, async err2 => {
       if (err2) return res.status(400).json({ error: err2.message || 'Upload failed' });
       if (!req.files?.length) return res.status(400).json({ error: 'No files uploaded' });
-      res.json({ success: true, urls: req.files.map(f => f.path) });
+      try {
+        const urls = await Promise.all(req.files.map(file => new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'kidscart/media', resource_type: 'auto' },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            }
+          );
+          stream.end(file.buffer);
+        })));
+        res.json({ success: true, urls });
+      } catch(e) {
+        res.status(500).json({ error: e.message || 'Media upload failed' });
+      }
     });
   });
 });
@@ -2083,22 +2089,6 @@ Reply *MENU* for main menu.`,
           return;
         }
       }
-    }
-  }
-
-  // Check keyword triggers from DB
-  const keywordTriggers = await WaBotKeyword.find({ isActive: true });
-  for (const trigger of keywordTriggers) {
-    const matched = trigger.keywords.some(kw => lowerText.includes(kw.toLowerCase()));
-    if (matched) {
-      const reply = trigger.reply.replace('{{name}}', name || 'there');
-      if (trigger.buttons?.length) {
-        await waSendWithButtons(phone, reply, trigger.buttons, 'Reply with a button or type MENU');
-        await WaBotSession.findOneAndUpdate({ phone }, { state: 'keyword_btn' });
-      } else {
-        await waSend(phone, reply);
-      }
-      return;
     }
   }
 

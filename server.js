@@ -756,6 +756,13 @@ const WaTemplateSchema = new mongoose.Schema({
   createdAt:{ type: Date, default: Date.now }
 });
 
+// Bot configuration stored in DB — editable from admin panel
+const WaBotConfigSchema = new mongoose.Schema({
+  key:       { type: String, required: true, unique: true },
+  value:     mongoose.Schema.Types.Mixed,
+  updatedAt: { type: Date, default: Date.now }
+});
+
 const WaBotSessionSchema = new mongoose.Schema({
   phone:        { type: String, required: true, unique: true },
   state:        { type: String, default: 'idle' },
@@ -780,6 +787,7 @@ const WaConversation = mongoose.model('WaConversation',  WaConversationSchema);
 const WaMessage      = mongoose.model('WaMessage',       WaMessageSchema);
 const WaTemplate     = mongoose.model('WaTemplate',      WaTemplateSchema);
 const WaBotSession   = mongoose.model('WaBotSession',     WaBotSessionSchema);
+const WaBotConfig    = mongoose.model('WaBotConfig',      WaBotConfigSchema);
 
 // ── HELPERS ───────────────────────────────────────────────
 const genOTP     = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -1826,8 +1834,27 @@ app.post('/api/webhook/whatsapp', async (req, res) => {
 });
 
 // ── Bot engine ──
+async function getBotConfig() {
+  const items = await WaBotConfig.find();
+  const cfg = {};
+  items.forEach(i => cfg[i.key] = i.value);
+  return {
+    welcomeText:   cfg.welcomeText   || `Hi {{name}}! 🛍️ India's favourite kids fashion store. How can I help?`,
+    welcomeFooter: cfg.welcomeFooter || 'kidscart.kids | Free delivery above ₹999',
+    btn1Label:     cfg.btn1Label     || '📦 Track My Order',
+    btn2Label:     cfg.btn2Label     || '🛍️ Shop Now',
+    btn3Label:     cfg.btn3Label     || '💬 Support',
+    shopText:      cfg.shopText      || `🛍️ *Shop KidsCart*\n\n👗 Girls 👖 Boys 🍼 Baby 🎀 Party 🌸 Ethnic\n\nVisit: https://kidscart.kids\n\nReply *MENU* to go back.`,
+    supportText:   cfg.supportText   || `💬 Our team will assist you shortly! Describe your issue below. 💜`,
+    fallbackText:  cfg.fallbackText  || `Hi {{name}}! 👋 Reply *MENU* for options, or type *SUPPORT* to talk to our team.`,
+    botEnabled:    cfg.botEnabled !== undefined ? cfg.botEnabled : true,
+  };
+}
+
 async function handleBotMessage(phone, name, text, msgType) {
   if (ADMIN_WA_NUMBERS.includes(phone)) return;
+  const cfg = await getBotConfig();
+  if (!cfg.botEnabled) return; // Bot disabled from admin panel
   let session = await WaBotSession.findOne({ phone });
   if (!session) session = await WaBotSession.create({ phone, state: 'idle' });
 
@@ -1926,6 +1953,11 @@ async function handleBotMessage(phone, name, text, msgType) {
 
 async function sendWelcomeMenu(phone, name) {
   await WaBotSession.findOneAndUpdate({ phone }, { state: 'menu', lastBotMsgAt: new Date() }, { upsert: true });
+  const cfg = await getBotConfig();
+  const bodyText = cfg.welcomeText.replace('{{name}}', name || 'there');
+  const btn1 = cfg.btn1Label.slice(0, 20); // WhatsApp button max 20 chars
+  const btn2 = cfg.btn2Label.slice(0, 20);
+  const btn3 = cfg.btn3Label.slice(0, 20);
   try {
     const r = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
       method: 'POST',
@@ -1936,13 +1968,13 @@ async function sendWelcomeMenu(phone, name) {
         interactive: {
           type: 'button',
           header: { type: 'text', text: '👋 Welcome to KidsCart!' },
-          body: { text: `Hi ${name || 'there'}! 🛍️ India's favourite kids fashion store. How can I help?` },
-          footer: { text: 'kidscart.kids | Free delivery above ₹999' },
+          body: { text: bodyText },
+          footer: { text: cfg.welcomeFooter },
           action: {
             buttons: [
-              { type: 'reply', reply: { id: 'track_order', title: '📦 Track My Order' } },
-              { type: 'reply', reply: { id: 'browse',      title: '🛍️ Shop Now' } },
-              { type: 'reply', reply: { id: 'support',     title: '💬 Support' } }
+              { type: 'reply', reply: { id: 'track_order', title: btn1 } },
+              { type: 'reply', reply: { id: 'browse',      title: btn2 } },
+              { type: 'reply', reply: { id: 'support',     title: btn3 } }
             ]
           }
         }
@@ -1952,7 +1984,7 @@ async function sendWelcomeMenu(phone, name) {
     if (!r.ok) throw new Error(JSON.stringify(d));
   } catch(e) {
     console.log('Interactive buttons unavailable, using text menu:', e.message);
-    await waSend(phone, `👋 Hi ${name || 'there'}! Welcome to *KidsCart* 🛍️\n\nWhat can I help you with?\n\n1️⃣ 📦 Track my order\n2️⃣ 🛍️ Shop / Browse\n3️⃣ 💬 Support & Help\n\n_Reply with 1, 2, or 3_`);
+    await waSend(phone, `👋 Hi ${name || 'there'}! Welcome to *KidsCart* 🛍️\n\nWhat can I help you with?\n\n1️⃣ ${btn1}\n2️⃣ ${btn2}\n3️⃣ ${btn3}\n\n_Reply with 1, 2, or 3_`);
   }
 }
 
@@ -2388,37 +2420,7 @@ app.get('/api/admin/whatsapp/meta-templates', adminAuth, async (req, res) => {
   }
 });
 
-// ── WA Debug endpoint (admin only) ──
-app.get('/api/admin/whatsapp/debug-account', adminAuth, async (req, res) => {
-  try {
-    if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ error: 'WA env vars not set' });
 
-    // Get phone info
-    const r1 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,name,display_phone_number,verified_name,account_mode`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const d1 = await r1.json();
-
-    // Try templates directly on phone ID
-    const r2 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/message_templates?limit=5`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const d2 = await r2.json();
-
-    // Try to get business account
-    const r3 = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const d3 = await r3.json();
-
-    res.json({
-      phone_id: WA_PHONE_ID,
-      phone_info: d1,
-      templates_on_phone_id: d2,
-      me: d3
-    });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
 
 // ── Temporary public WA template checker ──
 app.get('/api/wa-tmpl-check', async (req, res) => {

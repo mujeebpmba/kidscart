@@ -267,6 +267,7 @@ tr:hover td { background: #faf7fe; }
 <div class="topbar">
   <h2 class="page-title" id="pageTitle">Whatsapp</h2>
   <div class="topbar-right">
+    <button class="btn btn-ghost btn-sm" onclick="openBotSettingsModal()" style="padding:6px 12px;font-size:.74rem;">🤖 Bot Settings</button>
     <button class="btn btn-ghost btn-sm" onclick="openBroadcastModal()" style="padding:6px 12px;font-size:.74rem;">📢 Broadcast</button>
     <button class="notif-btn" onclick="document.getElementById('notifDrawer').classList.toggle('open')" id="notifBtn">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></button>
     <span class="admin-badge" id="adminName">Admin</span>
@@ -335,6 +336,73 @@ tr:hover td { background: #faf7fe; }
     </div>
   </div>
   <div id="mobBarMount" style="display:none;"></div>
+<!-- ── Bot Settings Modal ── -->
+<div class="modal-overlay" id="botSettingsModal" style="display:none;">
+  <div class="modal-box wide">
+    <div class="modal-head">
+      <h3>🤖 Bot Settings</h3>
+      <button class="modal-close" onclick="document.getElementById('botSettingsModal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#e8f5e9;border-radius:9px;padding:10px 13px;font-size:.78rem;color:#2e7d32;margin-bottom:16px;">
+        ✅ Changes save instantly. Bot uses these messages for all new conversations.
+      </div>
+
+      <!-- Bot On/Off -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0e8fb;margin-bottom:14px;">
+        <div>
+          <div style="font-weight:800;font-size:.85rem;">Bot Active</div>
+          <div style="font-size:.75rem;color:#888;">Turn off to handle all chats manually</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+          <input type="checkbox" id="botEnabledToggle" checked style="opacity:0;width:0;height:0;">
+          <span id="botToggleSlider" onclick="toggleBotEnabled()" style="position:absolute;inset:0;background:#25D366;border-radius:24px;transition:.3s;cursor:pointer;"></span>
+          <span id="botToggleThumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.3s;pointer-events:none;"></span>
+        </label>
+      </div>
+
+      <!-- Welcome Message -->
+      <div class="fgroup">
+        <label>Welcome Message Body <small style="color:#bbb;text-transform:none;font-weight:400;">— use {{name}} for customer name</small></label>
+        <textarea id="bsCfgWelcomeText" rows="3" placeholder="Hi {{name}}! 🛍️ India's favourite kids fashion store. How can I help?"></textarea>
+      </div>
+
+      <div class="fgroup">
+        <label>Footer Text</label>
+        <input type="text" id="bsCfgWelcomeFooter" placeholder="kidscart.kids | Free delivery above ₹999">
+      </div>
+
+      <!-- Buttons -->
+      <div style="font-size:.72rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:8px;">Menu Buttons (max 20 characters each)</div>
+      <div class="grid2" style="margin-bottom:12px;">
+        <div class="fgroup"><label>Button 1</label><input type="text" id="bsCfgBtn1" maxlength="20" placeholder="📦 Track My Order"></div>
+        <div class="fgroup"><label>Button 2</label><input type="text" id="bsCfgBtn2" maxlength="20" placeholder="🛍️ Shop Now"></div>
+      </div>
+      <div class="fgroup" style="max-width:50%;">
+        <label>Button 3</label>
+        <input type="text" id="bsCfgBtn3" maxlength="20" placeholder="💬 Support">
+      </div>
+
+      <!-- Auto Replies -->
+      <div style="font-size:.72rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin:14px 0 8px;">Auto Reply Messages</div>
+      <div class="fgroup">
+        <label>When customer taps Shop Now</label>
+        <textarea id="bsCfgShopText" rows="3" placeholder="🛍️ Shop KidsCart..."></textarea>
+      </div>
+      <div class="fgroup">
+        <label>When customer taps Support</label>
+        <textarea id="bsCfgSupportText" rows="2" placeholder="💬 Our team will assist you shortly..."></textarea>
+      </div>
+      <div class="fgroup">
+        <label>Fallback (when bot doesn't understand)</label>
+        <textarea id="bsCfgFallbackText" rows="2" placeholder="Hi {{name}}! Reply MENU for options..."></textarea>
+      </div>
+
+      <button class="btn btn-pp" style="width:100%;" onclick="saveBotSettings()">💾 Save Bot Settings</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── New Chat Modal ── -->
 <div class="modal-overlay" id="newChatModal" style="display:none;">
   <div class="modal-box">
@@ -609,6 +677,53 @@ async function createLeadFromPhone(phone){try{await apiFetch('/admin/crm/leads',
 function addToCrm(phone){location.href='/admin/crm.html';}
 function syncMobBadge(){const total=allConvs.reduce((s,cv)=>s+(cv.unreadCount||0),0);const mb=document.getElementById('mobInboxBadge');if(mb){mb.textContent=total;mb.style.display=total>0?'flex':'none';}}
 document.addEventListener('click',e=>{if(!e.target.closest('#tmplDD')&&!e.target.closest('.wa-tmpl-btn'))document.getElementById('tmplDD')?.classList.remove('open');});
+
+/* ── Bot Settings Modal ── */
+async function openBotSettingsModal(){
+  document.getElementById('botSettingsModal').style.display='flex';
+  try{
+    const d=await apiFetch('/admin/whatsapp/bot-config');
+    document.getElementById('bsCfgWelcomeText').value=d.welcomeText||'';
+    document.getElementById('bsCfgWelcomeFooter').value=d.welcomeFooter||'';
+    document.getElementById('bsCfgBtn1').value=d.btn1Label||'';
+    document.getElementById('bsCfgBtn2').value=d.btn2Label||'';
+    document.getElementById('bsCfgBtn3').value=d.btn3Label||'';
+    document.getElementById('bsCfgShopText').value=d.shopText||'';
+    document.getElementById('bsCfgSupportText').value=d.supportText||'';
+    document.getElementById('bsCfgFallbackText').value=d.fallbackText||'';
+    // Toggle state
+    const enabled=d.botEnabled!==false;
+    document.getElementById('botToggleSlider').style.background=enabled?'#25D366':'#ccc';
+    document.getElementById('botToggleThumb').style.left=enabled?'22px':'2px';
+    document.getElementById('botEnabledToggle').checked=enabled;
+  }catch(e){toast('❌ '+e.message);}
+}
+function toggleBotEnabled(){
+  const cb=document.getElementById('botEnabledToggle');
+  const slider=document.getElementById('botToggleSlider');
+  const thumb=document.getElementById('botToggleThumb');
+  const on=!cb.checked;
+  cb.checked=on;
+  slider.style.background=on?'#25D366':'#ccc';
+  thumb.style.left=on?'22px':'2px';
+}
+async function saveBotSettings(){
+  try{
+    await apiFetch('/admin/whatsapp/bot-config','PUT',{
+      welcomeText:   document.getElementById('bsCfgWelcomeText').value.trim(),
+      welcomeFooter: document.getElementById('bsCfgWelcomeFooter').value.trim(),
+      btn1Label:     document.getElementById('bsCfgBtn1').value.trim(),
+      btn2Label:     document.getElementById('bsCfgBtn2').value.trim(),
+      btn3Label:     document.getElementById('bsCfgBtn3').value.trim(),
+      shopText:      document.getElementById('bsCfgShopText').value.trim(),
+      supportText:   document.getElementById('bsCfgSupportText').value.trim(),
+      fallbackText:  document.getElementById('bsCfgFallbackText').value.trim(),
+      botEnabled:    document.getElementById('botEnabledToggle').checked,
+    });
+    document.getElementById('botSettingsModal').style.display='none';
+    toast('✅ Bot settings saved!');
+  }catch(e){toast('❌ '+e.message);}
+}
 
 /* ── Bot status ── */
 async function loadBotStatus(phone){

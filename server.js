@@ -180,30 +180,36 @@ async function waSendTemplate(to, templateName, params = []) {
 async function waSendMedia(to, mediaUrl, type = 'image', caption = '') {
   if (!WA_TOKEN || !WA_PHONE_ID) return null;
   try {
-    // For audio: Meta only accepts aac, mp4, mpeg, amr, ogg(opus)
-    // webm is not supported — send as document instead so customer can play it
+    // For audio: send as audio/mpeg (mp3) — Cloudinary already converted it
     if (type === 'audio') {
-      // Send as document with audio link — customer can tap to play
+      // Try sending as audio with direct link (mp3 from Cloudinary)
+      const audioMsgBody = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'audio',
+        audio: { link: mediaUrl }
+      };
       const r = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          recipient_type: 'individual',
-          to,
-          type: 'document',
-          document: {
-            link: mediaUrl,
-            caption: caption || 'Voice message',
-            filename: 'voice-message.webm'
-          }
-        })
+        body: JSON.stringify(audioMsgBody)
       });
       const d = await r.json();
       if (r.ok) return d.messages?.[0]?.id;
-      console.error('WA audio as doc error:', JSON.stringify(d));
-      // Final fallback: send as text with link
-      return waSend(to, '🎙️ Voice message: ' + mediaUrl);
+      console.error('WA audio link error:', JSON.stringify(d));
+      // Fallback: send as document
+      const r2 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp', recipient_type: 'individual', to,
+          type: 'document',
+          document: { link: mediaUrl, caption: 'Voice message', filename: 'voice-message.mp3' }
+        })
+      });
+      const d2 = await r2.json();
+      return r2.ok ? d2.messages?.[0]?.id : null;
     }
 
     // For images and video — upload to Meta media API then send
@@ -1540,14 +1546,18 @@ app.post('/api/admin/upload', adminAuth, (req, res, next) => {
   });
 });
 
-// ── Dedicated audio/media upload endpoint (for voice notes) ──
+// ── Dedicated audio upload endpoint — converts to mp3 via Cloudinary ──
 app.post('/api/admin/upload-audio', adminAuth, uploadMedia.single('audio'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' });
-    // Upload buffer directly to Cloudinary with resource_type: auto
+    // Upload to Cloudinary with format:mp3 — Cloudinary auto-converts webm to mp3
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: 'kidscart/media', resource_type: 'auto', format: 'webm' },
+        {
+          folder: 'kidscart/media',
+          resource_type: 'video', // Cloudinary uses 'video' resource type for audio too
+          format: 'mp3',          // Convert to mp3 — WhatsApp accepts audio/mpeg
+        },
         (error, result) => { if (error) reject(error); else resolve(result); }
       );
       stream.end(req.file.buffer);

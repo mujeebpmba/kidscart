@@ -2423,37 +2423,37 @@ app.get('/api/admin/whatsapp/debug-account', adminAuth, async (req, res) => {
 // ── Temporary public WA template checker ──
 app.get('/api/wa-tmpl-check', async (req, res) => {
   try {
-    if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ error: 'WA env vars not set' });
+    if (!WA_TOKEN) return res.json({ error: 'WA_ACCESS_TOKEN not set' });
+    const WABA = process.env.WA_WABA_ID || '1419280005966514';
 
-    // Get the WABA ID via the phone number's business account link
+    // Direct template fetch using known WABA ID
     const r1 = await fetch(
-      `https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,display_phone_number,verified_name,name_status,quality_rating,platform_type,throughput,whatsapp_business_profile`,
+      `https://graph.facebook.com/v19.0/${WABA}/message_templates?limit=20&fields=name,status,category,language`,
       { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
     );
-    const phoneData = await r1.json();
+    const tmplData = await r1.json();
 
-    // Try to get the WABA directly
+    // Token info
     const r2 = await fetch(
-      `https://graph.facebook.com/v19.0/${WA_PHONE_ID}/whatsapp_business_account`,
+      `https://graph.facebook.com/v19.0/me?fields=id,name`,
       { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
     );
-    const wabaData = await r2.json();
+    const meData = await r2.json();
 
-    // Also try getting accessible WABAs for this token
+    // Token permissions
     const r3 = await fetch(
-      `https://graph.facebook.com/v19.0/122100914715024697/owned_whatsapp_business_accounts?fields=id,name,currency,timezone_id`,
+      `https://graph.facebook.com/v19.0/me/permissions`,
       { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
     );
-    const ownedWabas = await r3.json();
+    const permsData = await r3.json();
 
-    // Try the known system user ID
-    const r4 = await fetch(
-      `https://graph.facebook.com/v19.0/122100914715024697/message_templates?limit=5`,
-      { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
-    );
-    const tmplTest = await r4.json();
-
-    res.json({ phoneData, wabaData, ownedWabas, tmplTest, phone_id: WA_PHONE_ID });
+    res.json({
+      waba_id_used: WABA,
+      token_owner: meData,
+      permissions: permsData,
+      templates: tmplData,
+      token_preview: WA_TOKEN ? WA_TOKEN.slice(0,20)+'...' : 'not set'
+    });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

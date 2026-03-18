@@ -180,34 +180,69 @@ async function waSendTemplate(to, templateName, params = []) {
 async function waSendMedia(to, mediaUrl, type = 'image', caption = '') {
   if (!WA_TOKEN || !WA_PHONE_ID) return null;
   try {
+    // For audio: Meta only accepts aac, mp4, mpeg, amr, ogg(opus)
+    // webm is not supported — send as document instead so customer can play it
+    if (type === 'audio') {
+      // Send as document with audio link — customer can tap to play
+      const r = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to,
+          type: 'document',
+          document: {
+            link: mediaUrl,
+            caption: caption || 'Voice message',
+            filename: 'voice-message.webm'
+          }
+        })
+      });
+      const d = await r.json();
+      if (r.ok) return d.messages?.[0]?.id;
+      console.error('WA audio as doc error:', JSON.stringify(d));
+      // Final fallback: send as text with link
+      return waSend(to, '🎙️ Voice message: ' + mediaUrl);
+    }
+
+    // For images and video — upload to Meta media API then send
     const fileRes = await fetch(mediaUrl);
     const fileBuffer = await fileRes.arrayBuffer();
-    let mime = 'application/octet-stream';
-    if (mediaUrl.includes('.webm'))  mime = 'audio/webm';
-    else if (mediaUrl.includes('.ogg'))   mime = 'audio/ogg; codecs=opus';
-    else if (mediaUrl.includes('.mp3'))   mime = 'audio/mpeg';
-    else if (mediaUrl.includes('.png'))   mime = 'image/png';
-    else if (mediaUrl.includes('.jpg') || mediaUrl.includes('.jpeg')) mime = 'image/jpeg';
-    else if (type === 'image')  mime = 'image/jpeg';
-    else if (type === 'audio')  mime = 'audio/webm';
+    let mime = 'image/jpeg';
+    if (mediaUrl.includes('.png'))  mime = 'image/png';
+    else if (mediaUrl.includes('.webp')) mime = 'image/webp';
+    else if (mediaUrl.includes('.mp4'))  mime = 'video/mp4';
 
     const form = new FormData();
     form.append('messaging_product', 'whatsapp');
     form.append('file', new Blob([fileBuffer], { type: mime }),
-      type === 'audio' ? 'voice.webm' : `media.${mime.split('/')[1].split(';')[0]}`);
+      `media.${mime.split('/')[1]}`);
     const uploadRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/media`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${WA_TOKEN}` },
       body: form
     });
     const uploadData = await uploadRes.json();
-    if (!uploadRes.ok) { console.error('WA media upload error:', JSON.stringify(uploadData)); return null; }
+    if (!uploadRes.ok) {
+      console.error('WA media upload error:', JSON.stringify(uploadData));
+      // Fallback: try sending image via link
+      const linkRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp', recipient_type: 'individual', to,
+          type: 'image', image: { link: mediaUrl, caption: caption || '' }
+        })
+      });
+      const linkData = await linkRes.json();
+      return linkRes.ok ? linkData.messages?.[0]?.id : null;
+    }
     const mediaId = uploadData.id;
     if (!mediaId) return null;
 
     const msgBody = { messaging_product: 'whatsapp', recipient_type: 'individual', to, type };
     if (type === 'image')    msgBody.image    = { id: mediaId, caption };
-    if (type === 'audio')    msgBody.audio    = { id: mediaId };
     if (type === 'video')    msgBody.video    = { id: mediaId, caption };
     if (type === 'document') msgBody.document = { id: mediaId, caption, filename: 'document.pdf' };
 

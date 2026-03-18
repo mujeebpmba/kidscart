@@ -246,6 +246,13 @@ tr:hover td { background: #faf7fe; }
 
 /* ── Upload progress ── */
 .upload-progress{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#f8f5fd;border-radius:10px;font-size:.78rem;color:#4A1070;font-weight:700;}
+/* ── Chat action buttons ── */
+.chat-act-btn{padding:4px 10px;border-radius:20px;border:1.5px solid #e8dff5;background:#fff;font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:#4A1070;transition:.15s;}
+.chat-act-btn:hover{background:#f0e8fb;}
+.chat-act-btn.green{background:#e8f5e9;color:#2e7d32;border-color:#c8e6c9;}
+.tag-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.64rem;font-weight:800;color:#fff;margin:2px;}
+.won-b{background:#e8f5e9;color:#2e7d32;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:800;}
+.lost-b{background:#ffebee;color:#c62828;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:800;}
 </style>
 <script>(function(){var s=document.createElement('style');if(localStorage.getItem('kc_admin_token')){s.textContent='#loginScreen{display:none!important}#adminApp{display:flex!important}';}else{s.textContent='#adminApp{display:none!important}';}document.head.appendChild(s);})()</script>
 <script src="/admin/shared.js"></script>
@@ -260,6 +267,7 @@ tr:hover td { background: #faf7fe; }
 <div class="topbar">
   <h2 class="page-title" id="pageTitle">Whatsapp</h2>
   <div class="topbar-right">
+    <button class="btn btn-ghost btn-sm" onclick="openBroadcastModal()" style="padding:6px 12px;font-size:.74rem;">📢 Broadcast</button>
     <button class="notif-btn" onclick="document.getElementById('notifDrawer').classList.toggle('open')" id="notifBtn">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></button>
     <span class="admin-badge" id="adminName">Admin</span>
     <a href="/" target="_blank" class="view-shop-btn">🛍️ View Shop</a>
@@ -270,8 +278,9 @@ tr:hover td { background: #faf7fe; }
 <div class="inbox-layout">
   <!-- Conversation List -->
   <div class="conv-list" id="convListPanel">
-    <div class="conv-search-wrap">
-      <input type="text" placeholder="Search conversations..." oninput="filterConvs(this.value)">
+    <div class="conv-search-wrap" style="display:flex;gap:6px;align-items:center;">
+      <input type="text" placeholder="Search conversations..." oninput="filterConvs(this.value)" style="flex:1;">
+      <button onclick="openNewChatModal()" title="New conversation" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#25D366,#1da851);border:none;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">+</button>
     </div>
     <div class="conv-filter">
       <button class="active" onclick="setConvFilter('all',this)">All</button>
@@ -287,6 +296,7 @@ tr:hover td { background: #faf7fe; }
             <span style="font-size:3.5rem;">💬</span>
             <p style="font-weight:700;color:#888;">Select a conversation</p>
             <small style="color:#bbb;">Choose a chat from the left to start</small>
+            <button onclick="openNewChatModal()" style="margin-top:14px;padding:9px 22px;background:linear-gradient(135deg,#25D366,#1da851);color:#fff;border:none;border-radius:22px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.84rem;cursor:pointer;">+ New Conversation</button>
           </div>
           <div id="chatActive" style="display:none;flex-direction:column;height:100%;flex:1;">
             <div class="chat-header" id="chatHeader"><button class="chat-back-btn" onclick="closeMobileChat()">←</button></div>
@@ -326,13 +336,70 @@ tr:hover td { background: #faf7fe; }
   </div>
   <div id="mobBarMount" style="display:none;"></div>
 </div>
-<div id="toast"></div>
-
-
+<!-- ── New Chat Modal ── -->
+<div class="modal-overlay" id="newChatModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-head"><h3>💬 New Conversation</h3><button class="modal-close" onclick="document.getElementById('newChatModal').style.display='none'">✕</button></div>
+    <div class="modal-body">
+      <div class="fgroup"><label>Phone Number (with country code)</label><input type="text" id="newChatPhone" placeholder="e.g. 919876543210" maxlength="15"><small style="color:#bbb;font-size:.72rem;">India: 91XXXXXXXXXX — no + sign</small></div>
+      <div class="fgroup"><label>Name (optional)</label><input type="text" id="newChatName" placeholder="Customer name"></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button id="ncTabFree" onclick="ncSetTab('free')" style="flex:1;padding:7px;border-radius:9px;border:2px solid #4A1070;background:#4A1070;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;">✏️ Free Text</button>
+        <button id="ncTabTmpl" onclick="ncSetTab('tmpl')" style="flex:1;padding:7px;border-radius:9px;border:2px solid #e8dff5;background:#fff;color:#888;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;">📋 Use Template</button>
+      </div>
+      <div id="ncFreeTab">
+        <div style="background:#fff8e1;border-radius:9px;padding:9px 12px;font-size:.75rem;color:#e65100;margin-bottom:10px;">⚠️ Free text only works if this customer messaged you in the last 24 hours. For new customers, use Template tab.</div>
+        <div class="fgroup"><label>Message</label><textarea id="newChatMsg" rows="3" placeholder="Type your opening message..."></textarea></div>
+      </div>
+      <div id="ncTmplTab" style="display:none;">
+        <div style="background:#e8f5e9;border-radius:9px;padding:9px 12px;font-size:.75rem;color:#2e7d32;margin-bottom:10px;">✅ Templates work for any number — even if they've never messaged you before.</div>
+        <div class="fgroup"><label>Select Template</label>
+          <select id="ncTmplSelect" onchange="ncLoadTmplParams(this.value)" style="width:100%;padding:9px 13px;border:1.5px solid #e8dff5;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;background:#fff;">
+            <option value="">-- Loading templates... --</option>
+          </select>
+        </div>
+        <div id="ncTmplPreview" style="display:none;background:#f8f5fd;border-radius:9px;padding:11px 13px;margin-bottom:12px;font-size:.8rem;color:#444;line-height:1.7;border-left:3px solid #4A1070;"></div>
+        <div id="ncTmplParams"></div>
+        <div id="ncNoTmpls" style="display:none;text-align:center;padding:16px;color:#bbb;"><div style="font-size:1.8rem;margin-bottom:8px;">📋</div><div style="font-size:.82rem;font-weight:700;">No approved templates yet</div><div style="font-size:.74rem;margin-top:4px;">Create templates in Meta Business Manager.<br>Utility templates approve in 2–6 hours.</div></div>
+      </div>
+      <button class="btn btn-pp" style="width:100%;margin-top:6px;" onclick="startNewChat()">Send & Open Chat →</button>
     </div>
   </div>
 </div>
+
+<!-- ── Send Template Modal ── -->
+<div class="modal-overlay" id="sendTemplateModal" style="display:none;">
+  <div class="modal-box wide">
+    <div class="modal-head"><h3>📋 Send Approved Template</h3><button class="modal-close" onclick="document.getElementById('sendTemplateModal').style.display='none'">✕</button></div>
+    <div class="modal-body">
+      <div id="tmplModalPhone" style="font-size:.8rem;color:#888;margin-bottom:12px;"></div>
+      <div id="metaTmplList" style="max-height:380px;overflow-y:auto;"><div class="kc-loading"><span class="kc-spinner"></span>Loading Meta templates...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Broadcast Modal ── -->
+<div class="modal-overlay" id="broadcastModal" style="display:none;">
+  <div class="modal-box wide">
+    <div class="modal-head"><h3>📢 Broadcast Message</h3><button class="modal-close" onclick="document.getElementById('broadcastModal').style.display='none'">✕</button></div>
+    <div class="modal-body">
+      <div class="fgroup"><label>Send to</label>
+        <select id="broadcastTarget" onchange="document.getElementById('customPhonesWrap').style.display=this.value==='custom'?'block':'none'" style="width:100%;padding:9px 13px;border:1.5px solid #e8dff5;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;background:#fff;">
+          <option value="all">All contacts (all conversations)</option>
+          <option value="unread">Unread conversations only</option>
+          <option value="custom">Custom phone list (comma separated)</option>
+        </select>
+      </div>
+      <div class="fgroup" id="customPhonesWrap" style="display:none;"><label>Phone numbers (comma separated, with country code)</label><textarea id="customPhones" placeholder="918848703272, 917012631235"></textarea></div>
+      <div class="fgroup"><label>Message</label><textarea id="broadcastMsg" placeholder="Type your broadcast message..."></textarea></div>
+      <div style="background:#fff8e1;border-radius:9px;padding:10px 13px;font-size:.76rem;color:#e65100;margin-bottom:12px;">⚠️ Broadcast sends to customers who have messaged you before. For cold contacts use templates.</div>
+      <button class="btn btn-pp" style="width:100%;" onclick="sendBroadcast()">📢 Send Broadcast</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
+</div>
 <script>
 let activePhone=null,allConvs=[],convFilter='all',waTmpls=[];
 
@@ -358,7 +425,7 @@ async function refreshConvs(){try{const d=await apiFetch('/admin/whatsapp/inbox'
 function setConvFilter(f,btn){convFilter=f;document.querySelectorAll('.conv-filter button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');refreshConvs();}
 function filterConvs(q){renderConvs(q?allConvs.filter(cv=>(cv.contactName||'').toLowerCase().includes(q.toLowerCase())||cv.phone.includes(q)):allConvs);}
 function renderConvs(list){const el=document.getElementById('convList');if(!el)return;if(!list.length){el.innerHTML='<div style="padding:30px;text-align:center;color:#ccc;"><div style="font-size:2rem;margin-bottom:8px;">💬</div><div style="font-size:.82rem;font-weight:700;">No conversations yet</div></div>';return;}el.innerHTML=list.map(cv=>{const nm=cv.contactName||cv.phone;const t=cv.lastMessageAt?fmtT(new Date(cv.lastMessageAt)):'';const u=(cv.unreadCount||0)>0;return`<div class="conv-item ${u?'unread':''} ${cv.phone===activePhone?'active':''}" onclick="openConv('${cv.phone}','${nm.replace(/'/g,"\\'")}')"><div class="conv-avi">${nm.charAt(0).toUpperCase()}</div><div class="conv-info"><div class="conv-name">${nm}</div><div class="conv-last">${cv.lastMessage||''}</div></div><div class="conv-meta"><div class="conv-time">${t}</div>${u?`<div class="unread-dot">${cv.unreadCount}</div>`:''}</div></div>`;}).join('');}
-async function openConv(phone,name){activePhone=phone;await apiFetch('/admin/whatsapp/read/'+encodeURIComponent(phone),'PUT');const cv=allConvs.find(c=>c.phone===phone);if(cv)cv.unreadCount=0;syncMobBadge();document.getElementById('chatEmpty').style.display='none';const ca=document.getElementById('chatActive');ca.style.display='flex';if(window.innerWidth<=768){document.getElementById('convListPanel').classList.add('hidden');document.getElementById('chatWin').classList.add('mob-open');}const init=(name||phone).charAt(0).toUpperCase();document.getElementById('chatHeader').innerHTML=`<button class="chat-back-btn" onclick="closeMobileChat()">←</button><div class="chat-header-avi">${init}</div><div style="flex:1;min-width:0;"><div class="chat-header-name">${name||phone}</div><div class="chat-header-sub">${phone}</div></div><div style="display:flex;gap:6px;margin-left:auto;"><button class="chat-act-btn green" onclick="addToCrm('${phone}')">📊 CRM</button><button class="chat-act-btn" onclick="loadMsgs('${phone}')">↻</button></div>`;await loadMsgs(phone);loadContactPanel(phone);renderConvs(allConvs);}
+async function openConv(phone,name){activePhone=phone;await apiFetch('/admin/whatsapp/read/'+encodeURIComponent(phone),'PUT');const cv=allConvs.find(c=>c.phone===phone);if(cv)cv.unreadCount=0;syncMobBadge();document.getElementById('chatEmpty').style.display='none';const ca=document.getElementById('chatActive');ca.style.display='flex';if(window.innerWidth<=768){document.getElementById('convListPanel').classList.add('hidden');document.getElementById('chatWin').classList.add('mob-open');}const init=(name||phone).charAt(0).toUpperCase();document.getElementById('chatHeader').innerHTML=`<button class="chat-back-btn" onclick="closeMobileChat()">←</button><div class="chat-header-avi">${init}</div><div style="flex:1;min-width:0;"><div class="chat-header-name">${name||phone}</div><div class="chat-header-sub">${phone}</div></div><div style="display:flex;gap:6px;margin-left:auto;align-items:center;flex-wrap:wrap;"><span id="botStatusBadge" onclick="toggleBot('${phone}')" style="font-size:.65rem;padding:3px 9px;border-radius:20px;font-weight:700;background:#e8f5e9;color:#2e7d32;cursor:pointer;" title="Click to toggle bot">🤖 Bot On</span><button class="chat-act-btn" onclick="openSendTemplateModal('${phone}')">📋 Template</button><button class="chat-act-btn green" onclick="addToCrm('${phone}')">📊 CRM</button><button class="chat-act-btn" onclick="loadMsgs('${phone}')">↻</button></div>`;await loadMsgs(phone);loadContactPanel(phone);loadBotStatus(phone);renderConvs(allConvs);}
 function closeMobileChat(){activePhone=null;document.getElementById('convListPanel').classList.remove('hidden');document.getElementById('chatWin').classList.remove('mob-open');document.getElementById('chatActive').style.display='none';document.getElementById('chatEmpty').style.display='flex';renderConvs(allConvs);}
 async function loadMsgs(phone){const el=document.getElementById('chatMsgs');if(!el)return;try{const d=await apiFetch('/admin/whatsapp/messages/'+encodeURIComponent(phone));const msgs=d.messages||[];el.innerHTML='';let lastD='';msgs.forEach(m=>{const ds=new Date(m.timestamp).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});if(ds!==lastD){el.innerHTML+=`<div class="msg-date-div">${ds}</div>`;lastD=ds;}el.innerHTML+=mkBubble(m);});el.scrollTop=el.scrollHeight;}catch(e){console.error('msgs:',e);}}
 function mkBubble(m){const dir=m.direction==='outbound'?'out':'in';const t=new Date(m.timestamp).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});const tick=dir==='out'?(m.status==='read'?'<span style="color:#4A90D9">✓✓</span>':m.status==='delivered'?'<span style="color:#ccc">✓✓</span>':'<span style="color:#ccc">✓</span>'):'';const body=(m.type&&m.type!=='text')?`<em style="color:#bbb;font-size:.76rem;">[${m.type}] ${m.body||''}</em>`:(m.body||'');return`<div class="msg-wrap ${dir}"><div class="msg-bubble ${dir}">${body}<div class="msg-time">${t} ${tick}</div></div></div>`;}
@@ -543,6 +610,155 @@ async function createLeadFromPhone(phone){try{await apiFetch('/admin/crm/leads',
 function addToCrm(phone){location.href='/admin/crm.html';}
 function syncMobBadge(){const total=allConvs.reduce((s,cv)=>s+(cv.unreadCount||0),0);const mb=document.getElementById('mobInboxBadge');if(mb){mb.textContent=total;mb.style.display=total>0?'flex':'none';}}
 document.addEventListener('click',e=>{if(!e.target.closest('#tmplDD')&&!e.target.closest('.wa-tmpl-btn'))document.getElementById('tmplDD')?.classList.remove('open');});
+
+/* ── Bot status ── */
+async function loadBotStatus(phone){
+  try{
+    const d=await apiFetch('/admin/whatsapp/bot-session/'+encodeURIComponent(phone));
+    const s=d.session;const badge=document.getElementById('botStatusBadge');if(!badge)return;
+    if(s&&s.humanHandoff){badge.style.background='#fff3e0';badge.style.color='#e65100';badge.textContent='👤 Human';}
+    else{badge.style.background='#e8f5e9';badge.style.color='#2e7d32';badge.textContent='🤖 Bot On';}
+  }catch(e){}
+}
+async function toggleBot(phone){
+  try{
+    const d=await apiFetch('/admin/whatsapp/bot-session/'+encodeURIComponent(phone));
+    const s=d.session;
+    if(s&&s.humanHandoff){await apiFetch('/admin/whatsapp/bot-resume/'+encodeURIComponent(phone),'POST');toast('🤖 Bot resumed');}
+    else{await apiFetch('/admin/whatsapp/new-contact','POST',{phone});toast('👤 Bot paused — you have control');}
+    loadBotStatus(phone);
+  }catch(e){toast('❌ '+e.message);}
+}
+
+/* ── New Chat Modal ── */
+let ncTab='free',ncMetaTemplates=[];
+function ncSetTab(tab){
+  ncTab=tab;
+  document.getElementById('ncFreeTab').style.display=tab==='free'?'block':'none';
+  document.getElementById('ncTmplTab').style.display=tab==='tmpl'?'block':'none';
+  const fb=document.getElementById('ncTabFree'),tb=document.getElementById('ncTabTmpl');
+  if(tab==='free'){fb.style.background='#4A1070';fb.style.color='#fff';fb.style.borderColor='#4A1070';tb.style.background='#fff';tb.style.color='#888';tb.style.borderColor='#e8dff5';}
+  else{tb.style.background='#4A1070';tb.style.color='#fff';tb.style.borderColor='#4A1070';fb.style.background='#fff';fb.style.color='#888';fb.style.borderColor='#e8dff5';if(!ncMetaTemplates.length)ncLoadTemplates();}
+}
+async function ncLoadTemplates(){
+  const sel=document.getElementById('ncTmplSelect'),noT=document.getElementById('ncNoTmpls');
+  sel.innerHTML='<option value="">Loading...</option>';
+  try{
+    const d=await apiFetch('/admin/whatsapp/meta-templates');
+    ncMetaTemplates=d.templates||[];
+    if(!ncMetaTemplates.length){sel.style.display='none';noT.style.display='block';return;}
+    sel.style.display='block';noT.style.display='none';
+    sel.innerHTML='<option value="">-- Select a template --</option>'+ncMetaTemplates.map((t,i)=>`<option value="${i}">${t.name}</option>`).join('');
+  }catch(e){sel.innerHTML='<option value="">Error loading templates</option>';}
+}
+function ncLoadTmplParams(idx){
+  const preview=document.getElementById('ncTmplPreview'),paramsDiv=document.getElementById('ncTmplParams');
+  paramsDiv.innerHTML='';preview.style.display='none';
+  if(idx===''||idx===null)return;
+  const t=ncMetaTemplates[parseInt(idx)];if(!t)return;
+  const bodyComp=(t.components||[]).find(c=>c.type==='BODY');
+  if(bodyComp?.text){preview.style.display='block';preview.innerHTML='<strong style="font-size:.7rem;color:#4A1070;display:block;margin-bottom:4px;">TEMPLATE PREVIEW</strong>'+bodyComp.text.replace(/
+/g,'<br>');}
+  const paramCount=((bodyComp?.text||'').match(/\{\{\d+\}\}/g)||[]).length;
+  if(!paramCount)return;
+  const smartLabels=['Customer name','Order ID (e.g. KC2024001)','Amount (e.g. 1299)','Status / message','Extra info'];
+  paramsDiv.innerHTML='<div style="font-size:.72rem;font-weight:800;color:#4A1070;margin-bottom:6px;text-transform:uppercase;">Fill template variables</div>'+
+    Array.from({length:paramCount},(_,j)=>`<div class="fgroup" style="margin-bottom:8px;"><label>{{${j+1}}} — ${smartLabels[j]||'Parameter '+(j+1)}</label><input type="text" id="ncP_${j}" placeholder="${smartLabels[j]||'Value'}" style="width:100%;padding:8px 12px;border:1.5px solid #e8dff5;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.84rem;outline:none;"></div>`).join('');
+}
+function openNewChatModal(){
+  document.getElementById('newChatPhone').value='';document.getElementById('newChatName').value='';
+  if(document.getElementById('newChatMsg'))document.getElementById('newChatMsg').value='';
+  document.getElementById('ncTmplSelect').value='';
+  document.getElementById('ncTmplPreview').style.display='none';document.getElementById('ncTmplParams').innerHTML='';
+  ncSetTab('free');document.getElementById('newChatModal').style.display='flex';
+  setTimeout(()=>document.getElementById('newChatPhone').focus(),100);
+}
+async function startNewChat(){
+  const rawPhone=document.getElementById('newChatPhone').value.trim().replace(/\D/g,'');
+  const name=document.getElementById('newChatName').value.trim();
+  if(!rawPhone||rawPhone.length<10){toast('⚠️ Enter valid phone number');return;}
+  const phone=rawPhone.startsWith('91')?rawPhone:'91'+rawPhone.slice(-10);
+  if(ncTab==='free'){
+    const msg=document.getElementById('newChatMsg').value.trim();
+    try{const d=await apiFetch('/admin/whatsapp/new-contact','POST',{phone,name,message:msg});document.getElementById('newChatModal').style.display='none';toast('✅ Conversation started!');await refreshConvs();openConv(d.phone,name||d.phone);}
+    catch(e){toast('❌ '+e.message);}
+  }else{
+    const idx=document.getElementById('ncTmplSelect').value;
+    if(idx===''||idx===null){toast('⚠️ Select a template');return;}
+    const t=ncMetaTemplates[parseInt(idx)];if(!t)return;
+    const bodyComp=(t.components||[]).find(c=>c.type==='BODY');
+    const paramCount=((bodyComp?.text||'').match(/\{\{\d+\}\}/g)||[]).length;
+    const params=[];
+    for(let j=0;j<paramCount;j++){const val=document.getElementById(`ncP_${j}`)?.value?.trim();if(!val){toast(`⚠️ Fill parameter {{${j+1}}}`);return;}params.push(val);}
+    try{
+      await apiFetch('/admin/whatsapp/new-contact','POST',{phone,name});
+      await apiFetch('/admin/whatsapp/template','POST',{phone,templateName:t.name,params});
+      document.getElementById('newChatModal').style.display='none';toast('✅ Template sent!');await refreshConvs();openConv(phone,name||phone);
+    }catch(e){toast('❌ '+e.message);}
+  }
+}
+
+/* ── Send Template Modal ── */
+let templateModalPhone='',metaTemplates=[];
+async function openSendTemplateModal(phone){
+  templateModalPhone=phone;document.getElementById('tmplModalPhone').textContent='Sending to: '+phone;
+  document.getElementById('sendTemplateModal').style.display='flex';
+  const el=document.getElementById('metaTmplList');
+  el.innerHTML='<div class="kc-loading"><span class="kc-spinner"></span>Loading...</div>';
+  try{
+    const d=await apiFetch('/admin/whatsapp/meta-templates');
+    metaTemplates=d.templates||[];
+    if(!metaTemplates.length){el.innerHTML='<div style="padding:20px;text-align:center;color:#bbb;"><div style="font-size:2rem;margin-bottom:8px;">📋</div><div style="font-weight:700;font-size:.84rem;">No approved templates yet</div><div style="font-size:.76rem;margin-top:6px;">Create in Meta Business Manager → WhatsApp Manager → Message Templates</div></div>';return;}
+    el.innerHTML=metaTemplates.map((t,i)=>{
+      const bc=(t.components||[]).find(c=>c.type==='BODY');
+      const pCount=((bc?.text||'').match(/\{\{\d+\}\}/g)||[]).length;
+      const smartL=['Customer name','Order ID','Amount','Status','Extra info'];
+      return `<div style="border:1.5px solid #e8dff5;border-radius:10px;padding:12px;margin-bottom:8px;">
+        <div style="font-weight:800;font-size:.82rem;color:#4A1070;margin-bottom:4px;">⚡ ${t.name}</div>
+        <div style="font-size:.75rem;color:#888;margin-bottom:8px;background:#faf7fe;padding:8px;border-radius:7px;">${(bc?.text||'No body').replace(/
+/g,'<br>')}</div>
+        ${pCount?Array.from({length:pCount},(_,j)=>`<input type="text" placeholder="{{${j+1}}} — ${smartL[j]||'Param '+(j+1)}" id="tmplP_${i}_${j}" style="width:100%;padding:6px 10px;border:1.5px solid #e8dff5;border-radius:7px;font-family:'Nunito',sans-serif;font-size:.8rem;margin-bottom:4px;outline:none;">`).join(''):''}
+        <button class="btn btn-pp btn-sm" style="margin-top:4px;" onclick="sendApprovedTemplate(${i})">Send This Template</button>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="padding:14px;color:#c62828;font-size:.8rem;">Error: ${e.message}</div>`;}
+}
+async function sendApprovedTemplate(idx){
+  const t=metaTemplates[idx];if(!t||!templateModalPhone)return;
+  const bc=(t.components||[]).find(c=>c.type==='BODY');
+  const pCount=((bc?.text||'').match(/\{\{\d+\}\}/g)||[]).length;
+  const params=[];
+  for(let j=0;j<pCount;j++){const val=document.getElementById(`tmplP_${idx}_${j}`)?.value?.trim();if(!val){toast('⚠️ Fill all parameters');return;}params.push(val);}
+  try{
+    await apiFetch('/admin/whatsapp/template','POST',{phone:templateModalPhone,templateName:t.name,params});
+    document.getElementById('sendTemplateModal').style.display='none';toast('✅ Template sent!');
+    refreshConvs();if(activePhone===templateModalPhone)loadMsgs(activePhone);
+  }catch(e){toast('❌ '+e.message);}
+}
+
+/* ── Broadcast ── */
+function openBroadcastModal(){document.getElementById('broadcastMsg').value='';document.getElementById('broadcastModal').style.display='flex';}
+async function sendBroadcast(){
+  const target=document.getElementById('broadcastTarget').value;
+  const msg=document.getElementById('broadcastMsg').value.trim();
+  if(!msg){toast('⚠️ Enter a message');return;}
+  let phones=[];
+  if(target==='custom'){
+    phones=document.getElementById('customPhones').value.split(',').map(p=>p.trim().replace(/\D/g,'')).filter(p=>p.length>=10);
+    if(!phones.length){toast('⚠️ Enter valid phone numbers');return;}
+  }else{
+    const filter=target==='unread'?'?filter=unread':'';
+    const d=await apiFetch('/admin/whatsapp/inbox'+filter);
+    phones=(d.conversations||[]).map(c=>c.phone);
+    if(!phones.length){toast('⚠️ No conversations found');return;}
+  }
+  if(!confirm(`Send to ${phones.length} contacts?`))return;
+  try{
+    const d=await apiFetch('/admin/whatsapp/broadcast','POST',{phones,message:msg});
+    document.getElementById('broadcastModal').style.display='none';
+    toast(`✅ Sent: ${d.sent}, Failed: ${d.failed}`);
+  }catch(e){toast('❌ '+e.message);}
+}
 </script>
 </body>
 </html>

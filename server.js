@@ -2367,48 +2367,21 @@ app.get('/api/admin/whatsapp/meta-templates', adminAuth, async (req, res) => {
   try {
     if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ templates: [] });
 
-    // Step 1: Get the WABA ID from the phone number ID
-    const phoneRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,name,display_phone_number,verified_name,quality_rating,account_mode,certificate`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const phoneData = await phoneRes.json();
-    console.log('WA Phone data:', JSON.stringify(phoneData));
+    // Use the WABA_ID env var if set, otherwise use the env var WA_WABA_ID
+    // You can set WA_WABA_ID in Railway variables
+    const WABA_ID = process.env.WA_WABA_ID || WA_PHONE_ID;
 
-    // Step 2: Get WABA ID - try multiple approaches
-    let wabaId = phoneData.id; // fallback: use phone number ID itself
-
-    // Try to get the actual WABA ID
-    const bizRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,waba_id`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const bizData = await bizRes.json();
-    if (bizData.waba_id) wabaId = bizData.waba_id;
-
-    // Step 3: Fetch templates using WABA ID
-    const tmplRes = await fetch(`https://graph.facebook.com/v19.0/${wabaId}/message_templates?limit=100&fields=name,status,language,components,category`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const tmplData = await tmplRes.json();
-    console.log('WA Templates raw:', JSON.stringify(tmplData).slice(0, 300));
-
-    // Include APPROVED and ACTIVE templates (Meta uses both terms)
-    const approved = (tmplData.data || []).filter(t =>
-      ['APPROVED', 'ACTIVE', 'Active'].includes(t.status)
+    const tmplRes = await fetch(
+      `https://graph.facebook.com/v19.0/${WABA_ID}/message_templates?limit=100&fields=name,status,language,components,category`,
+      { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
     );
+    const tmplData = await tmplRes.json();
+    console.log('Templates fetch:', WABA_ID, '->', JSON.stringify(tmplData).slice(0,200));
 
-    // If no templates via WABA ID, try direct phone number ID approach
-    if (!approved.length && tmplData.error) {
-      const fallbackRes = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/message_templates?limit=100`, {
-        headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-      });
-      const fallbackData = await fallbackRes.json();
-      const fallbackApproved = (fallbackData.data || []).filter(t =>
-        ['APPROVED', 'ACTIVE', 'Active'].includes(t.status)
-      );
-      return res.json({ templates: fallbackApproved, debug: { wabaId, phoneId: WA_PHONE_ID } });
-    }
-
-    res.json({ templates: approved, debug: { wabaId, phoneId: WA_PHONE_ID } });
+    const approved = (tmplData.data || []).filter(t =>
+      ['APPROVED', 'ACTIVE'].includes((t.status||'').toUpperCase())
+    );
+    res.json({ templates: approved });
   } catch(e) {
     console.error('meta-templates error:', e.message);
     res.status(500).json({ error: e.message });
@@ -2447,45 +2420,40 @@ app.get('/api/admin/whatsapp/debug-account', adminAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── Temporary public WA template checker (remove after debugging) ──
+// ── Temporary public WA template checker ──
 app.get('/api/wa-tmpl-check', async (req, res) => {
   try {
-    if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ error: 'WA env vars not set', WA_PHONE_ID: !!WA_PHONE_ID, WA_TOKEN: !!WA_TOKEN });
+    if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ error: 'WA env vars not set' });
 
-    // Get phone number info
-    const r1 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,name,display_phone_number`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const phoneInfo = await r1.json();
+    // Get the WABA ID via the phone number's business account link
+    const r1 = await fetch(
+      `https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,display_phone_number,verified_name,name_status,quality_rating,platform_type,throughput,whatsapp_business_profile`,
+      { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
+    );
+    const phoneData = await r1.json();
 
-    // Try fetching templates directly on phone number ID
-    const r2 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/message_templates?limit=20&fields=name,status,language,category`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const tmplOnPhone = await r2.json();
+    // Try to get the WABA directly
+    const r2 = await fetch(
+      `https://graph.facebook.com/v19.0/${WA_PHONE_ID}/whatsapp_business_account`,
+      { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
+    );
+    const wabaData = await r2.json();
 
-    // Get the token owner (to find WABA ID)
-    const r3 = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name`, {
-      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-    });
-    const meInfo = await r3.json();
+    // Also try getting accessible WABAs for this token
+    const r3 = await fetch(
+      `https://graph.facebook.com/v19.0/122100914715024697/owned_whatsapp_business_accounts?fields=id,name,currency,timezone_id`,
+      { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
+    );
+    const ownedWabas = await r3.json();
 
-    // Try using meInfo.id as WABA
-    let tmplOnWaba = null;
-    if (meInfo.id && meInfo.id !== WA_PHONE_ID) {
-      const r4 = await fetch(`https://graph.facebook.com/v19.0/${meInfo.id}/message_templates?limit=20&fields=name,status,language,category`, {
-        headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
-      });
-      tmplOnWaba = await r4.json();
-    }
+    // Try the known system user ID
+    const r4 = await fetch(
+      `https://graph.facebook.com/v19.0/122100914715024697/message_templates?limit=5`,
+      { headers: { 'Authorization': `Bearer ${WA_TOKEN}` } }
+    );
+    const tmplTest = await r4.json();
 
-    res.json({
-      phone_id: WA_PHONE_ID,
-      phone_info: phoneInfo,
-      me: meInfo,
-      templates_via_phone_id: tmplOnPhone,
-      templates_via_me_id: tmplOnWaba
-    });
+    res.json({ phoneData, wabaData, ownedWabas, tmplTest, phone_id: WA_PHONE_ID });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

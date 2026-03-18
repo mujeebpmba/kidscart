@@ -758,10 +758,11 @@ const WaTemplateSchema = new mongoose.Schema({
 
 // Bot keyword triggers — stored in DB, editable from admin panel
 const WaBotKeywordSchema = new mongoose.Schema({
-  keywords:  [{ type: String, lowercase: true, trim: true }], // e.g. ['price','cost','how much']
-  reply:     { type: String, required: true },                // auto reply text
+  keywords:  [{ type: String, lowercase: true, trim: true }],
+  reply:     { type: String, required: true },
+  buttons:   [{ id: String, label: String, nextReply: String, nextButtons: [{ id: String, label: String }] }],
   isActive:  { type: Boolean, default: true },
-  name:      { type: String, default: '' },                   // label for admin UI
+  name:      { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -1843,6 +1844,43 @@ app.post('/api/webhook/whatsapp', async (req, res) => {
   } catch(e) { console.error('WA webhook error:', e.message); }
 });
 
+// ── Send message with optional WhatsApp buttons (max 3) ──
+async function waSendWithButtons(to, text, buttons = [], footer = '') {
+  if (!WA_TOKEN || !WA_PHONE_ID) return null;
+  if (!buttons.length) return waSend(to, text);
+  try {
+    const r = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'interactive',
+        interactive: {
+          type: 'button',
+          body: { text },
+          footer: footer ? { text: footer } : undefined,
+          action: {
+            buttons: buttons.slice(0,3).map(b => ({
+              type: 'reply',
+              reply: { id: b.id || b.label.toLowerCase().replace(/[\s]+/g,'_').slice(0,256), title: b.label.slice(0,20) }
+            }))
+          }
+        }
+      })
+    });
+    const d = await r.json();
+    if (r.ok) return d.messages?.[0]?.id;
+    // Fallback to plain text if buttons fail
+    const btnText = buttons.map((b,i) => (i+1)+'. '+b.label).join('\n');
+    return waSend(to, text+'\n\n'+btnText+'\n\n_Reply with 1, 2, or 3_');
+  } catch(e) {
+    const btnText2 = buttons.map((b,i) => (i+1)+'. '+b.label).join('\n');
+    return waSend(to, text+'\n\n'+btnText2+'\n\n_Reply with 1, 2, or 3_');
+  }
+}
+
 // ── Bot engine ──
 async function getBotConfig() {
   const items = await WaBotConfig.find();
@@ -1906,9 +1944,19 @@ async function handleBotMessage(phone, name, text, msgType) {
       await waSend(phone, `📦 *Order Tracking*\n\nEnter your *Order ID* (e.g. KC2024001) or registered *phone number*.`);
       return;
     }
-    if (lowerText.includes('shop') || lowerText.includes('browse') || lowerText === '2') {
+    if (lowerText.includes('shop') || lowerText.includes('browse') || lowerText === 'browse' || lowerText === '2') {
       await WaBotSession.findOneAndUpdate({ phone }, { state: 'browse' });
-      await waSend(phone, `🛍️ *Shop KidsCart*\n\n👗 Girls 👖 Boys 🍼 Baby 🎀 Party 🌸 Ethnic\n\nVisit: https://kidscart.kids\n\nReply *MENU* to go back.`);
+      await waSendWithButtons(phone,
+        `🛍️ *Shop KidsCart!*
+
+What are you looking for?`,
+        [
+          { id: 'cat_girls',  label: '👗 Girls Wear' },
+          { id: 'cat_boys',   label: '👖 Boys Wear' },
+          { id: 'cat_baby',   label: '🍼 Baby & Toddler' },
+        ],
+        'kidscart.kids | Free delivery above ₹999'
+      );
       return;
     }
     if (lowerText.includes('support') || lowerText === '3') {
@@ -1944,6 +1992,63 @@ async function handleBotMessage(phone, name, text, msgType) {
     return;
   }
 
+  // BROWSE state — handle category buttons
+  if (session.state === 'browse') {
+    if (lowerText === 'menu' || lowerText === 'back') { await sendWelcomeMenu(phone, name); return; }
+    const catReplies = {
+      'cat_girls':  `👗 *Girls Wear*
+
+Shop our latest girls collection:
+• Frocks & Dresses
+• Ethnic & Party wear
+• Casual everyday wear
+
+🔗 https://kidscart.kids
+
+Use code *WELCOME10* for 10% off!
+
+Reply *MENU* for main menu.`,
+      'cat_boys':   `👖 *Boys Wear*
+
+Shop our latest boys collection:
+• Casual & everyday
+• Ethnic kurta sets
+• Party & occasion wear
+
+🔗 https://kidscart.kids
+
+Use code *WELCOME10* for 10% off!
+
+Reply *MENU* for main menu.`,
+      'cat_baby':   `🍼 *Baby & Toddler*
+
+Shop for your little one:
+• Rompers & onesies (0-24M)
+• Comfortable cotton sets
+• Ethnic baby wear
+
+🔗 https://kidscart.kids
+
+Use code *WELCOME10* for 10% off!
+
+Reply *MENU* for main menu.`,
+    };
+    if (catReplies[lowerText]) {
+      await waSend(phone, catReplies[lowerText]);
+      await WaBotSession.findOneAndUpdate({ phone }, { state: 'idle' });
+      return;
+    }
+    // Also handle text like "girls", "boys", "baby"
+    if (lowerText.includes('girl')) { await waSend(phone, catReplies['cat_girls']); await WaBotSession.findOneAndUpdate({ phone }, { state: 'idle' }); return; }
+    if (lowerText.includes('boy'))  { await waSend(phone, catReplies['cat_boys']);  await WaBotSession.findOneAndUpdate({ phone }, { state: 'idle' }); return; }
+    if (lowerText.includes('baby') || lowerText.includes('toddler')) { await waSend(phone, catReplies['cat_baby']); await WaBotSession.findOneAndUpdate({ phone }, { state: 'idle' }); return; }
+    // Show buttons again if they typed something else
+    await waSendWithButtons(phone, `Please choose a category:`,
+      [{ id:'cat_girls', label:'👗 Girls Wear' }, { id:'cat_boys', label:'👖 Boys Wear' }, { id:'cat_baby', label:'🍼 Baby & Toddler' }]
+    );
+    return;
+  }
+
   // SUPPORT state — let admin handle, bot stays quiet
   if (session.state === 'support') {
     if (lowerText === 'menu' || lowerText === 'back') { await sendWelcomeMenu(phone, name); return; }
@@ -1958,14 +2063,41 @@ async function handleBotMessage(phone, name, text, msgType) {
     return;
   }
 
+  // Check if this is a button reply from a keyword trigger
+  if (msgType === 'interactive' || session.state === 'keyword_btn') {
+    const btnId = text.toLowerCase().trim();
+    // Look for a trigger that has this button ID
+    const allTriggers = await WaBotKeyword.find({ isActive: true });
+    for (const trigger of allTriggers) {
+      for (const btn of (trigger.buttons || [])) {
+        if (btn.id === btnId || btn.label.toLowerCase().replace(/[\s]+/g,'_') === btnId) {
+          const reply = (btn.nextReply || '').replace('{{name}}', name || 'there');
+          const nextBtns = btn.nextButtons || [];
+          if (nextBtns.length) {
+            await waSendWithButtons(phone, reply, nextBtns);
+            await WaBotSession.findOneAndUpdate({ phone }, { state: 'keyword_btn' });
+          } else {
+            await waSend(phone, reply || `Got it! Reply *MENU* for more options.`);
+            await WaBotSession.findOneAndUpdate({ phone }, { state: 'idle' });
+          }
+          return;
+        }
+      }
+    }
+  }
+
   // Check keyword triggers from DB
   const keywordTriggers = await WaBotKeyword.find({ isActive: true });
   for (const trigger of keywordTriggers) {
     const matched = trigger.keywords.some(kw => lowerText.includes(kw.toLowerCase()));
     if (matched) {
       const reply = trigger.reply.replace('{{name}}', name || 'there');
-      await waSend(phone, reply);
-      // Stay in current state — don't reset to menu
+      if (trigger.buttons?.length) {
+        await waSendWithButtons(phone, reply, trigger.buttons, 'Reply with a button or type MENU');
+        await WaBotSession.findOneAndUpdate({ phone }, { state: 'keyword_btn' });
+      } else {
+        await waSend(phone, reply);
+      }
       return;
     }
   }
@@ -2482,6 +2614,70 @@ app.get('/api/wa-tmpl-check', async (req, res) => {
       templates: tmplData,
       token_preview: WA_TOKEN ? WA_TOKEN.slice(0,20)+'...' : 'not set'
     });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// BOT KEYWORD TRIGGER ROUTES
+// ══════════════════════════════════════════════════════════
+
+app.get('/api/admin/whatsapp/bot-keywords', adminAuth, async (req, res) => {
+  try { res.json({ keywords: await WaBotKeyword.find().sort({ createdAt: -1 }) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/whatsapp/bot-keywords', adminAuth, async (req, res) => {
+  try {
+    const { name, keywords, reply, buttons } = req.body;
+    if (!keywords?.length || !reply) return res.status(400).json({ error: 'keywords and reply required' });
+    const kw = await WaBotKeyword.create({ name: name || keywords[0], keywords, reply, buttons: buttons || [] });
+    res.status(201).json({ keyword: kw });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/admin/whatsapp/bot-keywords/:id', adminAuth, async (req, res) => {
+  try { res.json({ keyword: await WaBotKeyword.findByIdAndUpdate(req.params.id, req.body, { new: true }) }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/admin/whatsapp/bot-keywords/:id', adminAuth, async (req, res) => {
+  try { await WaBotKeyword.findByIdAndDelete(req.params.id); res.json({ success: true }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// BOT CONFIG ROUTES
+// ══════════════════════════════════════════════════════════
+
+app.get('/api/admin/whatsapp/bot-config', adminAuth, async (req, res) => {
+  try {
+    const items = await WaBotConfig.find();
+    const cfg = {};
+    items.forEach(i => cfg[i.key] = i.value);
+    res.json({
+      welcomeText:    cfg.welcomeText    || "Hi {{name}}! \uD83D\uDECD\uFE0F India's favourite kids fashion store. How can I help?",
+      welcomeFooter:  cfg.welcomeFooter  || 'kidscart.kids | Free delivery above \u20B9999',
+      btn1Label:      cfg.btn1Label      || '\uD83D\uDCE6 Track My Order',
+      btn2Label:      cfg.btn2Label      || '\uD83D\uDECD\uFE0F Shop Now',
+      btn3Label:      cfg.btn3Label      || '\uD83D\uDCAC Support',
+      shopText:       cfg.shopText       || '\uD83D\uDECD\uFE0F Shop KidsCart\n\nVisit: https://kidscart.kids',
+      supportText:    cfg.supportText    || '\uD83D\uDCAC Our team will assist you shortly! \uD83D\uDC9C',
+      fallbackText:   cfg.fallbackText   || 'Hi {{name}}! \uD83D\uDC4B Reply MENU for options, or type SUPPORT to talk to our team.',
+      botEnabled:     cfg.botEnabled !== undefined ? cfg.botEnabled : true,
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/admin/whatsapp/bot-config', adminAuth, async (req, res) => {
+  try {
+    for (const [key, value] of Object.entries(req.body)) {
+      await WaBotConfig.findOneAndUpdate(
+        { key },
+        { key, value, updatedAt: new Date() },
+        { upsert: true, new: true }
+      );
+    }
+    res.json({ success: true, message: 'Bot settings saved!' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

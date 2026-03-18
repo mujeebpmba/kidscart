@@ -1505,6 +1505,25 @@ app.post('/api/admin/upload', adminAuth, (req, res, next) => {
   });
 });
 
+// ── Dedicated audio/media upload endpoint (for voice notes) ──
+app.post('/api/admin/upload-audio', adminAuth, uploadMedia.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' });
+    // Upload buffer directly to Cloudinary with resource_type: auto
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'kidscart/media', resource_type: 'auto', format: 'webm' },
+        (error, result) => { if (error) reject(error); else resolve(result); }
+      );
+      stream.end(req.file.buffer);
+    });
+    res.json({ success: true, url: result.secure_url, urls: [result.secure_url] });
+  } catch(e) {
+    console.error('Audio upload error:', e.message);
+    res.status(500).json({ error: e.message || 'Audio upload failed' });
+  }
+});
+
 // FIXED: Banner image upload now goes to Cloudinary – crash bug resolved
 app.post('/api/admin/upload-banner', adminAuth, (req, res, next) => {
   uploadBanner.single('image')(req, res, err => {

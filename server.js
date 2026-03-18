@@ -2415,6 +2415,38 @@ app.get('/api/admin/whatsapp/meta-templates', adminAuth, async (req, res) => {
   }
 });
 
+// ── WA Debug endpoint (admin only) ──
+app.get('/api/admin/whatsapp/debug-account', adminAuth, async (req, res) => {
+  try {
+    if (!WA_TOKEN || !WA_PHONE_ID) return res.json({ error: 'WA env vars not set' });
+
+    // Get phone info
+    const r1 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}?fields=id,name,display_phone_number,verified_name,account_mode`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const d1 = await r1.json();
+
+    // Try templates directly on phone ID
+    const r2 = await fetch(`https://graph.facebook.com/v19.0/${WA_PHONE_ID}/message_templates?limit=5`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const d2 = await r2.json();
+
+    // Try to get business account
+    const r3 = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name`, {
+      headers: { 'Authorization': `Bearer ${WA_TOKEN}` }
+    });
+    const d3 = await r3.json();
+
+    res.json({
+      phone_id: WA_PHONE_ID,
+      phone_info: d1,
+      templates_on_phone_id: d2,
+      me: d3
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Socket.io admin room ──
 io.on('connection', socket => {
   socket.on('join_admin', () => {

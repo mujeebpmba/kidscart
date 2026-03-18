@@ -756,6 +756,15 @@ const WaTemplateSchema = new mongoose.Schema({
   createdAt:{ type: Date, default: Date.now }
 });
 
+// Bot keyword triggers — stored in DB, editable from admin panel
+const WaBotKeywordSchema = new mongoose.Schema({
+  keywords:  [{ type: String, lowercase: true, trim: true }], // e.g. ['price','cost','how much']
+  reply:     { type: String, required: true },                // auto reply text
+  isActive:  { type: Boolean, default: true },
+  name:      { type: String, default: '' },                   // label for admin UI
+  createdAt: { type: Date, default: Date.now }
+});
+
 // Bot configuration stored in DB — editable from admin panel
 const WaBotConfigSchema = new mongoose.Schema({
   key:       { type: String, required: true, unique: true },
@@ -788,6 +797,7 @@ const WaMessage      = mongoose.model('WaMessage',       WaMessageSchema);
 const WaTemplate     = mongoose.model('WaTemplate',      WaTemplateSchema);
 const WaBotSession   = mongoose.model('WaBotSession',     WaBotSessionSchema);
 const WaBotConfig    = mongoose.model('WaBotConfig',      WaBotConfigSchema);
+const WaBotKeyword   = mongoose.model('WaBotKeyword',     WaBotKeywordSchema);
 
 // ── HELPERS ───────────────────────────────────────────────
 const genOTP     = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -1941,14 +1951,30 @@ async function handleBotMessage(phone, name, text, msgType) {
   }
 
   // Default / greeting — show welcome menu
-  const greetWords = ['hi', 'hello', 'hey', 'start', 'menu', 'help', 'hai', 'hii'];
-  const isGreeting = greetWords.some(w => lowerText.includes(w)) || lowerText.length <= 4;
-  if (session.state === 'idle' || isGreeting || lowerText === 'menu') {
+  const greetWords = ['hi', 'hello', 'hey', 'start', 'menu', 'help', 'hai', 'hii', 'helo', 'hllo'];
+  const isGreeting = greetWords.some(w => lowerText === w) || lowerText.length <= 3;
+  if (isGreeting || lowerText === 'menu') {
     await sendWelcomeMenu(phone, name);
     return;
   }
 
-  await waSend(phone, `Hi ${name || 'there'}! 👋 Reply *MENU* to see what I can help you with, or type *SUPPORT* to talk to our team.`);
+  // Check keyword triggers from DB
+  const keywordTriggers = await WaBotKeyword.find({ isActive: true });
+  for (const trigger of keywordTriggers) {
+    const matched = trigger.keywords.some(kw => lowerText.includes(kw.toLowerCase()));
+    if (matched) {
+      const reply = trigger.reply.replace('{{name}}', name || 'there');
+      await waSend(phone, reply);
+      // Stay in current state — don't reset to menu
+      return;
+    }
+  }
+
+  // No keyword matched — send fallback
+  const fallbackMsg = cfg.fallbackText
+    ? cfg.fallbackText.replace('{{name}}', name || 'there')
+    : `Hi ${name || 'there'}! 👋 Reply *MENU* to see what I can help you with, or type *SUPPORT* to talk to our team.`;
+  await waSend(phone, fallbackMsg);
 }
 
 async function sendWelcomeMenu(phone, name) {
@@ -2566,6 +2592,111 @@ async function seed() {
       { name: 'Hot 🔥',    color: '#e74c3c' },
     ]);
     console.log('✅ CRM default tags seeded');
+  }
+
+  // ── Seed default bot keyword triggers ──
+  if (!await WaBotKeyword.countDocuments()) {
+    await WaBotKeyword.insertMany([
+      {
+        name: 'Price / Cost query',
+        keywords: ['price', 'cost', 'rate', 'how much', 'prices', 'rate list', 'price list'],
+        reply: `💰 *KidsCart Prices*
+
+Our kids fashion starts from just ₹399!
+
+👗 Girls wear: ₹399 – ₹1,899
+👖 Boys wear: ₹499 – ₹1,499
+🍼 Baby wear: ₹299 – ₹699
+🎀 Party wear: ₹899 – ₹2,499
+
+🎁 Use code *WELCOME10* for 10% off your first order!
+
+Shop now: https://kidscart.kids`
+      },
+      {
+        name: 'New arrivals',
+        keywords: ['new', 'new arrivals', 'latest', 'new collection', 'new stock', 'what is new', 'new designs'],
+        reply: `✨ *New Arrivals at KidsCart!*
+
+Fresh kids fashion just landed! 🎉
+
+👗 New Girls collection — frocks, lehengas & more
+👖 New Boys collection — kurtas, casuals & party wear
+🍼 Baby essentials — rompers, sets & more
+
+All new arrivals: https://kidscart.kids
+
+🚚 Free delivery above ₹999
+🎁 Use *WELCOME10* for 10% off!`
+      },
+      {
+        name: 'COD available',
+        keywords: ['cod', 'cash on delivery', 'cash', 'pay on delivery', 'cash delivery'],
+        reply: `✅ *Yes! We accept Cash on Delivery (COD)*
+
+Simply place your order at https://kidscart.kids and choose COD at checkout.
+
+💵 Pay cash when your order arrives at your doorstep.
+
+🚚 Free delivery on orders above ₹999
+📦 Delivery in 3-5 business days`
+      },
+      {
+        name: 'Delivery info',
+        keywords: ['delivery', 'shipping', 'when will', 'how long', 'how many days', 'deliver', 'dispatch'],
+        reply: `🚚 *Delivery Information*
+
+📦 We deliver across India!
+⏰ Delivery time: 3-5 business days
+💰 Delivery fee: ₹60 (FREE above ₹999)
+
+Track your order anytime — just reply with your *Order ID* or tap 📦 Track My Order below.
+
+Reply *MENU* for more options.`
+      },
+      {
+        name: 'Return / refund',
+        keywords: ['return', 'refund', 'exchange', 'wrong item', 'damaged', 'replace', 'size issue'],
+        reply: `↩️ *Returns & Exchanges*
+
+We're sorry to hear that! Here's how we help:
+
+📸 Send us a photo of the issue
+📞 Contact: +91 94975 96110
+📧 Email: admin@kidscart.kids
+
+We'll resolve it within 24-48 hours. Your satisfaction is our priority! 💜`
+      },
+      {
+        name: 'Discount / coupon',
+        keywords: ['discount', 'coupon', 'offer', 'promo', 'code', 'deal', 'sale', 'off'],
+        reply: `🎁 *Current Offers at KidsCart!*
+
+🏷️ *WELCOME10* — 10% off your first order
+🏷️ *FLAT100* — ₹100 off on orders above ₹799
+
+🚚 Also get FREE delivery on orders above ₹999!
+
+Shop now: https://kidscart.kids
+
+_Offers valid on kidscart.kids only_`
+      },
+      {
+        name: 'Size guide',
+        keywords: ['size', 'size chart', 'which size', 'sizing', 'measurement', 'fit'],
+        reply: `📏 *KidsCart Size Guide*
+
+👶 Baby (0-24M): XS, S
+👦 Toddler (2-4Y): S, M
+🧒 Kids (4-8Y): M, L
+👦 Older Kids (8-12Y): L, XL
+
+💡 *Tip:* If between sizes, size up for comfort!
+
+For specific measurements, chat with us or email admin@kidscart.kids 💜`
+      },
+    ]);
+    console.log('✅ Bot keyword triggers seeded');
   }
 
   // ── Seed default WhatsApp quick reply templates ──

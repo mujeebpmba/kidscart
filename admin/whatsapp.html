@@ -399,6 +399,42 @@ tr:hover td { background: #faf7fe; }
       </div>
 
       <button class="btn btn-pp" style="width:100%;" onclick="saveBotSettings()">💾 Save Bot Settings</button>
+
+      <!-- Keyword Triggers section inside bot settings -->
+      <div style="margin-top:22px;border-top:2px solid #f0e8fb;padding-top:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:.88rem;color:#1a0a2e;">⚡ Keyword Triggers</div>
+            <div style="font-size:.74rem;color:#888;margin-top:2px;">When customer types a keyword → bot auto replies</div>
+          </div>
+          <button class="btn btn-pp btn-sm" onclick="openAddKeywordForm()">+ Add Trigger</button>
+        </div>
+
+        <!-- Add keyword form (hidden by default) -->
+        <div id="addKeywordForm" style="display:none;background:#f8f5fd;border-radius:11px;padding:14px;margin-bottom:14px;border:1.5px solid #e8dff5;">
+          <div class="fgroup">
+            <label>Trigger Name (e.g. "Price query")</label>
+            <input type="text" id="kwName" placeholder="Price query">
+          </div>
+          <div class="fgroup">
+            <label>Keywords (comma separated)</label>
+            <input type="text" id="kwWords" placeholder="price, cost, how much, rate">
+            <small style="color:#bbb;font-size:.71rem;">Bot replies when customer message contains any of these words</small>
+          </div>
+          <div class="fgroup">
+            <label>Auto Reply Message</label>
+            <textarea id="kwReply" rows="4" placeholder="Our prices start from ₹399..."></textarea>
+            <small style="color:#bbb;font-size:.71rem;">Use {{name}} for customer name</small>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-pp btn-sm" onclick="saveKeyword()">Save Trigger</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addKeywordForm').style.display='none'">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Keywords list -->
+        <div id="kwList"><div class="kc-loading"><span class="kc-spinner"></span>Loading...</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -681,6 +717,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('#tmplDD')&&!e.target
 /* ── Bot Settings Modal ── */
 async function openBotSettingsModal(){
   document.getElementById('botSettingsModal').style.display='flex';
+  loadKeywords();
   try{
     const d=await apiFetch('/admin/whatsapp/bot-config');
     document.getElementById('bsCfgWelcomeText').value=d.welcomeText||'';
@@ -742,6 +779,89 @@ async function toggleBot(phone){
     else{await apiFetch('/admin/whatsapp/new-contact','POST',{phone});toast('👤 Bot paused — you have control');}
     loadBotStatus(phone);
   }catch(e){toast('❌ '+e.message);}
+}
+
+/* ── Keyword Triggers ── */
+let kwEditId = null;
+
+async function loadKeywords(){
+  const el = document.getElementById('kwList'); if(!el) return;
+  try{
+    const d = await apiFetch('/admin/whatsapp/bot-keywords');
+    const list = d.keywords || [];
+    if(!list.length){
+      el.innerHTML = '<div style="color:#bbb;font-size:.8rem;text-align:center;padding:16px;">No keyword triggers yet. Add one above!</div>';
+      return;
+    }
+    el.innerHTML = list.map(k => `
+      <div style="border:1.5px solid #e8dff5;border-radius:10px;padding:11px 13px;margin-bottom:8px;background:#fff;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-weight:800;font-size:.82rem;color:#4A1070;">⚡ ${k.name||k.keywords[0]}</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.72rem;color:#888;">
+              <input type="checkbox" ${k.isActive?'checked':''} onchange="toggleKeyword('${k._id}',this.checked)" style="cursor:pointer;">
+              Active
+            </label>
+            <button class="btn btn-ghost btn-sm" onclick="editKeyword('${k._id}','${encodeURIComponent(k.name||'')}','${encodeURIComponent(k.keywords.join(', '))}','${encodeURIComponent(k.reply)}')">✏️</button>
+            <button class="btn btn-er-g btn-sm" onclick="deleteKeyword('${k._id}')">🗑</button>
+          </div>
+        </div>
+        <div style="font-size:.73rem;color:#888;margin-bottom:4px;">
+          🔑 Keywords: <span style="color:#4A1070;font-weight:700;">${k.keywords.join(', ')}</span>
+        </div>
+        <div style="font-size:.73rem;color:#666;background:#faf7fe;padding:6px 9px;border-radius:7px;white-space:pre-wrap;max-height:60px;overflow:hidden;">${(k.reply||'').slice(0,120)}${k.reply?.length>120?'…':''}</div>
+      </div>
+    `).join('');
+  }catch(e){el.innerHTML='<div style="color:#c62828;font-size:.8rem;">Error loading triggers</div>';}
+}
+
+function openAddKeywordForm(){
+  kwEditId = null;
+  document.getElementById('kwName').value='';
+  document.getElementById('kwWords').value='';
+  document.getElementById('kwReply').value='';
+  document.getElementById('addKeywordForm').style.display='block';
+  document.getElementById('kwName').focus();
+}
+
+function editKeyword(id, name, words, reply){
+  kwEditId = id;
+  document.getElementById('kwName').value = decodeURIComponent(name);
+  document.getElementById('kwWords').value = decodeURIComponent(words);
+  document.getElementById('kwReply').value = decodeURIComponent(reply);
+  document.getElementById('addKeywordForm').style.display='block';
+  document.getElementById('kwName').focus();
+}
+
+async function saveKeyword(){
+  const name  = document.getElementById('kwName').value.trim();
+  const words = document.getElementById('kwWords').value.trim();
+  const reply = document.getElementById('kwReply').value.trim();
+  if(!words || !reply){ toast('⚠️ Keywords and reply are required'); return; }
+  const keywords = words.split(',').map(w=>w.trim().toLowerCase()).filter(Boolean);
+  try{
+    if(kwEditId){
+      await apiFetch('/admin/whatsapp/bot-keywords/'+kwEditId,'PUT',{name,keywords,reply});
+      toast('✅ Trigger updated!');
+    } else {
+      await apiFetch('/admin/whatsapp/bot-keywords','POST',{name,keywords,reply});
+      toast('✅ Trigger added!');
+    }
+    kwEditId = null;
+    document.getElementById('addKeywordForm').style.display='none';
+    loadKeywords();
+  }catch(e){ toast('❌ '+e.message); }
+}
+
+async function toggleKeyword(id, active){
+  try{ await apiFetch('/admin/whatsapp/bot-keywords/'+id,'PUT',{isActive:active}); }
+  catch(e){ toast('❌ '+e.message); }
+}
+
+async function deleteKeyword(id){
+  if(!confirm('Delete this keyword trigger?')) return;
+  try{ await apiFetch('/admin/whatsapp/bot-keywords/'+id,'DELETE'); toast('🗑 Deleted'); loadKeywords(); }
+  catch(e){ toast('❌ '+e.message); }
 }
 
 /* ── New Chat Modal ── */

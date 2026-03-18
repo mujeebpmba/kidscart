@@ -426,7 +426,29 @@ tr:hover td { background: #faf7fe; }
             <textarea id="kwReply" rows="4" placeholder="Our prices start from ₹399..."></textarea>
             <small style="color:#bbb;font-size:.71rem;">Use {{name}} for customer name</small>
           </div>
-          <div style="display:flex;gap:8px;">
+          <!-- Optional buttons after the reply -->
+          <div style="margin-top:4px;">
+            <div style="font-size:.72rem;font-weight:800;color:#4A1070;text-transform:uppercase;margin-bottom:6px;">
+              Buttons after reply <small style="color:#bbb;text-transform:none;font-weight:400;">(optional — max 3)</small>
+            </div>
+            <div id="kwBtnsWrap">
+              <div style="display:flex;gap:6px;margin-bottom:5px;" class="kw-btn-row">
+                <input type="text" placeholder="Button 1 label (e.g. View Girls)" maxlength="20" style="flex:1;padding:6px 10px;border:1.5px solid #e8dff5;border-radius:7px;font-size:.8rem;font-family:'Nunito',sans-serif;outline:none;">
+                <input type="text" placeholder="Reply when tapped" style="flex:2;padding:6px 10px;border:1.5px solid #e8dff5;border-radius:7px;font-size:.8rem;font-family:'Nunito',sans-serif;outline:none;">
+              </div>
+              <div style="display:flex;gap:6px;margin-bottom:5px;" class="kw-btn-row">
+                <input type="text" placeholder="Button 2 label" maxlength="20" style="flex:1;padding:6px 10px;border:1.5px solid #e8dff5;border-radius:7px;font-size:.8rem;font-family:'Nunito',sans-serif;outline:none;">
+                <input type="text" placeholder="Reply when tapped" style="flex:2;padding:6px 10px;border:1.5px solid #e8dff5;border-radius:7px;font-size:.8rem;font-family:'Nunito',sans-serif;outline:none;">
+              </div>
+              <div style="display:flex;gap:6px;margin-bottom:5px;" class="kw-btn-row">
+                <input type="text" placeholder="Button 3 label" maxlength="20" style="flex:1;padding:6px 10px;border:1.5px solid #e8dff5;border-radius:7px;font-size:.8rem;font-family:'Nunito',sans-serif;outline:none;">
+                <input type="text" placeholder="Reply when tapped" style="flex:2;padding:6px 10px;border:1.5px solid #e8dff5;border-radius:7px;font-size:.8rem;font-family:'Nunito',sans-serif;outline:none;">
+              </div>
+            </div>
+            <small style="color:#bbb;font-size:.71rem;">Leave empty if no buttons needed. Button labels max 20 chars.</small>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:10px;">
             <button class="btn btn-pp btn-sm" onclick="saveKeyword()">Save Trigger</button>
             <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addKeywordForm').style.display='none'">Cancel</button>
           </div>
@@ -839,12 +861,20 @@ async function saveKeyword(){
   const reply = document.getElementById('kwReply').value.trim();
   if(!words || !reply){ toast('⚠️ Keywords and reply are required'); return; }
   const keywords = words.split(',').map(w=>w.trim().toLowerCase()).filter(Boolean);
+  // Collect buttons
+  const buttons = [];
+  document.querySelectorAll('.kw-btn-row').forEach(row=>{
+    const inputs = row.querySelectorAll('input');
+    const label = inputs[0]?.value?.trim();
+    const nextReply = inputs[1]?.value?.trim();
+    if(label) buttons.push({ id: label.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,50), label, nextReply: nextReply||'' });
+  });
   try{
     if(kwEditId){
-      await apiFetch('/admin/whatsapp/bot-keywords/'+kwEditId,'PUT',{name,keywords,reply});
+      await apiFetch('/admin/whatsapp/bot-keywords/'+kwEditId,'PUT',{name,keywords,reply,buttons});
       toast('✅ Trigger updated!');
     } else {
-      await apiFetch('/admin/whatsapp/bot-keywords','POST',{name,keywords,reply});
+      await apiFetch('/admin/whatsapp/bot-keywords','POST',{name,keywords,reply,buttons});
       toast('✅ Trigger added!');
     }
     kwEditId = null;
